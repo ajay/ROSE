@@ -213,7 +213,7 @@ Rose::Rose(void)
 	if (this->connect())
 	{
 		this->reset();
-		this->send(zeros<vec>(5));
+		this->send(zeros<vec>(4));
 	}
 }
 

@@ -119,8 +119,9 @@ double gauss(double mu, double sigma2) {
 }
 
 /** Weigh the "health" of each particle using gaussian error
- *  @param observations a 2xn matrix, where the first row is the x row,
- *                      and the second row is the y row
+ *  @param observations a 3xn matrix, where the first row is the x row,
+ *                      the second row is the y row,
+ *                      and the third row is the presence
  *  @param health the health vector
  */
 void pfilter::weigh(mat &observations) {
@@ -134,10 +135,12 @@ void pfilter::weigh(mat &observations) {
   }
   for (int i=0;i<particles.size();i++){
     for(int j=0;j<landmarks.size();j++){
-      radius[j] = sqrt(pow(landmarks[j].x-particles[i].x, 2) + pow(landmarks[j].y-particles[i].y, 2)); // radius of the robot
-      theta[j]=atan2(landmarks[j].y - particles[i].y, landmarks[j].x - particles[i].x) - particles[i].t; // theta of the robot
-      this->health[i] *= gauss(R[j]-radius[j],vs);
-      this->health[i] *= gauss(T[j]-theta[j],ws);
+      if (observations(2,j) > 0.5) {
+        radius[j] = sqrt(pow(landmarks[j].x-particles[i].x, 2) + pow(landmarks[j].y-particles[i].y, 2)); // radius of the robot
+        theta[j]=atan2(landmarks[j].y - particles[i].y, landmarks[j].x - particles[i].x) - particles[i].t; // theta of the robot
+        this->health[i] *= gauss(R[j]-radius[j],vs);
+        this->health[i] *= gauss(T[j]-theta[j],ws);
+      }
     }
   }
   resample();

@@ -1,5 +1,5 @@
 // Chilitags
-#include "chilitags.hpp"
+#include <chilitags/chilitags.hpp>
 #include "chili_landmarks.h"
 
 // OpenCV
@@ -29,7 +29,7 @@ void chili_landmarks::update()
 	// Paramaters for image aquisition
 	int xRes = 640;
 	int yRes = 480;
-	int cameraIndex = 1;
+	int cameraIndex = 0;
 
 	// Get camera feed
 	cv::VideoCapture capture(cameraIndex);
