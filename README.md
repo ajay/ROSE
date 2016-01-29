@@ -22,12 +22,12 @@ Github Repository: This is it
 
 https://github.com/ajaysrivastava/ROSE
 
-Write your github handle below & I’ll give you access
+Tell me your github handle & I’ll give you access
 
 	Ajay ✔			ajaysrivastava
 	Shree ✔			sriharichekuri
-	Neil
-	Cedric
+	Neil ✔			neilpat1995
+	Cedric ✔		chb50
 	Jon
 	Brice
-	Vineet
+	Vineet ✔		VSepaha
