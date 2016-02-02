@@ -28,6 +28,6 @@ Tell me your github handle & I’ll give you access
 	Shree ✔			sriharichekuri
 	Neil ✔			neilpat1995
 	Cedric ✔		chb50
-	Jon
+	Jon ✔			jonnn333
 	Brice
 	Vineet ✔		VSepaha
