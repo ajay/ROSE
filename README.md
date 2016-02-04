@@ -24,7 +24,7 @@ https://github.com/ajaysrivastava/ROSE
 
 Tell me your github handle & I’ll give you access
 
-	Ajay ✔			ajaysrivastava
+	Ajay ✔			ajay
 	Shree ✔			shree
 	Neil ✔			neilpat1995
 	Cedric ✔		chb50
