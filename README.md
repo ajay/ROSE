@@ -27,7 +27,7 @@ Tell me your github handle & I’ll give you access
 	Ajay ✔			ajay
 	Shree ✔			shree
 	Neil ✔			neilpat1995
-	Cedric ✔		chb50
-	Jon ✔			jonnn333
+	Cedric ✔			chb50
+	Jon ✔				jonnn333
 	Brice
-	Vineet ✔		VSepaha
+	Vineet ✔			VSepaha
