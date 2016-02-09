@@ -3,25 +3,111 @@
 /////////////////////
 
 #include <Adafruit_MotorShield.h>
+#include <string.h>
 #include "utility/Adafruit_PWMServoDriver.h"
 #include <Wire.h>
 
 #define DEV_ID 0
 #define ramp_const 8
 
-Adafruit_MotorShield AFMS = Adafruit_MotorShield();
-Adafruit_DCMotor *motors[4];
-
+// Variables associated with buffers for serial comm
 const int bufsize = 256;
 const int safesize = bufsize / 2;
 char buf[bufsize];
 char msg[bufsize];
 char wbuf[safesize];
 unsigned long msecs;
-char numbuf[4];
 
+// Mounting motorshield
+Adafruit_MotorShield AFMS = Adafruit_MotorShield();
+Adafruit_DCMotor *motors[4];
+
+// Arrays that hold target and previous values for the motors
 static int targetv[4];
 static int prevv[4];
+
+// QuadEncoder class set up to utilize the encoders
+class QuadEncoder
+{
+	public:
+		long pos;
+		bool reversed;
+		char pin[2];
+
+		QuadEncoder()
+		{
+			reset();
+		}
+
+		// Attach quadencoder based on two input pins on digital IO
+		void attach(int pin1, int pin2)
+		{
+			pin[0] = pin1;
+			pin[1] = pin2;
+			pinMode(pin[0], INPUT);
+			pinMode(pin[1], INPUT);
+			pin_state[0] = digitalRead(pin[0]) == HIGH;
+			pin_state[1] = digitalRead(pin[1]) == HIGH;
+		}
+
+		// Read values from input pins
+		long long read()
+		{
+			update();
+			return pos;
+		}
+
+		// Reset QuadEncoder instance
+		void reset()
+		{
+			pin[0] = 0;
+			pin[1] = 0;
+			pos = 0;
+			velocity = 1;
+			reversed = false;
+			pin_state[0] = 0;
+			pin_state[1] = 0;
+		}
+
+	private:
+		char pin_state[2];
+		long long velocity;
+
+		// Private update method to read and interpolate quadencoder data
+		void update()
+		{
+			if (pin[0] == 0 || pin[1] == 0)
+				return;
+			// FSA : reg :: 00 01 11 10
+			//     : rev :: 00 10 11 01
+			char new_state[2] = { digitalRead(pin[0]) == HIGH,
+								  digitalRead(pin[1]) == HIGH };
+			char delta_state[2] = { new_state[0] != pin_state[0],
+									new_state[1] != pin_state[1] };
+
+			if (delta_state[0] && delta_state[1])
+			{
+				pos += velocity * 2 * (reversed ? -1 : 1);
+			}
+			else if (delta_state[1])
+			{
+				velocity = (new_state[0] == new_state[1]) ? -1 : 1;
+				pos += velocity * (reversed ? -1 : 1);
+			}
+			else if (delta_state[0])
+			{
+				velocity = (new_state[0] == new_state[1]) ? 1 : -1;
+				pos += velocity * (reversed ? -1 : 1);
+			}
+
+			pin_state[0] = new_state[0];
+			pin_state[1] = new_state[1];
+		}
+};
+
+// Arrays to hold data associated with the encoders
+QuadEncoder *encoders[4];
+static long encoder_values[4];
 
 // Limit values of 'x' between a certain range (a < x < b)
 int limit(int x, int a, int b)
@@ -84,15 +170,21 @@ void setmotors(int leftFront, int rightFront, int leftBack, int rightBack)
 // Initial set up (attach motors & begin serial comm)
 void setup()
 {
-	// Attach motors to motor array
-	motors[0] = AFMS.getMotor(1);
-	motors[1] = AFMS.getMotor(2);
-	motors[2] = AFMS.getMotor(3);
-	motors[3] = AFMS.getMotor(4);
-
 	// Set status LED to OUTPUT and HIGH
 	pinMode(13, OUTPUT);
 	digitalWrite(13, HIGH);
+
+	// Attach motors to motor array
+	for (int i = 0; i < 4; i++)
+	{
+		motors[i] = AFMS.getMotor(i+1);
+	}
+
+	// Attach encoders
+	encoders[0]->attach(2, 3);
+	encoders[1]->attach(4, 5);
+	encoders[2]->attach(6, 7);
+	encoders[3]->attach(8, 11);
 
 	// Start motorshield & serial comm
 	AFMS.begin();
@@ -133,22 +225,34 @@ void loop()
 		}
 	}
 
-	// Assign read values to motors
+	// Ramp motors values, and determine next value to set
 	for (int i = 0; i < 4; i++)
 	{
 		prevv[i] = rampmotor(prevv[i], targetv[i]);
 	}
+
+	// Assign determined values to motors
 	setmotors(-prevv[0], -prevv[1], prevv[2], prevv[3]);
+
+	// Read encoder values
+	for (int i = 0; i < 4; i++)
+	{
+		encoder_values[i] = encoders[i]->read();
+	}
 
 	// Send back data over serial every 100ms
 	if (millis() - msecs > 100)
 	{
-		sprintf(wbuf, "[%d %d %d %d %d]\n",
+		sprintf(wbuf, "[%d %d %d %d %d %ld %ld %ld %ld]\n",
 				DEV_ID,
 				prevv[0],
 				prevv[1],
 				prevv[2],
-				prevv[3]);
+				prevv[3],
+				encoder_values[0],
+				encoder_values[1],
+				encoder_values[2],
+				encoder_values[3]);
 		Serial.print(wbuf);
 		msecs = millis();
 	}
