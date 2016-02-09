@@ -1,14 +1,16 @@
+/////////////////////
+// ROSE DRIVE BASE //
+/////////////////////
+
 #include <Adafruit_MotorShield.h>
-#include <stringCallbackFunction.h>
+#include "utility/Adafruit_PWMServoDriver.h"
 #include <Wire.h>
 
-#include "utility/Adafruit_PWMServoDriver.h"
-
-#define DEV_ID 1
+#define DEV_ID 0
+#define ramp_const 8
 
 Adafruit_MotorShield AFMS = Adafruit_MotorShield();
 Adafruit_DCMotor *motors[4];
-static int v;
 
 const int bufsize = 256;
 const int safesize = bufsize / 2;
@@ -18,6 +20,10 @@ char wbuf[safesize];
 unsigned long msecs;
 char numbuf[4];
 
+static int targetv[4];
+static int prevv[4];
+
+// Limit values of 'x' between a certain range (a < x < b)
 int limit(int x, int a, int b)
 {
 	if (x > b)
@@ -34,21 +40,31 @@ int limit(int x, int a, int b)
 	}
 }
 
-void setmotors(int topleft, int topright, int botleft, int botright)
+// Ramps motor based on ramp_const
+int rampmotor(int curr, int target)
 {
-	bool isneg[4] = {topright < 0, topleft < 0, botleft < 0, botright < 0};
-	topright = limit(abs(topright), 0, 255);
-	topleft = limit(abs(topleft), 0, 255);
-	botleft = limit(abs(botleft), 0, 255);
-	botright = limit(abs(botright), 0, 255);
-	motors[0]->setSpeed(topright);
-	motors[1]->setSpeed(topleft);
-	motors[2]->setSpeed(botleft);
-	motors[3]->setSpeed(botright);
+	int delta = target - curr;
+	delta = limit(delta, -ramp_const, ramp_const);
+	curr = limit(curr + delta, -255, 255);
+	return curr;
+}
 
+// Assigns velocity values to motors
+void setmotors(int leftFront, int rightFront, int leftBack, int rightBack)
+{
+	// Determine whether motor assignments need to be forward or backward
+	bool negative[4] = {rightFront < 0, leftFront < 0, leftBack < 0, rightBack < 0};
+
+	// Limit values to be assigned within acceptable range (0 - 255)
+	rightFront 	= limit(abs(rightFront), 	0, 255);
+	leftFront 	= limit(abs(leftFront), 	0, 255);
+	leftBack 	= limit(abs(leftBack), 		0, 255);
+	rightBack 	= limit(abs(rightBack), 	0, 255);
+
+	// Set motors to correct directions
 	for (int i = 0; i < 4; i++)
 	{
-		if (isneg[i])
+		if (negative[i])
 		{
 			motors[i]->run(FORWARD);
 		}
@@ -57,72 +73,74 @@ void setmotors(int topleft, int topright, int botleft, int botright)
 			motors[i]->run(BACKWARD);
 		}
 	}
+
+	// Set motors to assigned values
+	motors[0]->setSpeed(rightFront);
+	motors[1]->setSpeed(leftFront);
+	motors[2]->setSpeed(leftBack);
+	motors[3]->setSpeed(rightBack);
 }
 
+// Initial set up (attach motors & begin serial comm)
 void setup()
 {
+	// Attach motors to motor array
 	motors[0] = AFMS.getMotor(1);
 	motors[1] = AFMS.getMotor(2);
 	motors[2] = AFMS.getMotor(3);
 	motors[3] = AFMS.getMotor(4);
 
-	pinMode(13, OUTPUT); // set status LED to OUTPUT and HIGH
+	// Set status LED to OUTPUT and HIGH
+	pinMode(13, OUTPUT);
 	digitalWrite(13, HIGH);
 
+	// Start motorshield & serial comm
 	AFMS.begin();
 	setmotors(0, 0, 0, 0);
 	Serial.begin(57600);
 	msecs = millis();
 }
 
-static int targetv[4];
-static int prevv[4];
-
-int rampmotor(int curr, int target)
-{
-	int delta = target - curr;
-	delta = limit(delta, -8, 8);
-	curr = limit(curr + delta, -255, 255);
-	return curr;
-}
-
 void loop()
 {
+	// See if there are any available bytes to be read over serial comm
 	int nbytes = 0;
 	if ((nbytes = Serial.available()))
 	{
-		// read + attach null byte
+		// Read + attach null byte to read string
 		int obytes = strlen(buf);
 		Serial.readBytes(&buf[obytes], nbytes);
 		buf[nbytes + obytes] = '\0';
 
-		// resize just in case
+		// Resize read string just in case
 		if (strlen(buf) > safesize)
 		{
 			memmove(buf, &buf[strlen(buf) - safesize], safesize);
-			buf[safesize] = '\0'; // just in case
+			buf[safesize] = '\0';
 		}
 
-		// extract possible message
+		// Extract possible message
 		char *s, *e;
 		if ((e = strchr(buf, '\n')))
 		{
 			e[0] = '\0';
 			if ((s = strrchr(buf, '[')))
 			{
-				// CUSTOMIZE
-				sscanf(s, "[%d %d %d %d]\n",
-						&targetv[0], &targetv[1], &targetv[2], &targetv[3]);
+				// Parse string being read
+				sscanf(s, "[%d %d %d %d]\n", &targetv[0], &targetv[1], &targetv[2], &targetv[3]);
 			}
 			memmove(buf, &e[1], strlen(&e[1]) + sizeof(char));
 		}
 	}
+
+	// Assign read values to motors
 	for (int i = 0; i < 4; i++)
 	{
 		prevv[i] = rampmotor(prevv[i], targetv[i]);
 	}
 	setmotors(-prevv[0], -prevv[1], prevv[2], prevv[3]);
 
+	// Send back data over serial every 100ms
 	if (millis() - msecs > 100)
 	{
 		sprintf(wbuf, "[%d %d %d %d %d]\n",
