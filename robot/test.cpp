@@ -1,43 +1,22 @@
-#include <stdio.h>
-#include <string>
-#include <vector>
-#include <iostream>
-#include <stdlib.h>
-#include <signal.h>
-#include "rose.h"
 #include <armadillo>
-#include <termios.h>
-#include <unistd.h>
+#include <signal.h>
 #include "SDL/SDL.h"
-// #include "xboxctrl.h"
+
+#include "Rose.h"
 
 SDL_Event event;
 
 static int stopsig;
 using namespace arma;
-static rose rose;
-static arma::vec motion = zeros<vec>(5);
+static Rose rose;
+static arma::vec motion = zeros<vec>(4);
 
-// static xboxctrl_t xBoxController;
-// static pthread_t xBoxControllerThread;
-
-// void *updateXboxController(void *args)
-// {
-// 	while (!stopsig)
-// 	{
-// 		xboxctrl_update(&xBoxController);
-// 	}
-// 	return NULL;
-// }
-
-void drive(double backLeft, double frontLeft, double backRight, double frontRight)
+void drive(double frontLeft, double frontRight, double backLeft, double backRight)
 {
-	// rightBack, rightFront, leftFront, leftBack
-
-	motion[0] = -backRight;
-	motion[1] = -frontRight;
-	motion[2] = -frontLeft;
-	motion[3] = -backLeft;
+	motion[0] = frontLeft;
+	motion[1] = frontRight;
+	motion[2] = backLeft;
+	motion[3] = backRight;
 }
 
 bool initSDL()
@@ -72,9 +51,6 @@ int main(int argc, char *argv[])
 	rose.startStop = false;
 	signal(SIGINT, stop);
 
-	// xboxctrl_connect(&xBoxController);
-	// pthread_create(&xBoxControllerThread, NULL, updateXboxController, NULL);
-
 	if(initSDL() == false)
 	{
 		return 1;
@@ -84,81 +60,24 @@ int main(int argc, char *argv[])
 
 	while(!quit)
 	{
+		SDL_PumpEvents();
 		Uint8 *keystates = SDL_GetKeyState(NULL);
 
-		// printf("Xbox left joystick y-axis: %f", xBoxController.LJOY.y);
-
-		// double backLeft = 	xBoxController.LJOY.y - xBoxController.LJOY.x + xBoxController.RJOY.x;
-		// double frontLeft = 	xBoxController.LJOY.y + xBoxController.LJOY.x + xBoxController.RJOY.x;
-		// double backRight = 	xBoxController.LJOY.y + xBoxController.LJOY.x - xBoxController.RJOY.x;
-		// double frontRight = xBoxController.LJOY.y - xBoxController.LJOY.x - xBoxController.RJOY.x;
-
-		// float t = 0;
-
-		// if ((backLeft < t) && (backLeft > -t))
-		// 	backLeft = 0;
-		// if ((frontLeft < t) && (frontLeft > -t))
-		// 	frontLeft = 0;
-		// if ((backRight < t) && (backRight > -t))
-		// 	backRight = 0;
-		// if ((frontRight < t) && (frontRight > -t))
-		// 	frontRight = 0;
-
-		// drive(backLeft, frontLeft, backRight, frontRight);
-
-
-
-
-
-
-
-
-
-
-		// rightBack, rightFront, leftFront, leftBack
-
-		if (keystates[SDLK_a])
-		{
-			rose.send(vec({1, 1, -1, -1, 0}));
-		}
-
-		else if (keystates[SDLK_s])
-		{
-			rose.send(vec({-1, -1, 1, 1, 0}));
-		}
-
-		else if (keystates[SDLK_UP])
-		{
-			rose.send(vec({1, 1, 1, 1, 0}));
-			drive(1, 1, 1, 1);
-			printf("Up\n");
-		}
-
-		else if (keystates[SDLK_DOWN])
-		{
-			rose.send(vec({-1, -1, -1, -1, 0}));
-		}
-
-		else if(keystates[SDLK_LEFT])
-		{
-			rose.send(vec({1, -1, -1, 1, 0}));
-		}
-
-		else if(keystates[SDLK_RIGHT])
-		{
-			rose.send(vec({-1, 1, 1, -1, 0}));
-		}
-
-      /*else if(keystates[SDLK_y])
-      {
-         rose.send(vec({0, 0, 0, 0, 1}));
-      }*/
+		// Front left, front right, back left, back right
+		if (keystates[SDLK_a])			{ drive(-1,  1, -1,  1); }
+		else if(keystates[SDLK_s]) 		{ drive( 1, -1,  1, -1); }
+		else if(keystates[SDLK_UP]) 	{ drive( 1,  1,  1,  1); }
+		else if(keystates[SDLK_DOWN]) 	{ drive(-1, -1, -1, -1); }
+		else if(keystates[SDLK_LEFT]) 	{ drive(-1,  1,  1, -1); }
+		else if(keystates[SDLK_RIGHT]) 	{ drive( 1, -1, -1,  1); }
+		else if(keystates[SDLK_1]) 		{ drive( 1,  0,  0,  0); }
+		else if(keystates[SDLK_2]) 		{ drive( 0,  1,  0,  0); }
+		else if(keystates[SDLK_3]) 		{ drive( 0,  0,  1,  0); }
+		else if(keystates[SDLK_4]) 		{ drive( 0,  0,  0,  1); }
 
 		else
 		{
-			rose.send(vec({0, 0, 0, 0, 0}));
 			drive(0, 0, 0, 0);
-			printf("no up\n");
 		}
 
 		if(keystates[SDLK_q])
@@ -167,26 +86,8 @@ int main(int argc, char *argv[])
 			SDL_Quit();
 		}
 
-
 		rose.send(motion);
-
-		// rose.readClear();
-
-
-
 	}
-
-	// pthread_join(xBoxControllerThread, NULL);
-	// xboxctrl_disconnect(&xBoxController);
-
 	SDL_Quit();
 	return 0;
 }
-
-
-
-
-
-
-
-

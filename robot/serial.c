@@ -32,6 +32,7 @@ int serial_connect(serial_t *connection, char *port, int baudrate)
 	{
 		connection->port = (char *)malloc((strlen(port) + 1) * sizeof(char));
 		strcpy(connection->port, port);
+
 		if ((connection->fd = open(connection->port, O_RDWR)) == -1)
 		{
 			goto error;
@@ -42,11 +43,13 @@ int serial_connect(serial_t *connection, char *port, int baudrate)
 		DIR *dp;
 		struct dirent *ent;
 		char hasPossibleSerial;
+
 		if (!(dp = opendir(INPUT_DIR)))
 		{
 			fprintf(stderr, "Cannot find directory %s to open serial connection\n", INPUT_DIR);
 			return -1;
 		}
+
 		while ((ent = readdir(dp)))
 		{
 			const char *prefix;
@@ -58,6 +61,7 @@ int serial_connect(serial_t *connection, char *port, int baudrate)
 				{
 					connection->port = (char *)malloc((strlen(INPUT_DIR) + strlen(ent->d_name) + 1) * sizeof(char));
 					sprintf(connection->port, "%s%s", INPUT_DIR, ent->d_name);
+
 					if ((connection->fd = open(connection->port, O_RDWR | O_NOCTTY | O_NONBLOCK)) == -1)
 					{
 						free(connection->port);
@@ -70,11 +74,13 @@ int serial_connect(serial_t *connection, char *port, int baudrate)
 					}
 				}
 			}
+
 			if (hasPossibleSerial)
 			{
 				break;
 			}
 		}
+
 		if (!hasPossibleSerial)
 		{
 			fprintf(stderr, "Cannot find a serial device to open\n");
@@ -85,10 +91,12 @@ int serial_connect(serial_t *connection, char *port, int baudrate)
 	/* set connection attributes */
 	connection->baudrate = baudrate;
 	connection->parity = 0;
+
 	if (_serial_setattr(connection) == -1)
 	{
 		goto error; /* possible bad behavior */
 	}
+
 	tcflush(connection->fd, TCIFLUSH);
 	tcflush(connection->fd, TCOFLUSH);
 	connection->connected = 1;
@@ -101,15 +109,18 @@ int serial_connect(serial_t *connection, char *port, int baudrate)
 	error:
 		fprintf(stderr, "Cannot connect to the device on %s\n", connection->port);
 		connection->connected = 0;
+
 		if (connection->fd != -1)
 		{
 			close(connection->fd);
 		}
 		connection->fd = -1;
+
 		if (connection->port)
 		{
 			free(connection->port);
 		}
+
 		connection->port = NULL;
 		return -1;
 }
@@ -123,6 +134,7 @@ int serial_connect(serial_t *connection, char *port, int baudrate)
 static int _serial_setattr(serial_t *connection)
 {
 	struct termios tty;
+
 	if (tcgetattr(connection->fd, &tty) == -1)
 	{
 		return -1;
@@ -143,6 +155,7 @@ static int _serial_setattr(serial_t *connection)
 	tty.c_cc[VTIME] = 5;
 	cfsetospeed(&tty, connection->baudrate);
 	cfsetispeed(&tty, connection->baudrate);
+
 	if (tcsetattr(connection->fd, TCSANOW, &tty) == -1)
 	{
 		return -1;
@@ -173,6 +186,7 @@ static void _serial_update(serial_t *connection)
 			connection->fd = -1;
 		}
 	}
+
 	else
 	{
 		if (!connection->connected)
@@ -207,12 +221,14 @@ static void _serial_update(serial_t *connection)
 		}
 		tempbuf[bytesRead] = '\0';
 		bytesStored = strlen(connection->buffer); /* no \0 */
+
 		while (bytesStored + bytesRead >= SWBUFMAX)
 		{
 			/* shorten it by only half of the readmax value */
 			bytesStored -= SWREADMAX / 2;
 			memmove(connection->buffer, &connection->buffer[SWREADMAX / 2], (bytesStored + 1) * sizeof(char));
 		}
+
 		strcat(connection->buffer, tempbuf);
 	}
 

@@ -7,7 +7,7 @@
 #include "utility/Adafruit_PWMServoDriver.h"
 #include <Wire.h>
 
-#define DEV_ID 0
+#define DEV_ID 1
 #define ramp_const 8
 
 // Variables associated with buffers for serial comm

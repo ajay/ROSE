@@ -3,7 +3,7 @@ CFLAGS = -pedantic -Wall -Werror -std=gnu99 -O3 -o
 COMPILEC = $(CC) $(CFLAGS)
 
 CPPC = g++
-CPPFLAGS = -pedantic -Wall -std=c++11 -O3 -o
+CPPFLAGS = -pedantic -Wall -std=c++11 -O3 -Wno-maybe-uninitialized -o
 COMPILECPP = $(CPPC) $(CPPFLAGS)
 LIBS = -larmadillo -lSDL -pthread
 
@@ -24,4 +24,4 @@ test: $(OBJECTS)
 	$(COMPILECPP) $@ $^ $(LIBS)
 
 clean:
-	rm -rfv *.o Rose
+	rm -rfv *.o test
