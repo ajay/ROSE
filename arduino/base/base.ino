@@ -106,8 +106,8 @@ class QuadEncoder
 };
 
 // Arrays to hold data associated with the encoders
-QuadEncoder *encoders[4];
-static long encoder_values[4];
+QuadEncoder encoders[4];
+long encoder_values[4];
 
 // Limit values of 'x' between a certain range (a < x < b)
 int limit(int x, int a, int b)
@@ -181,10 +181,10 @@ void setup()
 	}
 
 	// Attach encoders
-	encoders[0]->attach(2, 3);
-	encoders[1]->attach(4, 5);
-	encoders[2]->attach(6, 7);
-	encoders[3]->attach(8, 11);
+	encoders[0].attach(2, 3);
+	encoders[1].attach(4, 5);
+	encoders[2].attach(6, 7);
+	encoders[3].attach(8, 11);
 
 	// Start motorshield & serial comm
 	AFMS.begin();
@@ -219,7 +219,9 @@ void loop()
 			if ((s = strrchr(buf, '[')))
 			{
 				// Parse string being read
-				sscanf(s, "[%d %d %d %d]\n", &targetv[0], &targetv[1], &targetv[2], &targetv[3]);
+				// Left front, right front, left back, right back
+				sscanf(s, "[%d %d %d %d]\n", &targetv[2], &targetv[0], &targetv[3], &targetv[1]);
+        		Serial.println("test\n");
 			}
 			memmove(buf, &e[1], strlen(&e[1]) + sizeof(char));
 		}
@@ -237,7 +239,7 @@ void loop()
 	// Read encoder values
 	for (int i = 0; i < 4; i++)
 	{
-		encoder_values[i] = encoders[i]->read();
+		encoder_values[i] = encoders[i].read();
 	}
 
 	// Send back data over serial every 100ms
