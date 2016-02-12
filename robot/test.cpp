@@ -85,7 +85,7 @@ int main(int argc, char *argv[])
 			quit = true;
 			SDL_Quit();
 		}
-
+		
 		rose.send(motion);
 	}
 	SDL_Quit();

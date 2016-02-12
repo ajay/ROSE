@@ -29,6 +29,8 @@ class Rose
 		void threadSend(const arma::vec &motion); // [rightFront, leftFront, rightBack, leftBack]
 		arma::vec threadRecv(void);
 
+		int encoderValues [4] = {};
+
 	private:
     	// Threading stuff for handling the communcation
 		arma::vec prev_motion;

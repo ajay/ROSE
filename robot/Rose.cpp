@@ -357,6 +357,28 @@ void Rose::threadSend(const vec &motion)
 
 vec Rose::threadRecv(void)
 {
+	//this->encVal encoderValues;
+
+	// char *msg;
+	
+	// Attempt to connect to all arduinos
+	struct timespec synctime;
+	synctime.tv_nsec = SYNC_NSEC % 1000000000;
+	synctime.tv_sec = SYNC_NSEC / 1000000000;
+
+
+	// Read a message from each device
+	nanosleep(&synctime, NULL);
+	char *msg;
+	for (serial_t *connection : this->connections)
+	{
+		msg = serial_read(connection);
+		printf("%s\n", msg);
+	}	
+	
+
+	// printf("in recv\n");
+
 	return zeros<vec>(4);
 }
 
