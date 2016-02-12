@@ -16,7 +16,6 @@
 // #include <string>
 // #include <time.h>
 
-
 chili_landmarks::chili_landmarks()
 {
 }
@@ -76,6 +75,11 @@ void chili_landmarks::update()
 
 	    // Clone input image to label chilitags on & display
 		// cv::Mat outputImage = inputImage.clone();
+
+		for (int i=0; i<1024; i++)
+		{
+			this->tags[i][0] = 0;
+		}
 
 		for (const std::pair<int, chilitags::Quad> & tag : detected_tags)
 		{
