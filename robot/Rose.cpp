@@ -1,6 +1,8 @@
 #include <dirent.h>
 #include <pthread.h>
 #include <termios.h>
+#include <string>
+#include <cstring>
 
 #include "Rose.h"
 
@@ -357,10 +359,6 @@ void Rose::threadSend(const vec &motion)
 
 vec Rose::threadRecv(void)
 {
-	//this->encVal encoderValues;
-
-	// char *msg;
-	
 	// Attempt to connect to all arduinos
 	struct timespec synctime;
 	synctime.tv_nsec = SYNC_NSEC % 1000000000;
@@ -370,10 +368,44 @@ vec Rose::threadRecv(void)
 	// Read a message from each device
 	nanosleep(&synctime, NULL);
 	char *msg;
+
 	for (serial_t *connection : this->connections)
 	{
 		msg = serial_read(connection);
 		printf("%s\n", msg);
+
+		//convert msg into int array
+		if(msg != NULL)
+		{
+			char one[10];
+			char two[10];
+			char three[10];
+			char four[10];
+			char five[10];
+			char six[10];
+			char seven[10];
+			char eight[10];
+			char nine[10];
+
+			sscanf(msg, "%s %s %s %s %s %s %s %s %s", one, two, three, four, five, six, seven, eight, nine);
+
+			int length = strlen(nine);
+			nine[length - 1] = '\0';
+
+			this->encoderValues[0] = atoi(six);
+			this->encoderValues[1] = atoi(seven);
+			this->encoderValues[2] = atoi(eight);
+			this->encoderValues[3] = atoi(nine);
+
+			//print encoder values
+			for(int y =0; y < 4; y++)
+			{
+				printf("%d ", this->encoderValues[y]);
+			}
+			printf("\n");
+		}
+
+
 	}	
 	
 
