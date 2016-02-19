@@ -20,7 +20,7 @@ static bool test_flag = false;
 void update_flag()
 {
 	// test_flag = <something>
-	printf("placeholder\n");
+	printf("test_flag is: %d\n", test_flag);
 }
 
 void drive(double frontLeft, double frontRight, double backLeft, double backRight)

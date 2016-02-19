@@ -15,20 +15,9 @@ using namespace arma;
 // Limit the value of x between min and max (min < x < max)
 static double limitf(double x, double min, double max)
 {
-	if (x < min)
-	{
-		return min;
-	}
-
-	else if (x > max)
-	{
-		return max;
-	}
-
-	else
-	{
-		return x;
-	}
+	if 		(x < min) 	{ return min; }
+	else if (x > max) 	{ return max; }
+	else 				{ return x;	  }
 }
 
 static void *commHandler(void *args);
@@ -64,10 +53,12 @@ bool Rose::connect(void)
 		return -1;
 	}
 
-	// Attempt to connect to all arduinos
+	// Create delay to read at correct rate
 	struct timespec synctime;
 	synctime.tv_nsec = SYNC_NSEC % 1000000000;
 	synctime.tv_sec = SYNC_NSEC / 1000000000;
+
+	// Attempt to connect to all arduinos
 	for (char *pport : this->pports)
 	{
 		// Connect Device
@@ -137,14 +128,14 @@ bool Rose::connect(void)
 	{
 		printf("[ROSE] Connected to all\n");
 
-		// create thread locks and thread
+		// Create thread locks and threads
 		this->update_thread = new pthread_t;
 		this->commSendLock = new pthread_mutex_t;
 		this->commRecvLock = new pthread_mutex_t;
 		pthread_mutex_init(this->commSendLock, NULL);
 		pthread_mutex_init(this->commRecvLock, NULL);
 
-		// start the thread
+		// Start the update thread
 		pthread_create(this->update_thread, NULL, commHandler, this);
 
 		return true;
@@ -153,21 +144,17 @@ bool Rose::connect(void)
 
 static void *commHandler(void *args)
 {
-	Rose *bot = (Rose *)args;
+	Rose *rose = (Rose *)args;
 
-	while (!(bot->startStop))
+	while (!(rose->startStop))
 	{
 		vec tempSendVec;
-		pthread_mutex_lock(bot->commSendLock);
-		tempSendVec = bot->commSend;
-		pthread_mutex_unlock(bot->commSendLock);
-		bot->threadSend(tempSendVec);
+		pthread_mutex_lock(rose->commSendLock);
+		tempSendVec = rose->commSend;
+		pthread_mutex_unlock(rose->commSendLock);
+		rose->threadSend(tempSendVec);
 
-		vec tempRecvVec = bot->threadRecv();
-		pthread_mutex_lock(bot->commRecvLock);
-		bot->commRecv = tempRecvVec;
-		pthread_mutex_unlock(bot->commRecvLock);
-
+		rose->threadRecv();
 	}
 
 	return NULL;
@@ -231,42 +218,12 @@ Rose::~Rose(void)
 
 void Rose::readClear()
 {
-	/* Idea is here:
-	struct timespec synctime;
-	synctime.tv_nsec = SYNC_NSEC % 1000000000;
-	synctime.tv_sec = SYNC_NSEC / 1000000000;
-
-	nanosleep(&synctime, NULL);
-	char *msg;
-	for (serial_t *connection : this->connections)
-	{
-		do
-		{
-			msg = serial_read(connection);
-			printf("Read message was: %s\n", msg);
-		} while (!msg || strlen(msg) == 0);
-	}
-	*/
-
-	int devid;
-
 	// Go through every device
 	for (size_t i = 0; i < this->connections.size(); i++)
 	{
-		switch ((devid = this->ids[i]))
-		{
-			case 1:
-				serial_read(this->connections[i]);
-				break;
-			case 2:
-				serial_read(this->connections[i]); // just read everything, do nothing with it
-				break;
-			default:
-				break;
-		}
+		// Just read everything, do nothing with it
+		serial_read(this->connections[i]);
 	}
-
-	return;
 }
 
 int Rose::numconnected(void)
@@ -357,61 +314,46 @@ void Rose::threadSend(const vec &motion)
 	}
 }
 
-vec Rose::threadRecv(void)
+void Rose::threadRecv(void)
 {
-	// Attempt to connect to all arduinos
+	// Create delay to read at correct rate
 	struct timespec synctime;
 	synctime.tv_nsec = SYNC_NSEC % 1000000000;
 	synctime.tv_sec = SYNC_NSEC / 1000000000;
-
-
-	// Read a message from each device
 	nanosleep(&synctime, NULL);
-	char *msg;
 
-	for (serial_t *connection : this->connections)
+	for (int i = 0; i < (int)this->connections.size(); i++)
 	{
-		msg = serial_read(connection);
-		printf("%s\n", msg);
+		char* msg = serial_read(this->connections[i]);
+		printf("[ROSE] RECEIVED: %s\n", msg);
 
-		//convert msg into int array
-		if(msg != NULL)
+		switch (this->ids[i])
 		{
-			char one[10];
-			char two[10];
-			char three[10];
-			char four[10];
-			char five[10];
-			char six[10];
-			char seven[10];
-			char eight[10];
-			char nine[10];
+			case 1: // Arduino #1: Drive base
 
-			sscanf(msg, "%s %s %s %s %s %s %s %s %s", one, two, three, four, five, six, seven, eight, nine);
+				// Convert msg into int array
+				if ((msg != NULL) && (strstr(msg, "\n") != NULL))
+				{
+					sscanf(msg, "[%*d %d %d %d %d %d %d %d %d]\n",
+						&this->motor_speeds[0],
+						&this->motor_speeds[1],
+						&this->motor_speeds[2],
+						&this->motor_speeds[3],
+						&this->encoder[0],
+						&this->encoder[1],
+						&this->encoder[2],
+						&this->encoder[3]);
 
-			int length = strlen(nine);
-			nine[length - 1] = '\0';
+					// Test: print encoder values
+					for(int y =0; y < 4; y++)
+					{
+						printf("%d ", this->encoder[y]);
+					}
 
-			this->encoderValues[0] = atoi(six);
-			this->encoderValues[1] = atoi(seven);
-			this->encoderValues[2] = atoi(eight);
-			this->encoderValues[3] = atoi(nine);
-
-			//print encoder values
-			for(int y =0; y < 4; y++)
-			{
-				printf("%d ", this->encoderValues[y]);
-			}
-			printf("\n");
+					printf("\n");
+				}
 		}
-
-
-	}	
-	
-
-	// printf("in recv\n");
-
-	return zeros<vec>(4);
+	}
 }
 
 vec Rose::recv(void)

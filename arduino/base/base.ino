@@ -112,18 +112,9 @@ long encoder_values[4];
 // Limit values of 'x' between a certain range (a < x < b)
 int limit(int x, int a, int b)
 {
-	if (x > b)
-	{
-		return b;
-	}
-	else if (x < a)
-	{
-		return a;
-	}
-	else
-	{
-		return x;
-	}
+	if 		(x > b)	{ return b; }
+	else if (x < a)	{ return a; }
+	else 			{ return x; }
 }
 
 // Ramps motor based on ramp_const
@@ -221,7 +212,7 @@ void loop()
 				// Parse string being read
 				// Left front, right front, left back, right back
 				sscanf(s, "[%d %d %d %d]\n", &targetv[2], &targetv[0], &targetv[3], &targetv[1]);
-        		Serial.println("test\n");
+//        		Serial.println("test\n");
 			}
 			memmove(buf, &e[1], strlen(&e[1]) + sizeof(char));
 		}
@@ -247,14 +238,14 @@ void loop()
 	{
 		sprintf(wbuf, "[%d %d %d %d %d %ld %ld %ld %ld]\n",
 				DEV_ID,
-				prevv[0],
-				prevv[1],
 				prevv[2],
+				prevv[0],
 				prevv[3],
-				encoder_values[0],
-				encoder_values[1],
+				prevv[1],
 				encoder_values[2],
-				encoder_values[3]);
+				encoder_values[0],
+				encoder_values[3],
+				encoder_values[1]);
 		Serial.print(wbuf);
 		msecs = millis();
 	}
