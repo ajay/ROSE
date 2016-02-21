@@ -1,5 +1,4 @@
 #include "pfilter.h"
-#include "sim_lidar.h"
 #include "sim_robot.h"
 #include <cmath>
 #include <random>
@@ -183,7 +182,7 @@ void pfilter::observe(mat observations) {
  *  @param mu (output) the position ( x, y, theta )
  *  @param sigma (output) the error
  */
-void pfilter::predict(vec &mu, double &sigma) {
+void pfilter::predict(vec &mu, vec &sigma) {
   // TODO
   mu = zeros<vec>(3);
   for (int i = 0; i < this->particles.size(); i++) {
@@ -193,7 +192,7 @@ void pfilter::predict(vec &mu, double &sigma) {
   sigma = zeros<vec>(3);
   // var = (Particle's x_i-Mean)^2 / N 
   for (int i = 0; i < this->particles.size(); i++) {
-    sigma += vec({pow((this->particles[i].x - mu[i][0]),2), pow((this->particles[i].y - mu[i][1]),2), pow((this->particles[i].t - mu[i][2]),2)});
+    sigma += vec({pow((this->particles[i].x - mu[0]),2), pow((this->particles[i].y - mu[1]),2), pow((this->particles[i].t - mu[2]),2)});
   }
   sigma /= this->particles.size();
 }

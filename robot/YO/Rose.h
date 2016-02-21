@@ -27,10 +27,9 @@ class Rose
 		pthread_mutex_t *commSendLock;
 		pthread_mutex_t *commRecvLock;
 		void threadSend(const arma::vec &motion); // [rightFront, leftFront, rightBack, leftBack]
-		void threadRecv(void);
+		arma::vec threadRecv(void);
 
-		int motor_speeds[4] = {-1};
-		int encoder[4] = {-1};
+		int encoderValues [4] = {};
 
 	private:
     	// Threading stuff for handling the communcation

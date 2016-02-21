@@ -1,0 +1,6 @@
+[manager drive FORWARD 100]\n
+[manager drive BACKWARDS 50]\n
+[manager drive LEFT 30]\n
+[manager drive RIGHT 255]\n
+
+[manager stop]\n

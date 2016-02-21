@@ -1,5 +1,6 @@
 #include <armadillo>
 #include <signal.h>
+#include <thread>
 #include "SDL/SDL.h"
 
 #include "Rose.h"
@@ -10,6 +11,17 @@ static int stopsig;
 using namespace arma;
 static Rose rose;
 static arma::vec motion = zeros<vec>(4);
+
+static bool test_flag = false;
+
+// Kendrick:
+// Test flag is updated here
+// Only add code here for mongo connection
+void update_flag()
+{
+	// test_flag = <something>
+	printf("test_flag is: %d\n", test_flag);
+}
 
 void drive(double frontLeft, double frontRight, double backLeft, double backRight)
 {
@@ -48,6 +60,8 @@ void stop(int signo)
 
 int main(int argc, char *argv[])
 {
+	std::thread db_update(update_flag);
+
 	rose.startStop = false;
 	signal(SIGINT, stop);
 
@@ -85,7 +99,7 @@ int main(int argc, char *argv[])
 			quit = true;
 			SDL_Quit();
 		}
-		
+
 		rose.send(motion);
 	}
 	SDL_Quit();

@@ -1,23 +1,26 @@
 #include "sim_map.h"
 #include "sim_robot.h"
-//#include "sim_lidar.h"
-#include "sim_window.h"
+//#include "sim_window.h"
 #include "pfilter.h"
 #include "sim_landmark.h"
 #include <cstdio>
 #include <armadillo>
-#include <SDL2/SDL.h>
+#include <SDL/SDL.h>
 #include <cassert>
 #include <iostream>
 #include <cstdlib>
 #include <thread>
+#include <signal.h>
+#include "draw.h"
+#include "sdldef.h"
 
-#include "chilitag_landmark.h"
+#include "chili_landmarks.h"
 #include "Rose.h"
 
 using namespace std;
 using namespace arma;
 
+SDL_Event event;
 
 static chili_landmarks chili;
 
@@ -57,6 +60,37 @@ void stop(int signo)
 	exit(1);
 }
 
+
+SDL_Surface *initSDL(int w, int h)
+{
+	if (SDL_Init(SDL_INIT_EVERYTHING) == -1)
+	{
+		return NULL;
+	}
+
+	SDL_Surface *screen = SDL_SetVideoMode(w,h, 32, SDL_SWSURFACE);
+
+	if(screen == NULL)
+	{
+		return NULL;
+	}
+
+	SDL_WM_SetCaption("rose", NULL);
+
+	return screen;
+}
+
+void screenblit(SDL_Surface *s, icube &frame) {
+for (int i = 0; i < (int)frame.n_rows; i++) {
+    for (int j = 0; j < (int)frame.n_cols; j++) {
+      uint32_t color =
+          (((uint8_t)frame(i,j,0)) << 16) |
+          (((uint8_t)frame(i,j,1)) << 8) |
+          (((uint8_t)frame(i,j,2)) << 0);
+      ((uint32_t *)s->pixels)[XY2P(j, i, s->w, s->h)] = color;
+    }
+  }
+}
 
 // This is a simpler landmark extractor with the goal of extracting the location of the landmarks easily
 /*void sim_tag_extract(mat &tag_landmarks,
@@ -125,7 +159,10 @@ int main() {
   pf.set_noise(6.0, 1.5);
   
   // start up the window
-  SDL_Surface *screen = sim_window::init(map.n_cols * 2, map.n_rows * 2);
+  SDL_Surface *screen = initSDL(map.n_cols, map.n_rows);
+  if (!screen) {
+    return 1;
+  }
   icube frame(map.n_rows, map.n_cols, 3, fill::zeros), newframe;
   bool left = false;
   bool right = false;
@@ -135,6 +172,7 @@ int main() {
 
   while (!quit) {
     // see if something is about to quit
+
     SDL_PumpEvents();
 		Uint8 *keystates = SDL_GetKeyState(NULL);
 
@@ -155,10 +193,12 @@ int main() {
 			drive(0, 0, 0, 0);
 		}
 
-		if(keystates[SDLK_q] || rose.startStop)
+		if(keystates[SDLK_q])
 		{
+      printf("QUITTING\n");
 			quit = true;
 			SDL_Quit();
+      continue;
 		}
     forward = keystates[SDLK_UP];
 		backward = keystates[SDLK_DOWN];
@@ -171,6 +211,8 @@ int main() {
     //mat sensor_values = lidar.sense();
     //mat tag_landmarks;
     //sim_tag_extract(tag_landmarks, sensor_values, landmarks, robot, map);
+    
+
     mat tag_landmarks = sense();
     pf.observe(tag_landmarks);
     //robot.move(forward * 2, (left - right) * .1);
@@ -179,7 +221,7 @@ int main() {
 
     // predict the position
     vec mu;
-    double sigma;
+    vec sigma;
     pf.predict(mu, sigma);
     cout << "position: " << mu(0) << ", " << mu(1) << ", angle: " << mu(2) * 180 / M_PI << ", error: " << sigma << endl;
 
@@ -188,17 +230,27 @@ int main() {
     for (sim_landmark &lm : landmarks) {
       lm.blit(frame);
     }
+    ivec red({255,0,0});
+    for (int i = 0; i < landmarks.size(); i++) 
+    {
+      if (tag_landmarks(2,i) > 0.5) {
+        vec pt({(double)landmarks[i].x,(double)landmarks[i].y});
+        draw_circle(frame, red, pt, 4);
+        draw_circle(frame, red, pt, 5);
+        draw_circle(frame, red, pt, 6);
+      }
+    }
     //lidar.blit(frame);
     pf.blit(frame);
     //robot.blit(frame);
-    sim_window::blit(screen, frame);
+    screenblit(screen, frame);
     SDL_Delay(25);
 
     // draw the screen
-    sim_window::update();
+    SDL_Flip(screen);
   }
   rose.disconnect();
 
   // clean up
-  sim_window::destroy();
+  SDL_Quit();
 }
