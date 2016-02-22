@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel = "stylesheet" href = "styles.css">
+  </head>
+  <body>
+     <h1 id="status" style="text-align:center;">OFF</h1>
+     <div style="text-align:center">
+       <button type="button" onclick="go()">Go</button>
+       <br>
+       <button type="button" onclick="stop()">Stop</button>
+     </div>
+     
+     <script>
+       function go()
+       {
+       	 document.getElementById("status").innerHTML = "GO";
+       	 document.getElementById("status").style.color = "green";
+       	 
+       }
+       function stop()
+       {
+       	 document.getElementById("status").innerHTML = "STOP";
+       	 document.getElementById("status").style.color = "red";
+       	 
+       }
+     </script>
+  </body>
+</html>
+
