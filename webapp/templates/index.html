@@ -3,7 +3,7 @@
  <title>WebApp Version 1.0</title>
 </head>
 <body>
- <h1 id="status" style="text-align:center;">{{userinputs[0].message}}</h1>
+ <h1 id="status" style="text-align:center;">{{"OFF" if (userinputs[0] == null) else (userinputs[0].message)}}</h1>
  <div style="text-align:center;">
  <form action="/write" method="POST" id="the_form" hidden>
   <input type="text" name="userinput" id="userinput">

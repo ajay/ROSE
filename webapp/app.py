@@ -25,6 +25,8 @@ def index():
 @app.route("/write", methods=['POST'])
 def write():
     userinput = request.form.get("userinput")
+    if handle.mycollection.find().count() == 0:
+    	handle.mycollection.insert({"_id":1},{"message":userinput})
     oid = handle.mycollection.update({"_id":1},{"message":userinput})
     return redirect ("/")
 
