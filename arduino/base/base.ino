@@ -242,10 +242,10 @@ void loop()
 				prevv[0],
 				prevv[3],
 				prevv[1],
-				encoder_values[2],
 				encoder_values[0],
-				encoder_values[3],
-				encoder_values[1]);
+				encoder_values[2],
+				encoder_values[1],
+				encoder_values[3]);
 		Serial.print(wbuf);
 		msecs = millis();
 	}
