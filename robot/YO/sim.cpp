@@ -121,20 +121,32 @@ int main() {
 
   // load the map (custom)
   sim_map map;
-  map.load("map.jpg");
+  map.load("map_engineering_b_wing.jpg");
+
+  // 2/24/16 Engineering Building
+  // 0 (88, 202)
+  // 1 (601, 617)
+  // 2 (0, 171)
+  // 3 (98, 627)
+  // 4 (384, 627)
+  // 5 (1225, 627)
+  // 6 (3400, 513)
+  // 7 (3442, 583)
+  // 8 (1961, 539)
+  // 9 (762, 539)
 
   // create the landmarks (custom)
   vector<sim_landmark> landmarks;
-  landmarks.push_back(sim_landmark(54, 32));
-  landmarks.push_back(sim_landmark(256, 150));
-  landmarks.push_back(sim_landmark(274, 302));
-  landmarks.push_back(sim_landmark(450, 374));
-  landmarks.push_back(sim_landmark(202, 206));
-  landmarks.push_back(sim_landmark(576, 24));
-  landmarks.push_back(sim_landmark(0, 230));
-  landmarks.push_back(sim_landmark(522, 168));
-  landmarks.push_back(sim_landmark(158, 134));
-  landmarks.push_back(sim_landmark(116, 374));
+  landmarks.push_back(sim_landmark(88, 202));
+  landmarks.push_back(sim_landmark(601, 617));
+  landmarks.push_back(sim_landmark(0, 171));
+  landmarks.push_back(sim_landmark(98, 627));
+  landmarks.push_back(sim_landmark(384, 627));
+  landmarks.push_back(sim_landmark(1225, 627));
+  landmarks.push_back(sim_landmark(3400, 513));
+  landmarks.push_back(sim_landmark(3442, 583));
+  landmarks.push_back(sim_landmark(1961, 539));
+  landmarks.push_back(sim_landmark(762, 539));
 
   // load the robot
   //sim_robot robot(&map);
@@ -157,7 +169,7 @@ int main() {
   pfilter pf(1000, &map, landmarks);
   pf.set_size(12);
   pf.set_noise(6.0, 1.5);
-  
+
   // start up the window
   SDL_Surface *screen = initSDL(map.n_cols, map.n_rows);
   if (!screen) {
@@ -213,7 +225,7 @@ int main() {
     //mat sensor_values = lidar.sense();
     //mat tag_landmarks;
     //sim_tag_extract(tag_landmarks, sensor_values, landmarks, robot, map);
-    
+
 
     mat tag_landmarks = sense();
     cout << "sensed:\n" << tag_landmarks << endl;
@@ -234,7 +246,7 @@ int main() {
       lm.blit(frame);
     }
     ivec red({255,0,0});
-    for (int i = 0; i < landmarks.size(); i++) 
+    for (int i = 0; i < landmarks.size(); i++)
     {
       if (tag_landmarks(2,i) > 0.5) {
         vec pt({(double)landmarks[i].x,(double)landmarks[i].y});
