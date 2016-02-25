@@ -33,8 +33,8 @@ mat sense() {
   mat sv(3, 10);
   for (int j = 0; j < 10; j++) {
     sv.col(j) = vec({
-        chili.tags[j][1]*2,
-        chili.tags[j][2]*2,
+        chili.tags[j][1],
+        chili.tags[j][2],
         chili.tags[j][0]});
   }
   return sv;
@@ -164,10 +164,12 @@ int main() {
     return 1;
   }
   icube frame(map.n_rows, map.n_cols, 3, fill::zeros), newframe;
-  bool left = false;
-  bool right = false;
+  bool turn_left = false;
+  bool turn_right = false;
   bool forward = false;
   bool backward = false;
+  bool strafe_left = false;
+  bool strafe_right = false;
   bool quit = false;
 
   while (!quit) {
@@ -177,12 +179,12 @@ int main() {
 		Uint8 *keystates = SDL_GetKeyState(NULL);
 
 		// Front left, front right, back left, back right
-		if (keystates[SDLK_a])			{ drive(-1,  1, -1,  1); }
-		else if(keystates[SDLK_s]) 		{ drive( 1, -1,  1, -1); }
-		else if(keystates[SDLK_UP]) 	{ drive( 1,  1,  1,  1); }
-		else if(keystates[SDLK_DOWN]) 	{ drive(-1, -1, -1, -1); }
-		else if(keystates[SDLK_LEFT]) 	{ drive(-1,  1,  1, -1); }
-		else if(keystates[SDLK_RIGHT]) 	{ drive( 1, -1, -1,  1); }
+		if (keystates[SDLK_a])			  { drive(-1,  1, -1,  1); }  // left turn
+		else if(keystates[SDLK_d])    { drive( 1, -1,  1, -1); }  // right turn
+		else if(keystates[SDLK_w]) 	  { drive( 1,  1,  1,  1); }  // up
+		else if(keystates[SDLK_s]) 	  { drive(-1, -1, -1, -1); }  // down
+		else if(keystates[SDLK_q]) 	  { drive(-1,  1,  1, -1); }  // left strafe
+		else if(keystates[SDLK_e]) 	  { drive( 1, -1, -1,  1); }  // right strafe
 		else if(keystates[SDLK_1]) 		{ drive( 1,  0,  0,  0); }
 		else if(keystates[SDLK_2]) 		{ drive( 0,  1,  0,  0); }
 		else if(keystates[SDLK_3]) 		{ drive( 0,  0,  1,  0); }
@@ -200,12 +202,12 @@ int main() {
 			SDL_Quit();
       continue;
 		}
-    forward = keystates[SDLK_UP];
-		backward = keystates[SDLK_DOWN];
-		left = keystates[SDLK_LEFT];
-    right = keystates[SDLK_RIGHT];
-    
-    
+    forward = keystates[SDLK_w];
+		backward = keystates[SDLK_s];
+		turn_left = keystates[SDLK_a];
+    turn_right = keystates[SDLK_d];
+    strafe_left = keystates[SDLK_q];
+    strafe_right = keystates[SDLK_e];
 
     // update the robot
     //mat sensor_values = lidar.sense();
@@ -215,9 +217,9 @@ int main() {
 
     mat tag_landmarks = sense();
     pf.observe(tag_landmarks);
-    //robot.move(forward * 2, (left - right) * .1);
+    //robot.move((forward - backward), (strafe_right - strafe_left), (turn_left - turn_right) * .1);
     rose.send(motion);
-    pf.move((forward - backward) * 2, (left - right) * .1);
+    pf.move((forward - backward), (strafe_right - strafe_left), (turn_left - turn_right) * .1);
 
     // predict the position
     vec mu;
