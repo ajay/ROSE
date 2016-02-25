@@ -24,6 +24,18 @@ SDL_Event event;
 
 static chili_landmarks chili;
 
+icube bilinint(icube frame) {
+  icube f((frame.n_rows - 1) / 2 + 1, (frame.n_cols - 1) / 2 + 1, 3, fill::zeros);
+  for (int i = 0; i < (int)frame.n_rows; i++) {
+    for (int j = 0; j < (int)frame.n_cols; j++) {
+      f(i / 2, j / 2, 0) += frame(i, j, 0) / 4;
+      f(i / 2, j / 2, 1) += frame(i, j, 1) / 4;
+      f(i / 2, j / 2, 2) += frame(i, j, 2) / 4;
+    }
+  }
+  return f;
+}
+
 void update_chili()
 {
 	chili.update();
@@ -247,6 +259,7 @@ int main() {
     pf.blit(frame);
     //robot.blit(frame);
     screenblit(screen, frame);
+    frame = bilinint(frame);
     SDL_Delay(25);
 
     // draw the screen
