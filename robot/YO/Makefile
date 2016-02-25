@@ -5,7 +5,6 @@ CFLAGS = `pkg-config --cflags opencv` \
 LIBS = -L/usr/local/lib \
 			 `pkg-config --libs opencv` \
 			 -larmadillo \
-			 -lSDL2 \
 			 -lSDL \
 			 -lchilitags \
 			 -pthread

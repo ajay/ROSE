@@ -83,11 +83,10 @@ static bool within(double x, double a, double b) {
   return a <= x && x <= b;
 }
 
-void sim_robot::move(double v, double w) {
-  v = limitf(v, -2, 2); // limit movement for PHYSICAL reasons
-  this->t += w + gaussianNoise(this->ws) + v/4 * gaussianNoise(this->ws);
-  double x = this->x + (v + gaussianNoise(this->vs)) * cos(this->t);
-  double y = this->y + (v + gaussianNoise(this->vs)) * sin(this->t);
+void sim_robot::move(double vy, double vx, double w) { // no limits to the thingy
+  this->t += w + gaussianNoise(this->ws);
+  double x = this->x + (vy + gaussianNoise(this->vs)) * cos(this->t) + (vx + gaussianNoise(this->vs)) * sin(this->t);
+  double y = this->y + (vy + gaussianNoise(this->vs)) * sin(this->t) + (vx + gaussianNoise(this->vs)) * -cos(this->t);
   if (!this->collided(x, y)) {
     this->x = x;
     this->y = y;

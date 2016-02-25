@@ -92,10 +92,10 @@ static double gaussianNoise(double sigma) {
  *  @param v the velocity
  *  @param w the angular velocity
  */
-void pfilter::move(double v, double w) {
+void pfilter::move(double vy, double vx, double w) {
   double xp=0; double yp=0; double tp=0;
   for (int i=0;i<particles.size();i++){
-    particles[i].move(v,w);
+    particles[i].move(vy,vx,w);
     // circular world!!!!
     sim_robot &bot = particles[i];
     if (bot.x < 0) {
