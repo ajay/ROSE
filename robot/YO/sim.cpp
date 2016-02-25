@@ -219,7 +219,7 @@ int main() {
 			drive(0, 0, 0, 0);
 		}
 
-		if(keystates[SDLK_q])
+		if(keystates[SDLK_ESC])
 		{
       printf("QUITTING\n");
 			quit = true;
