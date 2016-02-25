@@ -216,6 +216,7 @@ int main() {
     
 
     mat tag_landmarks = sense();
+    cout << "sensed:\n" << tag_landmarks << endl;
     pf.observe(tag_landmarks);
     //robot.move((forward - backward), (strafe_right - strafe_left), (turn_left - turn_right) * .1);
     rose.send(motion);
