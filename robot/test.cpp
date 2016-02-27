@@ -11,6 +11,7 @@ static int stopsig;
 using namespace arma;
 static Rose rose;
 static arma::vec motion = zeros<vec>(4);
+bool drive_kill = true;
 
 static bool test_flag = false;
 
@@ -29,6 +30,29 @@ void drive(double frontLeft, double frontRight, double backLeft, double backRigh
 	motion[1] = frontRight;
 	motion[2] = backLeft;
 	motion[3] = backRight;
+}
+
+
+// Takes in a value between -1 and 1, and drives straight
+// until a drive_kill flag is tripped 
+void driveStraight(double speed)
+{
+    speed = 0.5
+    drive_kill = false;
+    while (!drive_kill)
+    {
+        // Put pid stuff here
+
+        // 4 Wheels
+        // motion[0] --> rightFront wheel
+        // takes in value between -1 and 1 (1 is full speed forward)
+        // Ignore speed parameter for now, and go at 0.5
+        // base_velocity = 0.5
+        // read encoders through array (rose->encoders[0])
+        // leftFront, rightFront, leftBack, rightBack- encoders and motors
+
+        
+    }
 }
 
 bool initSDL()

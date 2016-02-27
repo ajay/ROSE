@@ -13,7 +13,7 @@ class sim_robot {
     void set_pose(double x, double y, double t);
     void set_noise(double vs, double ws);
     void attach_lidar(void *lidar);
-    void move(double vy, double vx, double w);
+    void move(double vx, double vy, double w);
     void blit(arma::icube &screen);
 
     double x;

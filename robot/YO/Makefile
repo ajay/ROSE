@@ -14,7 +14,6 @@ OBJS = sim_map.o sim_robot.o sim_landmark.o \
 			 chili_landmarks.o \
 			 serial.o Rose.o
 
-
 CC = gcc
 CCFLAGS = -pedantic -Wall -Werror -std=gnu99 -O3 -o
 COMPILEC = $(CC) $(CCFLAGS)

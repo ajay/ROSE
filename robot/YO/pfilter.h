@@ -9,11 +9,12 @@
 
 class pfilter {
   public:
-    pfilter(int nparticles, sim_map *map, std::vector<sim_landmark> &landmarks);
+    pfilter(void);
+    pfilter(int nparticles, sim_map *map, std::vector<sim_landmark> &landmarks, int x, int y, int t);
     ~pfilter(void);
-    void move(double vy, double vx, double w);
+    void move(double vx, double vy, double w);
     void observe(arma::mat observations);
-    void predict(arma::vec &mu, arma::vec &sigma);
+    void predict(arma::vec &mu, arma::mat &sigma);
     void set_noise(double vs, double ws);
     void set_size(double r);
     void blit(arma::icube &screen);
