@@ -78,7 +78,7 @@ class QuadEncoder
 		{
 			if (pin[0] == 0 || pin[1] == 0)
 				return;
-			// FSA : reg :: 00 01 11 10
+			// FSM : reg :: 00 01 11 10
 			//     : rev :: 00 10 11 01
 			char new_state[2] = { digitalRead(pin[0]) == HIGH,
 								  digitalRead(pin[1]) == HIGH };

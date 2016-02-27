@@ -233,7 +233,7 @@ int main() {
   //sim_lidar lidar(&robot);
   //lidar.set_noise(1.0, 0.1);
   std::thread detect(update_chili);
-  std::thread draw(draw_things);
+//  std::thread draw(draw_things);
 
   while (!quit) {
     // see if something is about to quit
@@ -293,6 +293,8 @@ int main() {
     mat sigma;
     pf.predict(mu, sigma);
     cout << "position: " << mu(0) << ", " << mu(1) << ", angle: " << mu(2) * 180 / M_PI << "\nerror: \n" << sigma << endl;
+
+    draw_things();
   }
 
   rose.disconnect();
