@@ -4,7 +4,7 @@
 
 #include <Adafruit_MotorShield.h>
 #include <string.h>
-#include "utility/Adafruit_PWMServoDriver.h"
+#include "utility/Adafruit_MS_PWMServoDriver.h"
 #include <Wire.h>
 
 #define DEV_ID 1

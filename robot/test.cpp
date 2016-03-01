@@ -1,7 +1,8 @@
 #include <armadillo>
 #include <signal.h>
 #include <thread>
-#include "SDL/SDL.h"
+#include "SDL2/SDL.h"
+// #include "SDL_ttf.h"
 
 #include "Rose.h"
 
@@ -34,10 +35,10 @@ void drive(double frontLeft, double frontRight, double backLeft, double backRigh
 
 
 // Takes in a value between -1 and 1, and drives straight
-// until a drive_kill flag is tripped 
+// until a drive_kill flag is tripped
 void driveStraight(double speed)
 {
-    speed = 0.5
+    speed = 0.5;
     drive_kill = false;
     while (!drive_kill)
     {
@@ -51,27 +52,25 @@ void driveStraight(double speed)
         // read encoders through array (rose->encoders[0])
         // leftFront, rightFront, leftBack, rightBack- encoders and motors
 
-        
+
     }
 }
 
-bool initSDL()
+SDL_Surface* initSDL()
 {
-	if (SDL_Init(SDL_INIT_EVERYTHING) == -1)
-	{
-		return false;
-	}
+	SDL_Init(SDL_INIT_VIDEO);
 
-	SDL_Surface *screen = SDL_SetVideoMode(200, 200, 32, SDL_SWSURFACE);
+	int width = 200;
+	int height = 200;
 
-	if(screen == NULL)
-	{
-		return false;
-	}
+	static SDL_Window *window = SDL_CreateWindow("simulation",
+	      SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+	      width, height, SDL_WINDOW_SHOWN);
+	static SDL_Renderer *renderer = SDL_CreateRenderer(window, -1,	      SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+	static SDL_Surface *screen = SDL_CreateRGBSurface(0, width, height, 32, 0, 0, 0, 0);
+	static SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, screen);
 
-	SDL_WM_SetCaption("rose", NULL);
-
-	return true;
+	return screen;
 }
 
 void stop(int signo)
@@ -89,36 +88,51 @@ int main(int argc, char *argv[])
 	rose.startStop = false;
 	signal(SIGINT, stop);
 
-	if(initSDL() == false)
-	{
-		return 1;
-	}
+	SDL_Surface *screen = initSDL();
 
 	bool quit = false;
+
+	double v = 0.5; // velocity
 
 	while(!quit)
 	{
 		SDL_PumpEvents();
-		Uint8 *keystates = SDL_GetKeyState(NULL);
+		const Uint8 *keystates = SDL_GetKeyboardState(NULL);
 
 		// Front left, front right, back left, back right
-		if (keystates[SDLK_a])			{ drive(-1,  1, -1,  1); }
-		else if(keystates[SDLK_s]) 		{ drive( 1, -1,  1, -1); }
-		else if(keystates[SDLK_UP]) 	{ drive( 1,  1,  1,  1); }
-		else if(keystates[SDLK_DOWN]) 	{ drive(-1, -1, -1, -1); }
-		else if(keystates[SDLK_LEFT]) 	{ drive(-1,  1,  1, -1); }
-		else if(keystates[SDLK_RIGHT]) 	{ drive( 1, -1, -1,  1); }
-		else if(keystates[SDLK_1]) 		{ drive( 1,  0,  0,  0); }
-		else if(keystates[SDLK_2]) 		{ drive( 0,  1,  0,  0); }
-		else if(keystates[SDLK_3]) 		{ drive( 0,  0,  1,  0); }
-		else if(keystates[SDLK_4]) 		{ drive( 0,  0,  0,  1); }
+
+		if (keystates[SDL_SCANCODE_A])
+		{
+			if (!(keystates[SDL_SCANCODE_A]))
+			{
+				v += 0.1;
+			}
+		}
+		else if(keystates[SDL_SCANCODE_S])
+		{
+			if (!(keystates[SDL_SCANCODE_S]))
+			{
+				v -= 0.1;
+			}
+		}
+
+		if (keystates[SDL_SCANCODE_PAGEUP])			{ drive(-v,  v, -v,  v); }
+		else if(keystates[SDL_SCANCODE_PAGEDOWN])	{ drive( v, -v,  v, -v); }
+		else if(keystates[SDL_SCANCODE_UP]) 		{ drive( v,  v,  v,  v); }
+		else if(keystates[SDL_SCANCODE_DOWN]) 		{ drive(-v, -v, -v, -v); }
+		else if(keystates[SDL_SCANCODE_LEFT]) 		{ drive(-v,  v,  v, -v); }
+		else if(keystates[SDL_SCANCODE_RIGHT]) 		{ drive( v, -v, -v,  v); }
+		else if(keystates[SDL_SCANCODE_1]) 			{ drive( v,  0,  0,  0); }
+		else if(keystates[SDL_SCANCODE_2]) 			{ drive( 0,  v,  0,  0); }
+		else if(keystates[SDL_SCANCODE_3]) 			{ drive( 0,  0,  v,  0); }
+		else if(keystates[SDL_SCANCODE_4]) 			{ drive( 0,  0,  0,  v); }
 
 		else
 		{
 			drive(0, 0, 0, 0);
 		}
 
-		if(keystates[SDLK_q])
+		if(keystates[SDL_SCANCODE_Q])
 		{
 			quit = true;
 			SDL_Quit();

@@ -5,7 +5,7 @@ COMPILEC = $(CC) $(CFLAGS)
 CPPC = g++
 CPPFLAGS = -pedantic -Wall -std=c++11 -O3 -Wno-maybe-uninitialized -o
 COMPILECPP = $(CPPC) $(CPPFLAGS)
-LIBS = -larmadillo -lSDL -pthread
+LIBS = -larmadillo -lSDL2 -pthread
 
 OBJECTS = Rose.o serial.o test.o
 
