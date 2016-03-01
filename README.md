@@ -21,5 +21,5 @@
 	Neil ✔			neilpat1995
 	Cedric ✔			chb50
 	Jon ✔				jonnn333
-	Brice ✔				bricedhoward
+	Brice ✔			bricedhoward
 	Vineet ✔			VSepaha
