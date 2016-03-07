@@ -1,11 +1,11 @@
 CC = gcc
-CFLAGS = -pedantic -Wall -Werror -std=gnu99 -O3 -o
+CFLAGS = -pedantic -Wall -Werror -std=gnu99 -O3 -g -o
 COMPILEC = $(CC) $(CFLAGS)
 
 CPPC = g++
-CPPFLAGS = -pedantic -Wall -std=c++11 -O3 -Wno-maybe-uninitialized -o
+CPPFLAGS = `pkg-config --cflags sdl2` -pedantic -Wall -Werror -Wno-unused-variable -std=c++11 -O3 -g -o
 COMPILECPP = $(CPPC) $(CPPFLAGS)
-LIBS = -larmadillo -lSDL2 -pthread
+LIBS = `pkg-config --libs sdl2` -larmadillo -pthread -lSDL2_ttf
 
 OBJECTS = Rose.o serial.o test.o
 

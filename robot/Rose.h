@@ -10,29 +10,32 @@ class Rose
 		Rose(void);
 		~Rose(void);
 		int numconnected(void);
-		void send(const arma::vec &motion);
-		void readClear(void);
-		arma::vec recv(void);
-		void reset(void);
-		int id(void);
-		bool connect(void);
 		bool connected(void);
+		void reset(void);
+
+		bool connect(void);
 		void disconnect(void);
 
+		void send(const arma::vec &motion);
+
 		bool startStop;
+
+		int motor_speeds[4] = {-1};
+		int encoder[4] = {-1};
+
+	private:
+		static void* commHandler(void*);
+
+		void threadSend(const arma::vec &motion);
+		arma::vec recv(void);
+		void threadRecv(void);
 
 		arma::vec commSend;
 		arma::vec commRecv;
     	pthread_t *update_thread;
 		pthread_mutex_t *commSendLock;
 		pthread_mutex_t *commRecvLock;
-		void threadSend(const arma::vec &motion); 
-		void threadRecv(void);
 
-		int motor_speeds[4] = {-1};
-		int encoder[4] = {-1};
-
-	private:
     	// Threading stuff for handling the communcation
 		arma::vec prev_motion;
 		arma::vec motion_const;

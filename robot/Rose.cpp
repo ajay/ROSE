@@ -20,7 +20,59 @@ static double limitf(double x, double min, double max)
 	else 				{ return x;	  }
 }
 
-static void *commHandler(void *args);
+Rose::Rose(void)
+{
+	this->prev_motion = zeros<vec>(4);
+	this->motion_const = ones<vec>(4) * 255.0;
+	if (this->connect())
+	{
+		this->reset();
+		this->send(zeros<vec>(4));
+	}
+}
+
+Rose::~Rose(void)
+{
+	if (this->connected())
+	{
+		this->send(zeros<vec>(4));
+		this->reset();
+		this->disconnect();
+	}
+}
+
+int Rose::numconnected(void)
+{
+	return this->connections.size();
+}
+
+bool Rose::connected(void)
+{
+	return this->connections.size() > 0;
+}
+
+void Rose::reset(void)
+{
+	this->prev_motion.zeros();
+}
+
+void* Rose::commHandler(void* args)
+{
+	Rose *rose = (Rose *)args;
+
+	while (!(rose->startStop))
+	{
+		vec tempSendVec;
+		pthread_mutex_lock(rose->commSendLock);
+		tempSendVec = rose->commSend;
+		pthread_mutex_unlock(rose->commSendLock);
+		rose->threadSend(tempSendVec);
+
+		rose->threadRecv();
+	}
+
+	return NULL;
+}
 
 // Connect to all arudinos currently mounted on system
 bool Rose::connect(void)
@@ -78,7 +130,7 @@ bool Rose::connect(void)
 
 	// Read a message from each device
 	nanosleep(&synctime, NULL);
-	char *msg;
+	char *msg = (char*)"";
 	for (serial_t *connection : this->connections)
 	{
 		while (!msg || strlen(msg) == 0)
@@ -136,37 +188,10 @@ bool Rose::connect(void)
 		pthread_mutex_init(this->commRecvLock, NULL);
 
 		// Start the update thread
-		pthread_create(this->update_thread, NULL, commHandler, this);
+		pthread_create(this->update_thread, NULL, this->commHandler, this);
 
 		return true;
 	}
-}
-
-static void *commHandler(void *args)
-{
-	Rose *rose = (Rose *)args;
-
-	while (!(rose->startStop))
-	{
-		vec tempSendVec;
-		pthread_mutex_lock(rose->commSendLock);
-		tempSendVec = rose->commSend;
-		pthread_mutex_unlock(rose->commSendLock);
-		rose->threadSend(tempSendVec);
-
-		rose->threadRecv();
-	}
-
-	return NULL;
-}
-
-
-/** Default connect detection method
- *  @return true if connected, false otherwise
- */
-bool Rose::connected(void)
-{
-	return this->connections.size() > 0;
 }
 
 void Rose::disconnect(void)
@@ -193,47 +218,6 @@ void Rose::disconnect(void)
 		this->pports.clear();
 	}
 	this->robotid = 0;
-}
-
-Rose::Rose(void)
-{
-	this->prev_motion = zeros<vec>(4);
-	this->motion_const = ones<vec>(4) * 255.0;
-	if (this->connect())
-	{
-		this->reset();
-		this->send(zeros<vec>(4));
-	}
-}
-
-Rose::~Rose(void)
-{
-	if (this->connected())
-	{
-		this->send(zeros<vec>(4));
-		this->reset();
-		this->disconnect();
-	}
-}
-
-void Rose::readClear()
-{
-	// Go through every device
-	for (size_t i = 0; i < this->connections.size(); i++)
-	{
-		// Just read everything, do nothing with it
-		serial_read(this->connections[i]);
-	}
-}
-
-int Rose::numconnected(void)
-{
-	return this->connections.size();
-}
-
-void Rose::reset(void)
-{
-	this->prev_motion.zeros();
 }
 
 void Rose::send(const vec &motion)
@@ -314,6 +298,16 @@ void Rose::threadSend(const vec &motion)
 	}
 }
 
+vec Rose::recv(void)
+{
+	// Add a lock to wait until the commthread is done setting the vector
+	vec tempVec;
+	pthread_mutex_lock(this->commRecvLock);
+	tempVec = this->commRecv;
+	pthread_mutex_unlock(this->commRecvLock);
+	return tempVec;
+}
+
 void Rose::threadRecv(void)
 {
 	// Create delay to read at correct rate
@@ -354,14 +348,4 @@ void Rose::threadRecv(void)
 				}
 		}
 	}
-}
-
-vec Rose::recv(void)
-{
-	// Add a lock to wait until the commthread is done setting the vector
-	vec tempVec;
-	pthread_mutex_lock(this->commRecvLock);
-	tempVec = this->commRecv;
-	pthread_mutex_unlock(this->commRecvLock);
-	return tempVec;
 }

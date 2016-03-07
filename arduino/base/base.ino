@@ -72,36 +72,75 @@ class QuadEncoder
 	private:
 		char pin_state[2];
 		long long velocity;
+    int prev_state;
 
 		// Private update method to read and interpolate quadencoder data
 		void update()
 		{
-			if (pin[0] == 0 || pin[1] == 0)
-				return;
 			// FSM : reg :: 00 01 11 10
 			//     : rev :: 00 10 11 01
-			char new_state[2] = { digitalRead(pin[0]) == HIGH,
-								  digitalRead(pin[1]) == HIGH };
-			char delta_state[2] = { new_state[0] != pin_state[0],
-									new_state[1] != pin_state[1] };
 
-			if (delta_state[0] && delta_state[1])
-			{
-				pos += velocity * 2 * (reversed ? -1 : 1);
-			}
-			else if (delta_state[1])
-			{
-				velocity = (new_state[0] == new_state[1]) ? -1 : 1;
-				pos += velocity * (reversed ? -1 : 1);
-			}
-			else if (delta_state[0])
-			{
-				velocity = (new_state[0] == new_state[1]) ? 1 : -1;
-				pos += velocity * (reversed ? -1 : 1);
-			}
+			char new_state[2] = { digitalRead(pin[0]) == HIGH, digitalRead(pin[1]) == HIGH };
+      char delta_state[2] = { new_state[0] != pin_state[0], new_state[1] != pin_state[1] };
+      int state;
+      int diff;
 
-			pin_state[0] = new_state[0];
-			pin_state[1] = new_state[1];
+      if (new_state[0] == 0 && new_state[1] == 0) { state = 0; }
+      else if (new_state[0] == 0 && new_state[1] == 1) { state = 1; }
+      else if (new_state[0] == 1 && new_state[1] == 1) { state = 2; }
+      else if (new_state[0] == 1 && new_state[1] == 0) { state = 3; }
+
+      
+
+      if (prevv[0] < 0)
+      {
+        diff = state - prev_state;
+        if (diff < 0)
+        {
+          diff = diff + 4;
+        }
+
+        pos -= diff;
+      }
+
+      else if (prevv[0] > 0)
+      {
+        diff = state - prev_state;
+        if (diff < 0)
+        {
+          diff = diff + 4;
+        }
+
+        pos += diff;
+      }
+
+      else if (prevv[0] == 0)
+      {
+        if (delta_state[0] && delta_state[1])
+        {
+          pos += velocity * 2 * (reversed ? -1 : 1);
+        }
+        else if (delta_state[1])
+        {
+          velocity = (new_state[0] == new_state[1]) ? -1 : 1;
+          pos += velocity * (reversed ? -1 : 1);
+        }
+        else if (delta_state[0])
+        {
+          velocity = (new_state[0] == new_state[1]) ? 1 : -1;
+          pos += velocity * (reversed ? -1 : 1);
+        }
+  
+        pin_state[0] = new_state[0];
+        pin_state[1] = new_state[1];
+      }
+
+
+
+
+
+
+      prev_state = state;
 		}
 };
 
@@ -135,7 +174,7 @@ void setmotors(int leftFront, int rightFront, int leftBack, int rightBack)
 	// Limit values to be assigned within acceptable range (0 - 255)
 	rightFront 	= limit(abs(rightFront), 	0, 255);
 	leftFront 	= limit(abs(leftFront), 	0, 255);
-	leftBack 	= limit(abs(leftBack), 		0, 255);
+	leftBack 	  = limit(abs(leftBack), 		0, 255);
 	rightBack 	= limit(abs(rightBack), 	0, 255);
 
 	// Set motors to correct directions
@@ -143,11 +182,11 @@ void setmotors(int leftFront, int rightFront, int leftBack, int rightBack)
 	{
 		if (negative[i])
 		{
-			motors[i]->run(FORWARD);
+			motors[i]->run(BACKWARD);
 		}
 		else
 		{
-			motors[i]->run(BACKWARD);
+			motors[i]->run(FORWARD);
 		}
 	}
 
@@ -211,7 +250,7 @@ void loop()
 			{
 				// Parse string being read
 				// Left front, right front, left back, right back
-				sscanf(s, "[%d %d %d %d]\n", &targetv[2], &targetv[0], &targetv[3], &targetv[1]);
+				sscanf(s, "[%d %d %d %d]\n", &targetv[1], &targetv[3], &targetv[0], &targetv[2]);
 //        		Serial.println("test\n");
 			}
 			memmove(buf, &e[1], strlen(&e[1]) + sizeof(char));
@@ -238,14 +277,14 @@ void loop()
 	{
 		sprintf(wbuf, "[%d %d %d %d %d %ld %ld %ld %ld]\n",
 				DEV_ID,
-				prevv[2],
-				prevv[0],
-				prevv[3],
 				prevv[1],
-				encoder_values[0],
-				encoder_values[2],
+				prevv[3],
+				prevv[0],
+				prevv[2],
+				encoder_values[3],
 				encoder_values[1],
-				encoder_values[3]);
+				encoder_values[2],
+				encoder_values[0]);
 		Serial.print(wbuf);
 		msecs = millis();
 	}
