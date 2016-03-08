@@ -80,7 +80,6 @@ void* Rose::commHandler(void* args)
 	return NULL;
 }
 
-// Connect to all arudinos currently mounted on system
 bool Rose::connect(void)
 {
 	// Open directory to look for arduinos

@@ -33,7 +33,7 @@ class QuadEncoder
 		long pos;
 		bool reversed;
 		char pin[2];
-    int motor;
+		int motor;
 
 		QuadEncoder()
 		{
@@ -49,7 +49,7 @@ class QuadEncoder
 			pinMode(pin[1], INPUT);
 			pin_state[0] = digitalRead(pin[0]) == HIGH;
 			pin_state[1] = digitalRead(pin[1]) == HIGH;
-      motor = m;
+			motor = m;
 		}
 
 		// Read values from input pins
@@ -71,15 +71,15 @@ class QuadEncoder
 			pin_state[1] = 0;
 		}
 
-    void reset_pos()
-    {
-       pos = 0;
-    }
+		void reset_pos()
+		{
+			pos = 0;
+		}
 
 	private:
 		char pin_state[2];
 		long long velocity;
-    int prev_state;
+		int prev_state;
 
 		// Private update method to read and interpolate quadencoder data
 		void update()
@@ -88,66 +88,61 @@ class QuadEncoder
 			//     : rev :: 00 10 11 01
 
 			char new_state[2] = { digitalRead(pin[0]) == HIGH, digitalRead(pin[1]) == HIGH };
-      char delta_state[2] = { new_state[0] != pin_state[0], new_state[1] != pin_state[1] };
-      int state;
-      int diff;
+			char delta_state[2] = { new_state[0] != pin_state[0], new_state[1] != pin_state[1] };
+			int state;
+			int diff;
 
-      if (new_state[0] == 0 && new_state[1] == 0) { state = 0; }
-      else if (new_state[0] == 0 && new_state[1] == 1) { state = 1; }
-      else if (new_state[0] == 1 && new_state[1] == 1) { state = 2; }
-      else if (new_state[0] == 1 && new_state[1] == 0) { state = 3; }
+			if (new_state[0] == 0 && new_state[1] == 0) { state = 0; }
+			else if (new_state[0] == 0 && new_state[1] == 1) { state = 1; }
+			else if (new_state[0] == 1 && new_state[1] == 1) { state = 2; }
+			else if (new_state[0] == 1 && new_state[1] == 0) { state = 3; }
 
+			if (prevv[motor] < 0)
+			{
+				diff = state - prev_state;
+				if (diff > 0)
+				{
+					diff = diff - 4;
+				}
 
+				pos += diff;
+			}
 
-      if (prevv[motor] < 0)
-      {
-        diff = state - prev_state;
-        if (diff < 0)
-        {
-          diff = diff + 4;
-        }
+			else if (prevv[motor] > 0)
+			{
+				diff = state - prev_state;
+				if (diff < 0)
+				{
+					diff = diff + 4;
+				}
 
-        pos -= diff;
-      }
+				pos += diff;
+			}
 
-      else if (prevv[motor] > 0)
-      {
-        diff = state - prev_state;
-        if (diff < 0)
-        {
-          diff = diff + 4;
-        }
+			else if (prevv[motor] == 0)
+			{
+				if (delta_state[0] && delta_state[1])
+				{
+					pos += velocity * 2 * (reversed ? -1 : 1);
+				}
 
-        pos += diff;
-      }
+				else if (delta_state[1])
+				{
+					velocity = (new_state[0] == new_state[1]) ? -1 : 1;
+					pos += velocity * (reversed ? -1 : 1);
+				}
 
-      else if (prevv[motor] == 0)
-      {
-        if (delta_state[0] && delta_state[1])
-        {
-          pos += velocity * 2 * (reversed ? -1 : 1);
-        }
-        else if (delta_state[1])
-        {
-          velocity = (new_state[0] == new_state[1]) ? -1 : 1;
-          pos += velocity * (reversed ? -1 : 1);
-        }
-        else if (delta_state[0])
-        {
-          velocity = (new_state[0] == new_state[1]) ? 1 : -1;
-          pos += velocity * (reversed ? -1 : 1);
-        }
+				else if (delta_state[0])
+				{
+					velocity = (new_state[0] == new_state[1]) ? 1 : -1;
+					pos += velocity * (reversed ? -1 : 1);
+				}
 
-        pin_state[0] = new_state[0];
-        pin_state[1] = new_state[1];
-      }
+				pin_state[0] = new_state[0];
+				pin_state[1] = new_state[1];
+			}
 
-
-
-
-
-
-      prev_state = state;
+			prev_state = state;
 		}
 };
 
@@ -248,37 +243,36 @@ void loop()
 			buf[safesize] = '\0';
 		}
 
-    char *s, *e;
+	char *s, *e;
 
-    // Check for encoder reset
-    if (strstr(buf, "[reset]\n") != NULL)
-    {
+	// Check for encoder reset
+	if (strstr(buf, "[reset]\n") != NULL)
+	{
+		e[0] = '\0';
+		memmove(buf, &e[1], strlen(&e[1]) + sizeof(char));
 
-      e[0] = '\0';
-      memmove(buf, &e[1], strlen(&e[1]) + sizeof(char));
-
-      for (int i = 0; i < 4; i++)
-      {
-        encoders[i].reset_pos();
-      }
-    }
-
-    // Otherwise extract possible message
-    else
-  	{
-  		if ((e = strchr(buf, '\n')))
-  		{
-  			e[0] = '\0';
-  			if ((s = strrchr(buf, '[')))
-  			{
-  				// Parse string being read
-  				// Left front, right front, left back, right back
-  				sscanf(s, "[%d %d %d %d]\n", &targetv[1], &targetv[3], &targetv[0], &targetv[2]);
-  			}
-  			memmove(buf, &e[1], strlen(&e[1]) + sizeof(char));
-  		}
-	  }
+		for (int i = 0; i < 4; i++)
+		{
+			encoders[i].reset_pos();
+		}
 	}
+
+	// Otherwise extract possible message
+	else
+	{
+		if ((e = strchr(buf, '\n')))
+		{
+			e[0] = '\0';
+			if ((s = strrchr(buf, '[')))
+			{
+				// Parse string being read
+				// Left front, right front, left back, right back
+				sscanf(s, "[%d %d %d %d]\n", &targetv[1], &targetv[3], &targetv[0], &targetv[2]);
+			}
+			memmove(buf, &e[1], strlen(&e[1]) + sizeof(char));
+		}
+	}
+}
 
 	// Ramp motors values, and determine next value to set
 	for (int i = 0; i < 4; i++)
