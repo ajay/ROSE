@@ -157,10 +157,10 @@ class Rose
 		 */
 		std::vector<char *> pports;
 
-    	// Threading stuff for handling the communcation
+		// Threading stuff for handling the communcation
 		arma::vec commSend;
 		arma::vec commRecv;
-    	pthread_t *update_thread;
+		pthread_t *update_thread;
 		pthread_mutex_t *commSendLock;
 		pthread_mutex_t *commRecvLock;
 };
