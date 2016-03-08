@@ -71,6 +71,7 @@ class QuadEncoder
 			pin_state[1] = 0;
 		}
 
+		// Reset encoder values back to 0
 		void reset_pos()
 		{
 			pos = 0;
@@ -84,19 +85,20 @@ class QuadEncoder
 		// Private update method to read and interpolate quadencoder data
 		void update()
 		{
-			// FSM : reg :: 00 01 11 10
-			//     : rev :: 00 10 11 01
+			// FSM : reg :: 00 01 11 10 		(0 -> 1 -> 2 -> 3)
+			//     : rev :: 10 11 01 00 		(3 -> 2 -> 1 -> 0)
 
 			char new_state[2] = { digitalRead(pin[0]) == HIGH, digitalRead(pin[1]) == HIGH };
 			char delta_state[2] = { new_state[0] != pin_state[0], new_state[1] != pin_state[1] };
 			int state;
 			int diff;
 
-			if (new_state[0] == 0 && new_state[1] == 0) { state = 0; }
+			if 		(new_state[0] == 0 && new_state[1] == 0) { state = 0; }
 			else if (new_state[0] == 0 && new_state[1] == 1) { state = 1; }
 			else if (new_state[0] == 1 && new_state[1] == 1) { state = 2; }
 			else if (new_state[0] == 1 && new_state[1] == 0) { state = 3; }
 
+			// If motor is moving backwards, then move encoder backwards
 			if (prevv[motor] < 0)
 			{
 				diff = state - prev_state;
@@ -108,6 +110,7 @@ class QuadEncoder
 				pos += diff;
 			}
 
+			// If motor is moving forwards, then move encoder forwards
 			else if (prevv[motor] > 0)
 			{
 				diff = state - prev_state;
@@ -119,6 +122,7 @@ class QuadEncoder
 				pos += diff;
 			}
 
+			// If motor is not moving, then predict which direction it is moving in
 			else if (prevv[motor] == 0)
 			{
 				if (delta_state[0] && delta_state[1])
@@ -174,10 +178,10 @@ void setmotors(int leftFront, int rightFront, int leftBack, int rightBack)
 	bool negative[4] = {rightFront < 0, leftFront < 0, leftBack < 0, rightBack < 0};
 
 	// Limit values to be assigned within acceptable range (0 - 255)
-	rightFront 	= limit(abs(rightFront), 	0, 255);
-	leftFront 	= limit(abs(leftFront), 	0, 255);
-	leftBack 	  = limit(abs(leftBack), 		0, 255);
-	rightBack 	= limit(abs(rightBack), 	0, 255);
+	rightFront	= limit(abs(rightFront),	0, 255);
+	leftFront	= limit(abs(leftFront),		0, 255);
+	leftBack	= limit(abs(leftBack),		0, 255);
+	rightBack	= limit(abs(rightBack),		0, 255);
 
 	// Set motors to correct directions
 	for (int i = 0; i < 4; i++)
@@ -243,36 +247,36 @@ void loop()
 			buf[safesize] = '\0';
 		}
 
-	char *s, *e;
+		char *s, *e;
 
-	// Check for encoder reset
-	if (strstr(buf, "[reset]\n") != NULL)
-	{
-		e[0] = '\0';
-		memmove(buf, &e[1], strlen(&e[1]) + sizeof(char));
-
-		for (int i = 0; i < 4; i++)
-		{
-			encoders[i].reset_pos();
-		}
-	}
-
-	// Otherwise extract possible message
-	else
-	{
-		if ((e = strchr(buf, '\n')))
+		// Check for encoder reset
+		if (strstr(buf, "[reset]\n") != NULL)
 		{
 			e[0] = '\0';
-			if ((s = strrchr(buf, '[')))
-			{
-				// Parse string being read
-				// Left front, right front, left back, right back
-				sscanf(s, "[%d %d %d %d]\n", &targetv[1], &targetv[3], &targetv[0], &targetv[2]);
-			}
 			memmove(buf, &e[1], strlen(&e[1]) + sizeof(char));
+
+			for (int i = 0; i < 4; i++)
+			{
+				encoders[i].reset_pos();
+			}
+		}
+
+		// Otherwise extract possible message
+		else
+		{
+			if ((e = strchr(buf, '\n')))
+			{
+				e[0] = '\0';
+				if ((s = strrchr(buf, '[')))
+				{
+					// Parse string being read
+					// Left front, right front, left back, right back
+					sscanf(s, "[%d %d %d %d]\n", &targetv[1], &targetv[3], &targetv[0], &targetv[2]);
+				}
+				memmove(buf, &e[1], strlen(&e[1]) + sizeof(char));
+			}
 		}
 	}
-}
 
 	// Ramp motors values, and determine next value to set
 	for (int i = 0; i < 4; i++)
