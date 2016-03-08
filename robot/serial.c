@@ -16,15 +16,6 @@ static int _serial_setattr(serial_t *connection);
 static void _serial_update(serial_t *connection);
 static char tempbuf[SWREADMAX];
 
-/** Connect to a serial device.
- *  @param connection
- *    a pointer to the serial struct
- *  @param port
- *    a portname; if NULL, will open a random port
- *  @param baudrate
- *    the bits per second of information to transmit/receive
- *  @return 0 on success, -1 on failure
- */
 int serial_connect(serial_t *connection, char *port, int baudrate)
 {
 	connection->connected = 0;
@@ -88,13 +79,14 @@ int serial_connect(serial_t *connection, char *port, int baudrate)
 		}
 	}
 
-	/* set connection attributes */
+	// Set connection attributes
 	connection->baudrate = baudrate;
 	connection->parity = 0;
 
+	// Possible bad behavior
 	if (_serial_setattr(connection) == -1)
 	{
-		goto error; /* possible bad behavior */
+		goto error;
 	}
 
 	tcflush(connection->fd, TCIFLUSH);
@@ -128,7 +120,7 @@ int serial_connect(serial_t *connection, char *port, int baudrate)
 /** Helper method to set the attributes of a serial connection,
  *  particularly for the arduino or similar device.
  *  @param connection
- *    the serial port to connect to
+ *         the serial port to connect to
  *  @return 0 on success, -1 on failure
  */
 static int _serial_setattr(serial_t *connection)
@@ -140,7 +132,7 @@ static int _serial_setattr(serial_t *connection)
 		return -1;
 	}
 
-	// get rid of old
+	// Get rid of old
 	memset(&tty, 0, sizeof(struct termios));
 	tty.c_cc[VMIN] = 1;
 	tty.c_cc[VTIME] = 0;
@@ -148,7 +140,7 @@ static int _serial_setattr(serial_t *connection)
 	tcsetattr(connection->fd, TCSAFLUSH, &tty);
 	fcntl(connection->fd, F_SETFL, O_NONBLOCK);
 
-	// set new attributes
+	// Set new attributes
 	memset(&tty, 0, sizeof(struct termios));
 	tty.c_cflag = CS8 | CREAD | CLOCAL;
 	tty.c_cc[VMIN] = 1;
@@ -163,13 +155,13 @@ static int _serial_setattr(serial_t *connection)
 	return 0;
 }
 
-/** Method to update the readbuf of the serial communication,
+/** Helper method to update the readbuf of the serial communication,
  *  as well as the connection itself.
  *  @param connection
- *    the serial struct
+ *         the serial struct
  *  @note
- *    the packets will be read in the following format:
- *    data\n
+ *  	   the packets will be read in the following format:
+ *   	   data\n
  */
 static void _serial_update(serial_t *connection)
 {
@@ -177,7 +169,7 @@ static void _serial_update(serial_t *connection)
 	int bytesStored;
 	unsigned char analyzeBuffer;
 
-	/* dynamically reconnect the device */
+	// Dynamically reconnect the device
 	if (access(connection->port, F_OK) == -1)
 	{
 		if (connection->connected)
@@ -211,20 +203,23 @@ static void _serial_update(serial_t *connection)
 		return;
 	}
 
-	/* update buffer constantly (be careful of overflow!) */
+	// update buffer constantly (be careful of overflow!)
 	analyzeBuffer = 0;
 	while ((bytesRead = read(connection->fd, tempbuf, SWREADMAX)) > 0)
 	{
+
 		if (bytesRead > 0)
 		{
-			analyzeBuffer = 1; /* turn on buffer analysis signal */
+			// Turn on buffer analysis signal
+			analyzeBuffer = 1;
 		}
+
 		tempbuf[bytesRead] = '\0';
-		bytesStored = strlen(connection->buffer); /* no \0 */
+		bytesStored = strlen(connection->buffer); // no \0
 
 		while (bytesStored + bytesRead >= SWBUFMAX)
 		{
-			/* shorten it by only half of the readmax value */
+			// Shorten it by only half of the readmax value
 			bytesStored -= SWREADMAX / 2;
 			memmove(connection->buffer, &connection->buffer[SWREADMAX / 2], (bytesStored + 1) * sizeof(char));
 		}
@@ -244,7 +239,7 @@ static void _serial_update(serial_t *connection)
 			start_index = start_index ? &start_index[1] : connection->buffer;
 			nbytes = (size_t)end_index - (size_t)start_index;
 			memcpy(connection->readbuf, start_index, nbytes * sizeof(char));
-			connection->readbuf[nbytes + 1] = '\n'; /* put the \n back */
+			connection->readbuf[nbytes + 1] = '\n'; // put the \n back
 			connection->readbuf[nbytes + 2] = '\0';
 			memmove(connection->buffer, end_index, (strlen(end_index) + 1) * sizeof(char));
 			connection->readAvailable = 1;
@@ -252,33 +247,22 @@ static void _serial_update(serial_t *connection)
 	}
 }
 
-/** Read a string from the serial communication link.
- *  @param connection
- *    the serial connection to read a message from
- *  @return the readbuf if a message exists, else NULL
- */
 char *serial_read(serial_t *connection)
 {
 	_serial_update(connection);
+
 	if (connection->readAvailable)
 	{
 		connection->readAvailable = 0;
 		return connection->readbuf;
 	}
+
 	else
 	{
 		return NULL;
 	}
 }
 
-/** Write a message to the serial communication link.
- *  @param connection
- *    the serial communication link to write to
- *  @param message
- *    the message to send over to the other side
- *  @note
- *    be sure the message has a '\n' chararacter
- */
 void serial_write(serial_t *connection, char *message)
 {
 	if (connection->fd != -1)
@@ -290,25 +274,24 @@ void serial_write(serial_t *connection, char *message)
 	}
 }
 
-/** Disconnect from the USB Serial port.
- *  @param connection
- *    A pointer to the serial struct.
- */
 void serial_disconnect(serial_t *connection)
 {
-	/* clean up */
+	// Clean up
 	if (!connection->connected)
 	{
 		return;
 	}
+
 	if (connection->fd != -1)
 	{
 		close(connection->fd);
 	}
+
 	if (connection->port != NULL)
 	{
 		free(connection->port);
 	}
+
 	memset(connection, 0, sizeof(serial_t));
 	connection->fd = -1;
 }

@@ -57,9 +57,12 @@ class Rose
 		void disconnect(void);
 
 		/**
-		 * Send strings over serial comm to the ardunios
-		 * @param Motion string to send over serial. Current format:
-		 * "[leftFront, rightFront, leftBack, rightBack]\n"
+		 * Send strings over serial comm to the ardunios. Manages
+		 * the locks required for sending and calls threadSend() to
+		 * actually send the serial string
+		 * @param motion
+		 *        Motion string to send over serial. Current format:
+		 *        "[leftFront, rightFront, leftBack, rightBack]\n"
 		 */
 		void send(const arma::vec &motion);
 
@@ -88,25 +91,78 @@ class Rose
 		int encoder[4] = {-1};
 
 	private:
+		/**
+		 * Private method for handing data transfer over serial.
+		 * Sets up and maintains mutex locks for sending & receiving
+		 */
 		static void* commHandler(void*);
 
-		void threadSend(const arma::vec &motion);
-		arma::vec recv(void);
+		/**
+		 * Private methods that accepts any data received over serial and
+		 * stores it in the correct location. Currently gets info from drive
+		 * base, as well as the arm.
+		 */
 		void threadRecv(void);
 
+		/**
+		 * Sends data over serial after being called by send().
+		 * Determines which arduino to send data to based on the
+		 * DEV_ID of the arduino
+		 * @param motion
+		 *        The vector to be sent over to the arduinos
+		 */
+		void threadSend(const arma::vec &motion);
+
+		/**
+		 * Manages receiving data over serial. Manages mutex locks
+		 * when actually reading the data. This function is only useful
+		 * if the actually data received is required. Otherwise, use
+		 * threadRecv(), which will actually place the data somewhere instead.
+		 * @return  A vector of data received
+		 */
+		arma::vec recv(void);
+
+		/**
+		 * Hold the last value that was assigned to the motors over serial.
+		 * Used to make sure the same values are not sent over twice.
+		 */
+		arma::vec prev_motion;
+
+		/**
+		 * Vector holding values of 255. Used to convert double from
+		 * -1 to 1 to a pwm value from -255 to 255. Can be used to limit
+		 * overall motion range between any two values.
+		 */
+		arma::vec motion_const;
+
+		/**
+		 * Stores current robotid, useful in the future if multiple
+		 * ROSE robots are ever connected
+		 */
+		int robotid;
+
+		/**
+		 * Vector holding all current connections to arduinos
+		 */
+		std::vector<serial_t *> connections;
+
+		/**
+		 * Vector holding DEV_IDs of all current connections
+		 */
+		std::vector<int> ids;
+
+		/**
+		 * Vector holding all pport strings used for arduinos to
+		 * connect. Stored with a prefix of '/dev/ttyACM#'
+		 */
+		std::vector<char *> pports;
+
+    	// Threading stuff for handling the communcation
 		arma::vec commSend;
 		arma::vec commRecv;
     	pthread_t *update_thread;
 		pthread_mutex_t *commSendLock;
 		pthread_mutex_t *commRecvLock;
-
-    	// Threading stuff for handling the communcation
-		arma::vec prev_motion;
-		arma::vec motion_const;
-		int robotid;
-		std::vector<serial_t *> connections;
-		std::vector<int> ids;
-		std::vector<char *> pports;
 };
 
 #endif

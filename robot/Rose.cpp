@@ -249,6 +249,7 @@ void Rose::threadSend(const vec &motion)
 		new_motion(i) = limitf(new_motion(i), -1.0, 1.0);
 	}
 
+	// Parse the new motion originally from (-1 to 1) to (-255 to 255)
 	new_motion %= motion_const;
 
 	char msg[WBUFSIZE];

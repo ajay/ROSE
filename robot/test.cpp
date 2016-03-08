@@ -23,6 +23,7 @@ void update_flag()
 	// printf("test_flag is: %d\n", test_flag);
 }
 
+// Takes in four integers and assignments them to motion
 void drive(double frontLeft, double frontRight, double backLeft, double backRight)
 {
 	motion[0] = frontLeft;
@@ -95,8 +96,9 @@ void driveStraight()
 void stop(int signo)
 {
 	printf("Exiting yo >>>>\n");
-	rose.startStop = true;
 	stopsig = 1;
+	rose.startStop = true;
+	rose.disconnect();
 	exit(1);
 }
 
@@ -187,17 +189,13 @@ int main(int argc, char *argv[])
 		if(keystates[SDL_SCANCODE_Q])
 		{
 			quit = true;
-			// SDL_Quit();
 		}
+
 		if (pid_kill)
 		{
 			rose.send(motion);
 		}
 	}
-
-	rose.startStop = true;
-	rose.disconnect();
-	stopsig = 1;
 	SDL_Quit();
-	return 0;
+	stop(0);
 }
