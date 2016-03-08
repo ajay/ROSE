@@ -56,6 +56,12 @@ void Rose::reset(void)
 	this->prev_motion.zeros();
 }
 
+void Rose::reset_encoders(void)
+{
+	this->reset_enc = true;
+	this->send(ones<vec>(4));
+}
+
 void* Rose::commHandler(void* args)
 {
 	Rose *rose = (Rose *)args;
@@ -271,7 +277,16 @@ void Rose::threadSend(const vec &motion)
 							(int)new_motion(1),
 							(int)new_motion(2),
 							(int)new_motion(3));
-					serial_write(this->connections[i], msg);
+
+					if (!(this->reset_enc))
+					{
+						serial_write(this->connections[i], msg);
+					}
+					else
+					{
+						serial_write(this->connections[i], (char*)"[reset]\n");
+						this->reset_enc = false;
+					}
 				}
 
 				break;
@@ -319,14 +334,19 @@ void Rose::threadRecv(void)
 	for (int i = 0; i < (int)this->connections.size(); i++)
 	{
 		char* msg = serial_read(this->connections[i]);
-		printf("[ROSE] RECEIVED: %s\n", msg);
+
+		if (msg != NULL)
+		{
+			printf("[ROSE] RECEIVED: %s\n", msg);
+		}
 
 		switch (this->ids[i])
 		{
 			case 1: // Arduino #1: Drive base
 
 				// Convert msg into int array
-				if ((msg != NULL) && (strstr(msg, "\n") != NULL))
+				if (msg != NULL)
+					//  && (strstr(msg, "\n") != NULL)
 				{
 					sscanf(msg, "[%*d %d %d %d %d %d %d %d %d]\n",
 						&this->motor_speeds[0],
@@ -337,14 +357,6 @@ void Rose::threadRecv(void)
 						&this->encoder[1],
 						&this->encoder[2],
 						&this->encoder[3]);
-
-					// Test: print encoder values
-					for(int y =0; y < 4; y++)
-					{
-						printf("%d ", this->encoder[y]);
-					}
-
-					printf("\n");
 				}
 		}
 	}

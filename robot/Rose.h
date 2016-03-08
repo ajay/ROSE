@@ -12,6 +12,8 @@ class Rose
 		int numconnected(void);
 		bool connected(void);
 		void reset(void);
+		void reset_encoders(void);
+		bool reset_enc;
 
 		bool connect(void);
 		void disconnect(void);

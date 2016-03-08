@@ -1,29 +1,18 @@
 #include <armadillo>
 #include <signal.h>
 #include <thread>
-#include "SDL2/SDL.h"
-#include "SDL2/SDL_ttf.h"
+#include <unistd.h>
+
 
 #include "Rose.h"
-
-SDL_Event event;
+#include "window.h"
 
 static int stopsig;
 using namespace arma;
 static Rose rose;
 static arma::vec motion = zeros<vec>(4);
-bool drive_kill = true;
-
 static bool test_flag = false;
-
-
-static SDL_Window *window;
-static SDL_Renderer *renderer;
-static SDL_Surface *screen;
-static SDL_Texture *texture;
-
-
-
+bool pid_kill = true;
 
 // Kendrick:
 // Test flag is updated here
@@ -31,7 +20,7 @@ static SDL_Texture *texture;
 void update_flag()
 {
 	// test_flag = <something>
-	printf("test_flag is: %d\n", test_flag);
+	// printf("test_flag is: %d\n", test_flag);
 }
 
 void drive(double frontLeft, double frontRight, double backLeft, double backRight)
@@ -42,126 +31,60 @@ void drive(double frontLeft, double frontRight, double backLeft, double backRigh
 	motion[3] = backRight;
 }
 
-
 // Takes in a value between -1 and 1, and drives straight
-// until a drive_kill flag is tripped
-void driveStraight(double speed)
+// until a pid_kill flag is tripped
+void driveStraight()
 {
-    speed = 0.5;
-    drive_kill = false;
-    while (!drive_kill)
-    {
-        // Put pid stuff here
+	double k_p = 0.005;
+	double k_i = 0.001;
+	double k_d = 0.001;
 
-        // 4 Wheels
-        // motion[0] --> rightFront wheel
-        // takes in value between -1 and 1 (1 is full speed forward)
-        // Ignore speed parameter for now, and go at 0.5
-        // base_velocity = 0.5
-        // read encoders through array (rose->encoders[0])
-        // leftFront, rightFront, leftBack, rightBack- encoders and motors
-
-
-    }
-}
-
-SDL_Surface* initSDL()
-{
-	SDL_Init(SDL_INIT_VIDEO);
-
-	int width = 200;
-	int height = 200;
-
-	window = SDL_CreateWindow("simulation",
-	      SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-	      width, height, SDL_WINDOW_SHOWN);
-	renderer = SDL_CreateRenderer(window, -1,	      SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
-	screen = SDL_CreateRGBSurface(0, width, height, 32, 0, 0, 0, 0);
-	texture = SDL_CreateTextureFromSurface(renderer, screen);
-
-	if (TTF_Init() != 0)
+	while (1)
 	{
-		// logSDLError(std::cout, "TTF_Init");
-		SDL_Quit();
-		// return 1;
-	}
+		while (pid_kill)
+		{
+			sleep(0.1);
+		}
 
-	return screen;
-}
+		double speed = 0.5;
+		rose.reset_encoders();
 
-/**
-* Render the message we want to display to a texture for drawing
-* @param message The message we want to display
-* @param fontFile The font we want to use to render the text
-* @param color The color we want the text to be
-* @param fontSize The size we want the font to be
-* @param renderer The renderer to load the texture in
-* @return An SDL_Texture containing the rendered message, or nullptr if something went wrong
-*/
-SDL_Texture* renderText(const std::string &message, const std::string &fontFile,
-	SDL_Color color, int fontSize, SDL_Renderer *renderer)
-{
-	//Open the font
-	TTF_Font *font = TTF_OpenFont(fontFile.c_str(), fontSize);
-	if (font == nullptr){
-		// logSDLError(std::cout, "TTF_OpenFont");
-		return nullptr;
-	}
-	//We need to first render to a surface as that's what TTF_RenderText
-	//returns, then load that surface into a texture
-	SDL_Surface *surf = TTF_RenderText_Blended(font, message.c_str(), color);
-	if (surf == nullptr){
-		TTF_CloseFont(font);
-		// logSDLError(std::cout, "TTF_RenderText");
-		return nullptr;
-	}
-	SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, surf);
-	if (texture == nullptr){
-		// logSDLError(std::cout, "CreateTexture");
-	}
-	//Clean up the surface and font
-	SDL_FreeSurface(surf);
-	TTF_CloseFont(font);
-	return texture;
-}
+		arma::vec error = zeros<vec>(4);
+		arma::vec error_sum = zeros<vec>(4);
+		arma::vec prev_error = zeros<vec>(4);
+		arma::vec error_diff = zeros<vec>(4);
 
-/*
- * Draw an SDL_Texture to an SDL_Renderer at some destination rect
- * taking a clip of the texture if desired
- * @param tex The source texture we want to draw
- * @param rend The renderer we want to draw too
- * @param dst The destination rectangle to render the texture too
- * @param clip The sub-section of the texture to draw (clipping rect)
- *		default of nullptr draws the entire texture
- */
-void renderTexture(SDL_Texture *tex, SDL_Renderer *ren, SDL_Rect dst, SDL_Rect *clip = nullptr){
-	SDL_RenderCopy(ren, tex, clip, &dst);
-}
-/*
- * Draw an SDL_Texture to an SDL_Renderer at position x, y, preserving
- * the texture's width and height and taking a clip of the texture if desired
- * If a clip is passed, the clip's width and height will be used instead of the texture's
- * @param tex The source texture we want to draw
- * @param rend The renderer we want to draw too
- * @param x The x coordinate to draw too
- * @param y The y coordinate to draw too
- * @param clip The sub-section of the texture to draw (clipping rect)
- *		default of nullptr draws the entire texture
- */
-void renderTexture(SDL_Texture *tex, SDL_Renderer *ren, int x, int y, SDL_Rect *clip = nullptr){
-	SDL_Rect dst;
-	dst.x = x;
-	dst.y = y;
-	if (clip != nullptr){
-		dst.w = clip->w;
-		dst.h = clip->h;
-	}
-	else {
-		SDL_QueryTexture(tex, NULL, NULL, &dst.w, &dst.h);
-	}
-	renderTexture(tex, ren, dst, clip);
-}
+	    while (!pid_kill)
+	    {
+	    	// printf("Starting pid\n");
+	        // Master
+	        motion[0] = speed;
 
+	        for (unsigned int i = 0; i < 4; i++)
+	        {
+	        	error[i] = rose.encoder[0] - rose.encoder[i];
+	        	error_sum[i] += error[i];
+	        	error_diff[i] = error[i] - prev_error[i];
+	        	prev_error[i] = error[i];
+	        }
+
+	        // Slaves
+	        motion[1] = speed + (error[1] * k_p) + (error_sum[1] * k_i) + (error_diff[1] * k_d);
+	        motion[2] = speed + (error[2] * k_p) + (error_sum[2] * k_i) + (error_diff[2] * k_d);
+	        motion[3] = speed + (error[3] * k_p) + (error_sum[3] * k_i) + (error_diff[3] * k_d);
+
+	        // printf("about to send motion\n");
+	        printf("rose_encoder: [%d %d %d %d]\n", (int)rose.encoder[0], (int)rose.encoder[1], (int)rose.encoder[2], (int)rose.encoder[3]);
+	        printf("error: [%d %d %d %d]\n", (int)error[0], (int)error[1], (int)error[2], (int)error[3]);
+	        printf("error_sum: [%d %d %d %d]\n", (int)error_sum[0], (int)error_sum[1], (int)error_sum[2], (int)error_sum[3]);
+   	        printf("error_diff: [%d %d %d %d]\n", (int)error_diff[0], (int)error_diff[1], (int)error_diff[2], (int)error_diff[3]);
+	        printf("motion: [%2.5f %2.5f %2.5f %2.5f]\n\n", motion[0], motion[1], motion[2], motion[3]);
+
+	        rose.send(motion);
+	        usleep(100000);
+	    }
+	}
+}
 
 void stop(int signo)
 {
@@ -174,42 +97,43 @@ void stop(int signo)
 int main(int argc, char *argv[])
 {
 	std::thread db_update(update_flag);
+	std::thread pid(driveStraight);
 
 	rose.startStop = false;
 	signal(SIGINT, stop);
 
 	SDL_Surface *screen = initSDL();
-
 	bool quit = false;
-
 	double v = 0.5; // velocity
-
-
 	SDL_Event event;
+	// sleep(2);
+
+	SDL_Window* window = get_window();
+	SDL_Renderer* renderer = get_renderer();
+	SDL_Texture* texture = get_texture();
 
 
 
 	while(!quit)
 	{
-
-		// SDL TTF //
-		// const std::string resPath = getResourcePath("Lesson6");
-		//We'll render the string "TTF fonts are cool!" in white
-		//Color is in RGBA format
 		SDL_Color color = { 255, 255, 255, 255 };
 
 		std::ostringstream stringStream;
 		stringStream << "speed: " << v;
 		std::string test = stringStream.str();
 
-		SDL_Texture *image = renderText(test, "sketchy.ttf",
-			color, 32, renderer);
-		if (image == nullptr){
-			// cleanup(renderer, window);
-			TTF_Quit();
-			SDL_Quit();
-			return 1;
-		}
+		SDL_Texture *image = renderText(test, "sketchy.ttf", color, 32, renderer);
+
+
+		// printf("reached here\n");
+
+		// if (image == nullptr){
+		// 	// cleanup(renderer, window);
+		// 	TTF_Quit();
+		// 	SDL_Quit();
+		// 	return 1;
+		// }
+
 		//Get the texture w/h so we can center it in the screen
 		int iW, iH;
 		SDL_QueryTexture(image, NULL, NULL, &iW, &iH);
@@ -222,7 +146,6 @@ int main(int argc, char *argv[])
 		//rendered to a texture
 		renderTexture(image, renderer, 10, 10);
 		SDL_RenderPresent(renderer);
-
 
 		SDL_PollEvent(&event);
 		const Uint8 *keystates = SDL_GetKeyboardState(NULL);
@@ -241,9 +164,13 @@ int main(int argc, char *argv[])
 			}
 		}
 
+		if(keystates[SDL_SCANCODE_R])
+		{
+			rose.reset_encoders();
+			drive(0.0001, -0.001, 0.0001, 0.001);
+		}
 
-
-		if (keystates[SDL_SCANCODE_PAGEUP])			{ drive(-v,  v, -v,  v); }
+		else if (keystates[SDL_SCANCODE_PAGEUP])	{ drive(-v,  v, -v,  v); }
 		else if(keystates[SDL_SCANCODE_PAGEDOWN])	{ drive( v, -v,  v, -v); }
 		else if(keystates[SDL_SCANCODE_UP]) 		{ drive( v,  v,  v,  v); }
 		else if(keystates[SDL_SCANCODE_DOWN]) 		{ drive(-v, -v, -v, -v); }
@@ -254,20 +181,23 @@ int main(int argc, char *argv[])
 		else if(keystates[SDL_SCANCODE_3]) 			{ drive( 0,  0,  v,  0); }
 		else if(keystates[SDL_SCANCODE_4]) 			{ drive( 0,  0,  0,  v); }
 
+		else if(keystates[SDL_SCANCODE_O]) 			{ pid_kill = false; }
+		else if(keystates[SDL_SCANCODE_P]) 			{ pid_kill = true; }
+
 		else
 		{
 			drive(0, 0, 0, 0);
 		}
-
-		// printf("[test.cpp] speed = %f\n\n", v);
 
 		if(keystates[SDL_SCANCODE_Q])
 		{
 			quit = true;
 			SDL_Quit();
 		}
-
-		rose.send(motion);
+		if (pid_kill)
+		{
+			rose.send(motion);
+		}
 	}
 	SDL_Quit();
 	return 0;

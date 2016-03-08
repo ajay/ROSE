@@ -1,27 +1,43 @@
-CC = gcc
-CFLAGS = -pedantic -Wall -Werror -std=gnu99 -O3 -g -o
-COMPILEC = $(CC) $(CFLAGS)
+CC 			= gcc
+CFLAGS 		= -pedantic \
+				-Wall \
+				-Werror \
+				-std=gnu99 \
+				-O3 \
+				-g \
+				-o
 
-CPPC = g++
-CPPFLAGS = `pkg-config --cflags sdl2` -pedantic -Wall -Werror -Wno-unused-variable -std=c++11 -O3 -g -o
-COMPILECPP = $(CPPC) $(CPPFLAGS)
-LIBS = `pkg-config --libs sdl2` -larmadillo -pthread -lSDL2_ttf
+CPPC 		= g++
+CPPFLAGS 	= `pkg-config --cflags sdl2` \
+				-pedantic \
+				-Wall \
+				-Werror \
+				-Wno-unused-variable \
+				-std=c++11 \
+				-O3 \
+				-g \
+				-o
 
-OBJECTS = Rose.o serial.o test.o
+LIBS 		= `pkg-config --libs sdl2` \
+ 				-larmadillo \
+ 				-pthread \
+ 				-lSDL2_ttf
+
+COMPILEC 	= $(CC) $(CFLAGS)
+COMPILECPP 	= $(CPPC) $(CPPFLAGS)
+
+OBJECTS 	= serial.o Rose.o test.o window.o
 
 all: $(OBJECTS) test
 
-serial.o: serial.c serial.h
-	$(COMPILEC) $@ -c $<
-
-Rose.o: Rose.cpp Rose.h
-	$(COMPILECPP) $@ -c $<
-
-test.o: test.cpp
-	$(COMPILECPP) $@ -c $<
-
 test: $(OBJECTS)
 	$(COMPILECPP) $@ $^ $(LIBS)
+
+%.o: %.c
+	$(COMPILEC) $@ -c $<
+
+%.o: %.cpp
+	$(COMPILECPP) $@ -c $<
 
 clean:
 	rm -rfv *.o test
