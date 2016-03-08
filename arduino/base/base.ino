@@ -33,6 +33,7 @@ class QuadEncoder
 		long pos;
 		bool reversed;
 		char pin[2];
+    int motor;
 
 		QuadEncoder()
 		{
@@ -40,7 +41,7 @@ class QuadEncoder
 		}
 
 		// Attach quadencoder based on two input pins on digital IO
-		void attach(int pin1, int pin2)
+		void attach(int pin1, int pin2, int m)
 		{
 			pin[0] = pin1;
 			pin[1] = pin2;
@@ -48,6 +49,7 @@ class QuadEncoder
 			pinMode(pin[1], INPUT);
 			pin_state[0] = digitalRead(pin[0]) == HIGH;
 			pin_state[1] = digitalRead(pin[1]) == HIGH;
+      motor = m;
 		}
 
 		// Read values from input pins
@@ -68,6 +70,11 @@ class QuadEncoder
 			pin_state[0] = 0;
 			pin_state[1] = 0;
 		}
+
+    void reset_pos()
+    {
+       pos = 0;
+    }
 
 	private:
 		char pin_state[2];
@@ -90,9 +97,9 @@ class QuadEncoder
       else if (new_state[0] == 1 && new_state[1] == 1) { state = 2; }
       else if (new_state[0] == 1 && new_state[1] == 0) { state = 3; }
 
-      
 
-      if (prevv[0] < 0)
+
+      if (prevv[motor] < 0)
       {
         diff = state - prev_state;
         if (diff < 0)
@@ -103,7 +110,7 @@ class QuadEncoder
         pos -= diff;
       }
 
-      else if (prevv[0] > 0)
+      else if (prevv[motor] > 0)
       {
         diff = state - prev_state;
         if (diff < 0)
@@ -114,7 +121,7 @@ class QuadEncoder
         pos += diff;
       }
 
-      else if (prevv[0] == 0)
+      else if (prevv[motor] == 0)
       {
         if (delta_state[0] && delta_state[1])
         {
@@ -130,7 +137,7 @@ class QuadEncoder
           velocity = (new_state[0] == new_state[1]) ? 1 : -1;
           pos += velocity * (reversed ? -1 : 1);
         }
-  
+
         pin_state[0] = new_state[0];
         pin_state[1] = new_state[1];
       }
@@ -210,11 +217,11 @@ void setup()
 		motors[i] = AFMS.getMotor(i+1);
 	}
 
-	// Attach encoders
-	encoders[0].attach(2, 3);
-	encoders[1].attach(4, 5);
-	encoders[2].attach(6, 7);
-	encoders[3].attach(8, 11);
+	// Attach encoders (pin0, pin1, motor)
+	encoders[0].attach(2, 3, 2);
+	encoders[1].attach(4, 5, 3);
+	encoders[2].attach(6, 7, 0);
+	encoders[3].attach(8, 11, 1);
 
 	// Start motorshield & serial comm
 	AFMS.begin();
@@ -241,20 +248,36 @@ void loop()
 			buf[safesize] = '\0';
 		}
 
-		// Extract possible message
-		char *s, *e;
-		if ((e = strchr(buf, '\n')))
-		{
-			e[0] = '\0';
-			if ((s = strrchr(buf, '[')))
-			{
-				// Parse string being read
-				// Left front, right front, left back, right back
-				sscanf(s, "[%d %d %d %d]\n", &targetv[1], &targetv[3], &targetv[0], &targetv[2]);
-//        		Serial.println("test\n");
-			}
-			memmove(buf, &e[1], strlen(&e[1]) + sizeof(char));
-		}
+    char *s, *e;
+
+    // Check for encoder reset
+    if (strstr(buf, "[reset]\n") != NULL)
+    {
+
+      e[0] = '\0';
+      memmove(buf, &e[1], strlen(&e[1]) + sizeof(char));
+
+      for (int i = 0; i < 4; i++)
+      {
+        encoders[i].reset_pos();
+      }
+    }
+
+    // Otherwise extract possible message
+    else
+  	{
+  		if ((e = strchr(buf, '\n')))
+  		{
+  			e[0] = '\0';
+  			if ((s = strrchr(buf, '[')))
+  			{
+  				// Parse string being read
+  				// Left front, right front, left back, right back
+  				sscanf(s, "[%d %d %d %d]\n", &targetv[1], &targetv[3], &targetv[0], &targetv[2]);
+  			}
+  			memmove(buf, &e[1], strlen(&e[1]) + sizeof(char));
+  		}
+	  }
 	}
 
 	// Ramp motors values, and determine next value to set
