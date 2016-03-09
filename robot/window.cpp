@@ -6,7 +6,7 @@ SDL_Surface* initSDL()
 {
 	SDL_Init(SDL_INIT_VIDEO);
 
-	int width = 200;
+	int width = 400;
 	int height = 200;
 
 	window = SDL_CreateWindow("Rose", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_SHOWN);

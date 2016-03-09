@@ -26,6 +26,14 @@ Adafruit_DCMotor *motors[4];
 static int targetv[4];
 static int prevv[4];
 
+// Variables for reading in current and voltage values
+int VRaw; //This will store our raw ADC data
+int IRaw;
+float VFinal; //This will store the converted data
+float IFinal;
+long int twelve_volt_voltage = 0;
+long int twelve_volt_current = 0;
+
 // QuadEncoder class set up to utilize the encoders
 class QuadEncoder
 {
@@ -293,10 +301,20 @@ void loop()
 		encoder_values[i] = encoders[i].read();
 	}
 
+	// Read voltage and current
+	VRaw = analogRead(A0);
+	IRaw = analogRead(A1);
+
+	VFinal = VRaw / 12.99 * 3.3 / 5;
+	IFinal = IRaw / 3.7 * 3.3 / 5;
+
+	twelve_volt_voltage = VFinal * 1000;
+	twelve_volt_current = IFinal * 100;
+
 	// Send back data over serial every 100ms
 	if (millis() - msecs > 100)
 	{
-		sprintf(wbuf, "[%d %d %d %d %d %ld %ld %ld %ld]\n",
+		sprintf(wbuf, "[%d %d %d %d %d %ld %ld %ld %ld %ld %ld]\n",
 				DEV_ID,
 				prevv[1],
 				prevv[3],
@@ -305,7 +323,9 @@ void loop()
 				encoder_values[3],
 				encoder_values[1],
 				encoder_values[2],
-				encoder_values[0]);
+				encoder_values[0],
+				twelve_volt_voltage,
+				twelve_volt_current);
 		Serial.print(wbuf);
 		msecs = millis();
 	}

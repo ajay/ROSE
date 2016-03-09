@@ -123,13 +123,23 @@ int main(int argc, char *argv[])
 	{
 		SDL_Color color = { 255, 255, 255, 255 };
 
-		std::ostringstream stringStream;
-		stringStream  << "speed: " << std::setprecision(2) << v;
-		std::string test = stringStream.str();
+		std::ostringstream speed_stream;
+		speed_stream  << "speed: " << std::setprecision(2) << v;
+		std::string speed_string = speed_stream.str();
 
-		SDL_Texture *image = renderText(test, "fonts/roboto.ttf", color, 32, renderer);
+		std::ostringstream voltage_stream;
+		voltage_stream  << "12V Voltage: " << std::setprecision(4) << rose.twelve_volt_voltage << " V";
+		std::string voltage_string = voltage_stream.str();
 
-		if (image == nullptr)
+		std::ostringstream current_stream;
+		current_stream  << "12V Current: " << std::setprecision(4) << rose.twelve_volt_current << "A";
+		std::string current_string = current_stream.str();
+
+		SDL_Texture *speed_image = renderText(speed_string, "fonts/roboto.ttf", color, 32, renderer);
+		SDL_Texture *voltage_image = renderText(voltage_string, "fonts/roboto.ttf", color, 32, renderer);
+		SDL_Texture *current_image = renderText(current_string, "fonts/roboto.ttf", color, 32, renderer);
+
+		if ((speed_image == nullptr) || (voltage_image == nullptr) || (current_image == nullptr))
 		{
 			TTF_Quit();
 			SDL_Quit();
@@ -137,13 +147,15 @@ int main(int argc, char *argv[])
 		}
 
 		// SDL Stuff
-		int iW, iH;
-		SDL_QueryTexture(image, NULL, NULL, &iW, &iH);
-		int x = 200 / 2 - iW / 2;
-		int y = 200 / 2 - iH / 2;
+		// int iW, iH;
+		// SDL_QueryTexture(image, NULL, NULL, &iW, &iH);
+		// int x = 200 / 2 - iW / 2;
+		// int y = 200 / 2 - iH / 2;
 
 		SDL_RenderClear(renderer);
-		renderTexture(image, renderer, 10, 10);
+		renderTexture(speed_image, renderer, 10, 10);
+		renderTexture(voltage_image, renderer, 10, 50);
+		renderTexture(current_image, renderer, 10, 90);
 		SDL_RenderPresent(renderer);
 
 		SDL_PollEvent(&event);

@@ -3,7 +3,6 @@
 #include <termios.h>
 #include <string>
 #include <cstring>
-
 #include "Rose.h"
 
 #define WBUFSIZE 128
@@ -344,11 +343,16 @@ void Rose::threadRecv(void)
 		{
 			case 1: // Arduino #1: Drive base
 
+
+
 				// Convert msg into int array
 				if (msg != NULL)
 					//  && (strstr(msg, "\n") != NULL)
 				{
-					sscanf(msg, "[%*d %d %d %d %d %d %d %d %d]\n",
+					int temp_voltage = 0;
+					int temp_current = 0;
+
+					sscanf(msg, "[%*d %d %d %d %d %d %d %d %d %d %d]\n",
 						&this->motor_speeds[0],
 						&this->motor_speeds[1],
 						&this->motor_speeds[2],
@@ -356,7 +360,12 @@ void Rose::threadRecv(void)
 						&this->encoder[0],
 						&this->encoder[1],
 						&this->encoder[2],
-						&this->encoder[3]);
+						&this->encoder[3],
+						&temp_voltage,
+						&temp_current);
+
+					this->twelve_volt_voltage = (float)((float)temp_voltage / 1000);
+					this->twelve_volt_current = (float)((float)temp_current / 1000);
 				}
 		}
 	}

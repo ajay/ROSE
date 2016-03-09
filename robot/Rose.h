@@ -90,6 +90,16 @@ class Rose
 		 */
 		int encoder[4] = {-1};
 
+		/**
+		 * Holds voltage of 12V battery powering TK1
+		 */
+		float twelve_volt_voltage = 0;
+
+		/**
+		 * Holds current draw from 12V battery powering TK1
+		 */
+		float twelve_volt_current = 0;
+
 	private:
 		/**
 		 * Private method for handing data transfer over serial.
