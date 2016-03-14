@@ -105,6 +105,7 @@ void draw_circle(cube &I, vec &v, vec pt, double radius) {
 }
 
 void draw_circle(imat &I, int v, vec pt, double radius) {
+  printf("starting draw\n");
   int x = (int)round(pt(1));
   int y = (int)round(pt(0));
   for (double tr = 0; tr < 2 * M_PI * radius; tr += 1.0) {
@@ -115,6 +116,7 @@ void draw_circle(imat &I, int v, vec pt, double radius) {
       I((int)X, (int)Y) = v;
     }
   }
+  printf("finished draw\n");
 }
 
 void draw_circle(icube &I, ivec &v, vec pt, double radius) {

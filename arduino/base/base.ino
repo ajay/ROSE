@@ -4,7 +4,7 @@
 
 #include <Adafruit_MotorShield.h>
 #include <string.h>
-#include "utility/Adafruit_PWMServoDriver.h"
+#include "utility/Adafruit_MS_PWMServoDriver.h"
 #include <Wire.h>
 
 #define DEV_ID 1
@@ -26,6 +26,14 @@ Adafruit_DCMotor *motors[4];
 static int targetv[4];
 static int prevv[4];
 
+// Variables for reading in current and voltage values
+int VRaw; //This will store our raw ADC data
+int IRaw;
+float VFinal; //This will store the converted data
+float IFinal;
+long int twelve_volt_voltage = 0;
+long int twelve_volt_current = 0;
+
 // QuadEncoder class set up to utilize the encoders
 class QuadEncoder
 {
@@ -33,6 +41,7 @@ class QuadEncoder
 		long pos;
 		bool reversed;
 		char pin[2];
+		int motor;
 
 		QuadEncoder()
 		{
@@ -40,7 +49,7 @@ class QuadEncoder
 		}
 
 		// Attach quadencoder based on two input pins on digital IO
-		void attach(int pin1, int pin2)
+		void attach(int pin1, int pin2, int m)
 		{
 			pin[0] = pin1;
 			pin[1] = pin2;
@@ -48,6 +57,7 @@ class QuadEncoder
 			pinMode(pin[1], INPUT);
 			pin_state[0] = digitalRead(pin[0]) == HIGH;
 			pin_state[1] = digitalRead(pin[1]) == HIGH;
+			motor = m;
 		}
 
 		// Read values from input pins
@@ -69,39 +79,82 @@ class QuadEncoder
 			pin_state[1] = 0;
 		}
 
+		// Reset encoder values back to 0
+		void reset_pos()
+		{
+			pos = 0;
+		}
+
 	private:
 		char pin_state[2];
 		long long velocity;
+		int prev_state;
 
 		// Private update method to read and interpolate quadencoder data
 		void update()
 		{
-			if (pin[0] == 0 || pin[1] == 0)
-				return;
-			// FSA : reg :: 00 01 11 10
-			//     : rev :: 00 10 11 01
-			char new_state[2] = { digitalRead(pin[0]) == HIGH,
-								  digitalRead(pin[1]) == HIGH };
-			char delta_state[2] = { new_state[0] != pin_state[0],
-									new_state[1] != pin_state[1] };
+			// FSM : reg :: 00 01 11 10 		(0 -> 1 -> 2 -> 3)
+			//     : rev :: 10 11 01 00 		(3 -> 2 -> 1 -> 0)
 
-			if (delta_state[0] && delta_state[1])
+			char new_state[2] = { digitalRead(pin[0]) == HIGH, digitalRead(pin[1]) == HIGH };
+			char delta_state[2] = { new_state[0] != pin_state[0], new_state[1] != pin_state[1] };
+			int state;
+			int diff;
+
+			if 		(new_state[0] == 0 && new_state[1] == 0) { state = 0; }
+			else if (new_state[0] == 0 && new_state[1] == 1) { state = 1; }
+			else if (new_state[0] == 1 && new_state[1] == 1) { state = 2; }
+			else if (new_state[0] == 1 && new_state[1] == 0) { state = 3; }
+
+			// If motor is moving backwards, then move encoder backwards
+			if (prevv[motor] < 0)
 			{
-				pos += velocity * 2 * (reversed ? -1 : 1);
-			}
-			else if (delta_state[1])
-			{
-				velocity = (new_state[0] == new_state[1]) ? -1 : 1;
-				pos += velocity * (reversed ? -1 : 1);
-			}
-			else if (delta_state[0])
-			{
-				velocity = (new_state[0] == new_state[1]) ? 1 : -1;
-				pos += velocity * (reversed ? -1 : 1);
+				diff = state - prev_state;
+				if (diff > 0)
+				{
+					diff = diff - 4;
+				}
+
+				pos += diff;
 			}
 
-			pin_state[0] = new_state[0];
-			pin_state[1] = new_state[1];
+			// If motor is moving forwards, then move encoder forwards
+			else if (prevv[motor] > 0)
+			{
+				diff = state - prev_state;
+				if (diff < 0)
+				{
+					diff = diff + 4;
+				}
+
+				pos += diff;
+			}
+
+			// If motor is not moving, then predict which direction it is moving in
+			else if (prevv[motor] == 0)
+			{
+				if (delta_state[0] && delta_state[1])
+				{
+					pos += velocity * 2 * (reversed ? -1 : 1);
+				}
+
+				else if (delta_state[1])
+				{
+					velocity = (new_state[0] == new_state[1]) ? -1 : 1;
+					pos += velocity * (reversed ? -1 : 1);
+				}
+
+				else if (delta_state[0])
+				{
+					velocity = (new_state[0] == new_state[1]) ? 1 : -1;
+					pos += velocity * (reversed ? -1 : 1);
+				}
+
+				pin_state[0] = new_state[0];
+				pin_state[1] = new_state[1];
+			}
+
+			prev_state = state;
 		}
 };
 
@@ -133,21 +186,21 @@ void setmotors(int leftFront, int rightFront, int leftBack, int rightBack)
 	bool negative[4] = {rightFront < 0, leftFront < 0, leftBack < 0, rightBack < 0};
 
 	// Limit values to be assigned within acceptable range (0 - 255)
-	rightFront 	= limit(abs(rightFront), 	0, 255);
-	leftFront 	= limit(abs(leftFront), 	0, 255);
-	leftBack 	= limit(abs(leftBack), 		0, 255);
-	rightBack 	= limit(abs(rightBack), 	0, 255);
+	rightFront	= limit(abs(rightFront),	0, 255);
+	leftFront	= limit(abs(leftFront),		0, 255);
+	leftBack	= limit(abs(leftBack),		0, 255);
+	rightBack	= limit(abs(rightBack),		0, 255);
 
 	// Set motors to correct directions
 	for (int i = 0; i < 4; i++)
 	{
 		if (negative[i])
 		{
-			motors[i]->run(FORWARD);
+			motors[i]->run(BACKWARD);
 		}
 		else
 		{
-			motors[i]->run(BACKWARD);
+			motors[i]->run(FORWARD);
 		}
 	}
 
@@ -171,11 +224,11 @@ void setup()
 		motors[i] = AFMS.getMotor(i+1);
 	}
 
-	// Attach encoders
-	encoders[0].attach(2, 3);
-	encoders[1].attach(4, 5);
-	encoders[2].attach(6, 7);
-	encoders[3].attach(8, 11);
+	// Attach encoders (pin0, pin1, motor)
+	encoders[0].attach(2, 3, 2);
+	encoders[1].attach(4, 5, 3);
+	encoders[2].attach(6, 7, 0);
+	encoders[3].attach(8, 11, 1);
 
 	// Start motorshield & serial comm
 	AFMS.begin();
@@ -202,19 +255,34 @@ void loop()
 			buf[safesize] = '\0';
 		}
 
-		// Extract possible message
 		char *s, *e;
-		if ((e = strchr(buf, '\n')))
+
+		// Check for encoder reset
+		if (strstr(buf, "[reset]\n") != NULL)
 		{
 			e[0] = '\0';
-			if ((s = strrchr(buf, '[')))
-			{
-				// Parse string being read
-				// Left front, right front, left back, right back
-				sscanf(s, "[%d %d %d %d]\n", &targetv[2], &targetv[0], &targetv[3], &targetv[1]);
-//        		Serial.println("test\n");
-			}
 			memmove(buf, &e[1], strlen(&e[1]) + sizeof(char));
+
+			for (int i = 0; i < 4; i++)
+			{
+				encoders[i].reset_pos();
+			}
+		}
+
+		// Otherwise extract possible message
+		else
+		{
+			if ((e = strchr(buf, '\n')))
+			{
+				e[0] = '\0';
+				if ((s = strrchr(buf, '[')))
+				{
+					// Parse string being read
+					// Left front, right front, left back, right back
+					sscanf(s, "[%d %d %d %d]\n", &targetv[1], &targetv[3], &targetv[0], &targetv[2]);
+				}
+				memmove(buf, &e[1], strlen(&e[1]) + sizeof(char));
+			}
 		}
 	}
 
@@ -233,19 +301,31 @@ void loop()
 		encoder_values[i] = encoders[i].read();
 	}
 
+	// Read voltage and current
+	VRaw = analogRead(A0);
+	IRaw = analogRead(A1);
+
+	VFinal = VRaw / 12.99 * 3.3 / 5;
+	IFinal = IRaw / 3.7 * 3.3 / 5;
+
+	twelve_volt_voltage = VFinal * 1000;
+	twelve_volt_current = IFinal * 100;
+
 	// Send back data over serial every 100ms
 	if (millis() - msecs > 100)
 	{
-		sprintf(wbuf, "[%d %d %d %d %d %ld %ld %ld %ld]\n",
+		sprintf(wbuf, "[%d %d %d %d %d %ld %ld %ld %ld %ld %ld]\n",
 				DEV_ID,
-				prevv[2],
-				prevv[0],
-				prevv[3],
 				prevv[1],
+				prevv[3],
+				prevv[0],
+				prevv[2],
+				encoder_values[3],
+				encoder_values[1],
 				encoder_values[2],
 				encoder_values[0],
-				encoder_values[3],
-				encoder_values[1]);
+				twelve_volt_voltage,
+				twelve_volt_current);
 		Serial.print(wbuf);
 		msecs = millis();
 	}

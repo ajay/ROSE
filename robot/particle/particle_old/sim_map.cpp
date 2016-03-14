@@ -22,9 +22,9 @@ void sim_map::blit(icube &screen) {
   assert(screen.n_rows == this->n_rows && screen.n_cols == this->n_cols && screen.n_slices == 3);
   for (int i = 0; i < (int)screen.n_rows; i++) {
     for (int j = 0; j < (int)screen.n_cols; j++) {
-      screen(i, j, 0) = (int)(this->map(i, j) * 255);
-      screen(i, j, 1) = (int)(this->map(i, j) * 255);
-      screen(i, j, 2) = (int)(this->map(i, j) * 255);
+      screen(i, j, 0) = -(int)(this->map(i, j) * 64) + 64;
+      screen(i, j, 1) = -(int)(this->map(i, j) * 64) + 64;
+      screen(i, j, 2) = -(int)(this->map(i, j) * 64) + 64;
     }
   }
 }

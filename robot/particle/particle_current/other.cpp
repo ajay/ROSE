@@ -1,0 +1,21 @@
+landmarks.push_back(sim_landmark(90, 202));           // 0
+  landmarks.push_back(sim_landmark(601, 617));          // 1
+  landmarks.push_back(sim_landmark(0, 416));            // 2
+  landmarks.push_back(sim_landmark(98, 627));           // 3
+  landmarks.push_back(sim_landmark(384, 627));          // 4
+  landmarks.push_back(sim_landmark(1225, 627));         // 5
+  landmarks.push_back(sim_landmark(3400, 513));         // 6
+  landmarks.push_back(sim_landmark(3442, 583));         // 7
+  landmarks.push_back(sim_landmark(1961, 539));         // 8
+  landmarks.push_back(sim_landmark(3442-460, 539+80));  // 9
+  landmarks.push_back(sim_landmark(0, 517));            // 10
+  landmarks.push_back(sim_landmark(78, 202));           // 11
+  landmarks.push_back(sim_landmark(111, 627));          // 12
+  landmarks.push_back(sim_landmark(384, 707));          // 13
+  landmarks.push_back(sim_landmark(601, 537));          // 14
+  landmarks.push_back(sim_landmark(1165, 540));         // 15
+  landmarks.push_back(sim_landmark(1961, 539+80));      // 16
+  landmarks.push_back(sim_landmark(3442, 583-37));      // 17
+  landmarks.push_back(sim_landmark(3400+14, 513));      // 18
+  landmarks.push_back(sim_landmark(3442-460, 539));     // 19
+

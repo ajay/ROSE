@@ -3,7 +3,6 @@
 #include <termios.h>
 #include <string>
 #include <cstring>
-
 #include "Rose.h"
 
 #define WBUFSIZE 128
@@ -20,9 +19,66 @@ static double limitf(double x, double min, double max)
 	else 				{ return x;	  }
 }
 
-static void *commHandler(void *args);
+Rose::Rose(void)
+{
+	this->prev_motion = zeros<vec>(4);
+	this->motion_const = ones<vec>(4) * 255.0;
+	if (this->connect())
+	{
+		this->reset();
+		this->send(zeros<vec>(4));
+	}
+}
 
-// Connect to all arudinos currently mounted on system
+Rose::~Rose(void)
+{
+	if (this->connected())
+	{
+		this->send(zeros<vec>(4));
+		this->reset();
+		this->disconnect();
+	}
+}
+
+int Rose::numconnected(void)
+{
+	return this->connections.size();
+}
+
+bool Rose::connected(void)
+{
+	return this->connections.size() > 0;
+}
+
+void Rose::reset(void)
+{
+	this->prev_motion.zeros();
+}
+
+void Rose::reset_encoders(void)
+{
+	this->reset_enc = true;
+	this->send(ones<vec>(4));
+}
+
+void* Rose::commHandler(void* args)
+{
+	Rose *rose = (Rose *)args;
+
+	while (!(rose->startStop))
+	{
+		vec tempSendVec;
+		pthread_mutex_lock(rose->commSendLock);
+		tempSendVec = rose->commSend;
+		pthread_mutex_unlock(rose->commSendLock);
+		rose->threadSend(tempSendVec);
+
+		rose->threadRecv();
+	}
+
+	return NULL;
+}
+
 bool Rose::connect(void)
 {
 	// Open directory to look for arduinos
@@ -78,7 +134,7 @@ bool Rose::connect(void)
 
 	// Read a message from each device
 	nanosleep(&synctime, NULL);
-	char *msg;
+	char *msg = (char*)"";
 	for (serial_t *connection : this->connections)
 	{
 		while (!msg || strlen(msg) == 0)
@@ -136,37 +192,10 @@ bool Rose::connect(void)
 		pthread_mutex_init(this->commRecvLock, NULL);
 
 		// Start the update thread
-		pthread_create(this->update_thread, NULL, commHandler, this);
+		pthread_create(this->update_thread, NULL, this->commHandler, this);
 
 		return true;
 	}
-}
-
-static void *commHandler(void *args)
-{
-	Rose *rose = (Rose *)args;
-
-	while (!(rose->startStop))
-	{
-		vec tempSendVec;
-		pthread_mutex_lock(rose->commSendLock);
-		tempSendVec = rose->commSend;
-		pthread_mutex_unlock(rose->commSendLock);
-		rose->threadSend(tempSendVec);
-
-		rose->threadRecv();
-	}
-
-	return NULL;
-}
-
-
-/** Default connect detection method
- *  @return true if connected, false otherwise
- */
-bool Rose::connected(void)
-{
-	return this->connections.size() > 0;
 }
 
 void Rose::disconnect(void)
@@ -195,47 +224,6 @@ void Rose::disconnect(void)
 	this->robotid = 0;
 }
 
-Rose::Rose(void)
-{
-	this->prev_motion = zeros<vec>(4);
-	this->motion_const = ones<vec>(4) * 255.0;
-	if (this->connect())
-	{
-		this->reset();
-		this->send(zeros<vec>(4));
-	}
-}
-
-Rose::~Rose(void)
-{
-	if (this->connected())
-	{
-		this->send(zeros<vec>(4));
-		this->reset();
-		this->disconnect();
-	}
-}
-
-void Rose::readClear()
-{
-	// Go through every device
-	for (size_t i = 0; i < this->connections.size(); i++)
-	{
-		// Just read everything, do nothing with it
-		serial_read(this->connections[i]);
-	}
-}
-
-int Rose::numconnected(void)
-{
-	return this->connections.size();
-}
-
-void Rose::reset(void)
-{
-	this->prev_motion.zeros();
-}
-
 void Rose::send(const vec &motion)
 {
 	// Lock the data before setting it...avoids the thread from reading the motion vector before it finishes copying over
@@ -260,6 +248,7 @@ void Rose::threadSend(const vec &motion)
 		new_motion(i) = limitf(new_motion(i), -1.0, 1.0);
 	}
 
+	// Parse the new motion originally from (-1 to 1) to (-255 to 255)
 	new_motion %= motion_const;
 
 	char msg[WBUFSIZE];
@@ -287,7 +276,16 @@ void Rose::threadSend(const vec &motion)
 							(int)new_motion(1),
 							(int)new_motion(2),
 							(int)new_motion(3));
-					serial_write(this->connections[i], msg);
+
+					if (!(this->reset_enc))
+					{
+						serial_write(this->connections[i], msg);
+					}
+					else
+					{
+						serial_write(this->connections[i], (char*)"[reset]\n");
+						this->reset_enc = false;
+					}
 				}
 
 				break;
@@ -314,6 +312,16 @@ void Rose::threadSend(const vec &motion)
 	}
 }
 
+vec Rose::recv(void)
+{
+	// Add a lock to wait until the commthread is done setting the vector
+	vec tempVec;
+	pthread_mutex_lock(this->commRecvLock);
+	tempVec = this->commRecv;
+	pthread_mutex_unlock(this->commRecvLock);
+	return tempVec;
+}
+
 void Rose::threadRecv(void)
 {
 	// Create delay to read at correct rate
@@ -325,16 +333,26 @@ void Rose::threadRecv(void)
 	for (int i = 0; i < (int)this->connections.size(); i++)
 	{
 		char* msg = serial_read(this->connections[i]);
-		printf("[ROSE] RECEIVED: %s\n", msg);
+
+		if (msg != NULL)
+		{
+			printf("[ROSE] RECEIVED: %s\n", msg);
+		}
 
 		switch (this->ids[i])
 		{
 			case 1: // Arduino #1: Drive base
 
+
+
 				// Convert msg into int array
-				if ((msg != NULL) && (strstr(msg, "\n") != NULL))
+				if (msg != NULL)
+					//  && (strstr(msg, "\n") != NULL)
 				{
-					sscanf(msg, "[%*d %d %d %d %d %d %d %d %d]\n",
+					int temp_voltage = 0;
+					int temp_current = 0;
+
+					sscanf(msg, "[%*d %d %d %d %d %d %d %d %d %d %d]\n",
 						&this->motor_speeds[0],
 						&this->motor_speeds[1],
 						&this->motor_speeds[2],
@@ -342,26 +360,13 @@ void Rose::threadRecv(void)
 						&this->encoder[0],
 						&this->encoder[1],
 						&this->encoder[2],
-						&this->encoder[3]);
+						&this->encoder[3],
+						&temp_voltage,
+						&temp_current);
 
-					// Test: print encoder values
-					for(int y =0; y < 4; y++)
-					{
-						printf("%d ", this->encoder[y]);
-					}
-
-					printf("\n");
+					this->twelve_volt_voltage = (float)((float)temp_voltage / 1000);
+					this->twelve_volt_current = (float)((float)temp_current / 1000);
 				}
 		}
 	}
-}
-
-vec Rose::recv(void)
-{
-	// Add a lock to wait until the commthread is done setting the vector
-	vec tempVec;
-	pthread_mutex_lock(this->commRecvLock);
-	tempVec = this->commRecv;
-	pthread_mutex_unlock(this->commRecvLock);
-	return tempVec;
 }

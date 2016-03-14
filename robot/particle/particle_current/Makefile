@@ -1,11 +1,10 @@
 CFLAGS = `pkg-config --cflags opencv` \
-				 -std=c++11 -O3 -g \
+				 -std=c++11 -O3 \
 				 -I/usr/local/include \
 				 -I/usr/include
 LIBS = -L/usr/local/lib \
 			 `pkg-config --libs opencv` \
 			 -larmadillo \
-			 -lSDL2 \
 			 -lSDL \
 			 -lchilitags \
 			 -pthread
