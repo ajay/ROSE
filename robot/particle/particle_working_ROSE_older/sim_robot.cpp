@@ -1,7 +1,10 @@
 #include "sim_robot.h"
 #include "highgui.h"
+#include <ctime>
 
 using namespace arma;
+
+static double secdiff(struct timeval &t1, struct timeval &t2);
 
 sim_robot::sim_robot(sim_map *map) {
   this->map = map;
@@ -83,16 +86,16 @@ static bool within(double x, double a, double b) {
   return a <= x && x <= b;
 }
 
-void sim_robot::move(double v, double w) {
-  this->t += w + gaussianNoise(this->ws) + v/4 * gaussianNoise(this->ws);
+void sim_robot::move(double v, double w, ) {
+  this->t += w * (1+gaussianNoise(this->ws));
   while (this->t < -2 * M_PI) {
     this->t += 2 * M_PI;
   }
   while (this->t > 2 * M_PI) {
     this->t -= 2 * M_PI;
   }
-  double x = this->x + (v + gaussianNoise(this->vs)) * cos(this->t);
-  double y = this->y + (v + gaussianNoise(this->vs)) * sin(this->t);
+  double x = this->x + (v * (1+gaussianNoise(this->vs))) * cos(this->t);
+  double y = this->y + (v *(1+gaussianNoise(this->vs))) * sin(this->t);
   if (!this->collided(x, y)) {
     this->x = x;
     this->y = y;
