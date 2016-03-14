@@ -286,7 +286,7 @@ int main() {
     //robot.move(forward * 2, (left - right) * .1);
     //printf("[sim.cpp] update belief\n");
     rose.send(motion);
-    pf.move((forward - backward) * 20, (turn_left - turn_right) * .1);
+    pf.move((forward - backward) * 20, (turn_left - turn_right) * .1, rose.encoder);
     //printf("[sim.cpp] update posterior\n");
 
     tag_landmarks = sense();

@@ -2,13 +2,19 @@
 #include "sim_robot.h"
 #include <cmath>
 #include <random>
+#include <ctime>
+
 
 using namespace arma;
 using namespace std;
 
+struct timeval currenttime;
+struct timeval prevtime;
+int prev_encoders [4] = {0};
 
 pfilter::pfilter(void) {
-  // DOES NOTHING
+  // initial start time for odometry (See move function) 
+  gettimeofday(&prevtime, NULL);
 }
 
 
@@ -98,11 +104,19 @@ static double gaussianNoise(double sigma) {
  *  @param v the velocity
  *  @param w the angular velocity
  */
-void pfilter::move(double v, double w) {
+void pfilter::move(double v, double w, int encoders []) {
+  int distance [4];
+  if(secdiff(prevtime,currenttime)>50){
+    // calculate displacement based on distance travelled per wheel
+    for (int i = 0; i<4; i++){
+      distance[i] = (encoders[i] - prev_encoders[i]) ;
+    }
+  }
+  gettimeofday(&currenttime, NULL);
   printf("[pfilter.cpp] moving %lf %lf\n", v, w);
   for (int i=0;i<particles.size();i++){
-    this->particles[i].move(v,w);
-    // circular world!!!!
+    this->particles[i].move(v,w,encoders);
+    // circular world!!!
     sim_robot &bot = this->particles[i];
     if (bot.x < 0) {
       bot.x = 0;
@@ -250,4 +264,10 @@ void pfilter::blit(icube &screen) {
     }
     i++;
   }
+}
+
+static double secdiff(struct timeval &t1, struct timeval &t2) {
+  double usec = (double)(t2.tv_usec - t1.tv_usec) / 1000000.0;
+  double sec = (double)(t2.tv_sec - t1.tv_sec);
+  return sec + usec;
 }
