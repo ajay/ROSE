@@ -86,7 +86,7 @@ static bool within(double x, double a, double b) {
   return a <= x && x <= b;
 }
 
-void sim_robot::move(double v, double w, ) {
+void sim_robot::move(double v, double w, int[] encoders) {
   this->t += w * (1+gaussianNoise(this->ws));
   while (this->t < -2 * M_PI) {
     this->t += 2 * M_PI;
