@@ -3,21 +3,34 @@
  <title>WebApp Version 1.0</title>
 </head>
 <body>
+	<!--This represents the first line of text on the HTML.  It displays OFF if there's nothing in the database.
+	    If there is an item, it displays the message contained.                                              -->
  <h1 id="status" style="text-align:center;">{{"OFF" if (userinputs[0] == null) else (userinputs[0].message)}}</h1>
+
+<h1 id="test">borp</h1>
+
  <div style="text-align:center;">
- <form action="/write" method="POST" id="the_form" hidden>
+ 	<!--The below form is a hidden object that gets posted to the database when the "...submit()" function is
+ 	    called.  This occurs when the GO and STOP buttons are pressed.                                       -->
+ <form action="/write" method="POST" id="the_form">
   <input type="text" name="userinput" id="userinput">
   <input type="submit" value="Submit">
   <br><br>  
  </form>
- 
+  <p id="Vineet" hidden></p>
   <button name="go" value="GO" onclick="go()">Go</button>
   <br>
   <button name="stop" value="STOP" onclick="stop()">Stop</button>
+  <br>
+  <button name="test" value="TEST" onmousedown="gopress()" onmouseup="gorelease()">Test</button>
+  <br>
+  <button name="reset" value="RESET" onclick="loadDoc()">Reset</button>
  
  </div>
  <a href="./deleteall" hidden>Delete all</a>
  <script>
+ 
+ 
  
    function go()
    {
@@ -30,6 +43,41 @@
    	document.getElementById("the_form").submit();
    }
    
+   function gopress()
+   {
+   	document.getElementById("Vineet").innerHTML = "GO";
+   	//document.getElementById("userinput").value = "GO";
+   	document.getElementById("status").style.color = "GREEN";
+   	loadDoc();
+   }
+   
+   function gorelease()
+   {
+   	document.getElementById("Vineet").innerHTML = "STOP";
+   	//document.getElementById("userinput").value = "STOP";
+   	document.getElementById("status").style.color = "WHITE";
+   	loadDoc();
+   }
+   
+   function loadDoc() 
+   {
+     //Create the AJAX Request Object
+     var xhttp;
+     xhttp = new XMLHttpRequest();
+     
+     xhttp.onreadystatechange = function()
+     {
+       //if (xhttp.readyState == 4 && xhttp.status == 200) 
+       {
+       	 document.getElementById("test").innerHTML = "check";
+         document.getElementById("status").innerHTML = document.getElementById("Vineet").innerHTML;
+       }
+     };
+     xhttp.open("POST", "/test", true);
+     xhttp.send("test");
+     //$.post("/test", { message: "SUCCESS"});
+   }
+   /*
    {
    	 
      if(document.getElementById("status").innerHTML == "GO")
@@ -43,6 +91,7 @@
      else
      	document.getElementById("status").style.color = "black";
    }
+   */
  </script>
 </body>
 
