@@ -41,39 +41,55 @@ int main() {
 	auto db = conn["rosedb"];
 	auto encoders = db["encoders"];
 
-	bsoncxx::builder::stream::document encoderVals;
-	encoderVals << "encoder values" << open_array 
-				<< 0 << 0
-				<< 0 << 0
-				<< close_array << finalize;
+	encoders.delete_many({});
 
-	//used to update all the values in the encoderVals document
-	bsoncxx::builder::stream::document updateVals;
+	bsoncxx::document::value initializer = 
+	document{} << "encoder values" << open_array
+		<< 0 << 0 
+		<< 0 << 0 
+		<< close_array << finalize;
+
+	printf("Inserting first encoder value\n");
+
+	encoders.insert_one(std::move(initializer));
+
+
 
 	srand(time(NULL));
 
 	int displacement[4];
 	int d;
 
-	auto cursor = encoders.find({}); //"encoders" is the collection
-
 	int count = 5;
 
 	while (count > 0){
+
+		bsoncxx::builder::stream::document encoderVals;
+
+		//used to update all the values in the encoderVals document
+		//initialized within the while loop so that it is reset
+		//and does not have multiple "$set" documents appended
+		bsoncxx::builder::stream::document updateVals;
+
 		for (int i = 0; i < 4; ++i) {
 			d = rand() % 100;
 			displacement[i] = d;
-			cout<<displacement[i]<<endl;
+			//cout<<displacement[i]<<endl;
 		}
 
 		//update values here
-		updateVals << "encoder values" << open_array
+		updateVals << "$set" << open_document
+			<< "encoder values" << open_array
 			<< displacement[0] << displacement[1]
 			<< displacement[2] << displacement[3]
-			<< close_array << finalize;
+			<< close_array << close_document;
+
+		encoderVals << "encoder values" << open_document
+		<< "$exists" << true << close_document;
 
 		encoders.update_one(encoderVals.view(), updateVals.view());
 
+		auto cursor = encoders.find({}); //"encoders" is the collection
 		//printing out for testing purposes
 		for (auto&& doc : cursor ) {
 			cout<<bsoncxx::to_json(doc)<<endl;
