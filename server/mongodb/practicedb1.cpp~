@@ -48,10 +48,7 @@ int main() {
                << "restaurant_id"
                << "41704620" << finalize;
 
-	auto cursor = collection.find();
-	for (int i = 0; i <  
-	
-// We choose to move in our document here, which transfers ownership to insert_one()
+	// We choose to move in our document here, which transfers ownership to insert_one()
     // with this line, we insert into a collection named "restaurants". again, if the 
    	// collection does not exist, then it will be automatically created for you
 	//insert_one() take one parameter of type "document";
