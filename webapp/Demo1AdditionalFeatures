@@ -1,0 +1,5 @@
+New Features to Add:
+1. Partial States
+  -Need to be able to move in 4 more directions: NW, NE, SW, SE if the corresponding two buttons are pressed on the keyboard simultaneously
+2. Rotation
+  -Designate two addtional keys to rotate the robot CW and CCW
