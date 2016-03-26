@@ -5,7 +5,6 @@
 <body>
 	<!--This represents the first line of text on the HTML.  It displays OFF if there's nothing in the database.
 	    If there is an item, it displays the state contained.                                              -->
- <br><br>
  <h1 id="status" style="text-align:center;">{{"OFF" if (userinputs[0] == null) else (userinputs[0].state)}}</h1>
 
  <div style="text-align:center;" hidden>

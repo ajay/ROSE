@@ -2,8 +2,6 @@ from flask import Flask, render_template, request, redirect
 import os
 from pymongo import MongoClient
 
-teststring = "Fish"
-
 def connect():
 # Substitute the 5 pieces of information you got when creating
 # the Mongo DB Database (underlined in red in the screenshots)
@@ -22,6 +20,7 @@ handle = connect()
 @app.route("/", methods=['GET'])
 def index():
     userinputs = [x for x in handle.mycollection.find()]
+    #speed = handle.mycollection.find({"_id":1})[0]["speed"]
     return render_template('index.html', userinputs=userinputs)
 
 @app.route("/test", methods=['GET', 'POST'])
@@ -30,9 +29,7 @@ def test():
 	print request.method
 	#userinputs = [x for x in handle.mycollection.find()]
 	userinput = request.args.get("userinput")
-        if handle.mycollection.find().count() == 0:
-    	    handle.mycollection.insert({"_id":1},{"message":userinput})
-        oid = handle.mycollection.update({"_id":1},{"message":userinput})
+        oid = handle.mycollection.update({"_id":1},{"state":userinput},True)
         print userinput
         #userinputs = [x for x in handle.mycollection.find()]
 	#return render_template('index.html', userinputs=userinputs)
@@ -41,10 +38,52 @@ def test():
 @app.route("/write", methods=['POST'])
 def write():
     userinput = request.form.get("userinput")
-    if handle.mycollection.find().count() == 0:
-    	handle.mycollection.insert({"_id":1},{"message":userinput})
-    oid = handle.mycollection.update({"_id":1},{"message":userinput})
+    oid = handle.mycollection.update({"_id":1},{"state":userinput,"speed":0}, True)
     return redirect ("/")
+    
+    
+    
+@app.route("/up", methods=['POST'])
+def up():
+    oid = handle.mycollection.update({"_id":1},{"state":"FORWARD"}, True)
+    return redirect ("/")
+
+@app.route("/down", methods=['POST'])
+def down():
+    oid = handle.mycollection.update({"_id":1},{"state":"BACKWARD"}, True)
+    return redirect ("/")    
+
+@app.route("/left", methods=['POST'])
+def left():
+    oid = handle.mycollection.update({"_id":1},{"state":"LEFT"}, True)
+    return redirect ("/")
+
+@app.route("/right", methods=['POST'])
+def right():
+    oid = handle.mycollection.update({"_id":1},{"state":"RIGHT"}, True)
+    return redirect ("/")
+
+@app.route("/reset", methods=['POST'])
+def reset():
+    oid = handle.mycollection.update({"_id":1},{"state":"STOP"}, True)
+    return redirect ("/")
+
+@app.route("/speedup", methods=['POST'])
+def speedup():
+	print "speed:%d"%(handle.mycollection.find({"_id":1})[0]["speed"])
+	spe = handle.mycollection.find({"_id":1})[0]["speed"] + 0.05 if handle.mycollection.find({"_id":1})[0]["speed"] < 1 else handle.mycollection.find({"_id":1})[0]["speed"]
+	oid = handle.mycollection.update({"_id":1},{"speed":spe})
+	return redirect ("/")
+
+@app.route("/speeddown", methods=['POST'])
+def speeddown():
+	print "speed:%d"%(handle.mycollection.find({"_id":1})[0]["speed"])
+	spe = handle.mycollection.find({"_id":1})[0]["speed"] - 0.05 if handle.mycollection.find({"_id":1})[0]["speed"] > 0 else handle.mycollection.find({"_id":1})[0]["speed"]
+	oid = handle.mycollection.update({"_id":1},{"speed":spe})
+	return redirect ("/")
+
+def threadtest():
+	return
 
 @app.route("/deleteall", methods=['GET'])
 def deleteall():
