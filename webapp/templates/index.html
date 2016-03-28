@@ -32,7 +32,10 @@
  
  <script>
  
- 
+    var isNorthPressed = false;
+    var isSouthPressed = false;
+    var isEastPressed = false;
+    var isWestPressed = false;
  
    function forward()
    {
@@ -78,51 +81,99 @@
      
         if (e.keyCode == '38') 
         {
-            // up arrow
-            document.getElementById("status").innerHTML = "FORWARD";
-            //SYNCHRONOUS VERSION
-            //document.getElementById("userinput").value = "UP";
-   			//document.getElementById("the_form").submit();
-   			
-   			//ASYNCHRONOUS VERSION
-   			xhttp.open("POST", "/up", true);
-     		xhttp.send("test");
+          isNorthPressed = true;
+          if(isWestPressed == true){
+            document.getElementById("status").innerHTML = "NORTHWEST";
+            xhttp.open("POST", "/northwest", true);
+            xhttp.send("test");
+          } else if (isEastPressed == true){
+            document.getElementById("status").innerHTML = "NORTHEAST";
+            xhttp.open("POST", "/northeast", true);
+            xhttp.send("test");
+          } else {
+                       // up arrow
+                document.getElementById("status").innerHTML = "FORWARD";
+                //SYNCHRONOUS VERSION
+                //document.getElementById("userinput").value = "UP";
+            //document.getElementById("the_form").submit();
+            
+            //ASYNCHRONOUS VERSION
+            xhttp.open("POST", "/up", true);
+            xhttp.send("test");
+          }
+     
         }
         else if (e.keyCode == '40')
         {
-            // down arrow
-            document.getElementById("status").innerHTML = "BACKWARD";
-            //SYNCHRONOUS VERSION
-            //document.getElementById("userinput").value = "DOWN";
-   			//document.getElementById("the_form").submit();
-   			
-   			//ASYNCHRONOUS VERSION
-   			xhttp.open("POST", "/down", true);
-     		xhttp.send("test");
+          isSouthPressed = true;
+          if(isWestPressed == true){
+            document.getElementById("status").innerHTML = "SOUTHWEST";
+            xhttp.open("POST", "/southwest", true);
+            xhttp.send("test");
+          } else if(isEastPressed == true){
+            document.getElementById("status").innerHTML = "SOUTHEAST";
+            xhttp.open("POST", "/southeast", true);
+            xhttp.send("test");
+          } else {
+                           // down arrow
+                document.getElementById("status").innerHTML = "BACKWARD";
+                //SYNCHRONOUS VERSION
+                //document.getElementById("userinput").value = "DOWN";
+            //document.getElementById("the_form").submit();
+            
+            //ASYNCHRONOUS VERSION
+            xhttp.open("POST", "/down", true);
+            xhttp.send("test");
+          }
+ 
         }
         else if (e.keyCode == '37')
         {
-            // left arrow
-            document.getElementById("status").innerHTML = "LEFT";
-            //SYNCHRONOUS VERSION
-            //document.getElementById("userinput").value = "LEFT";
-   			//document.getElementById("the_form").submit();
-   			
-   			//ASYNCHRONOUS VERSION
-   			xhttp.open("POST", "/left", true);
-     		xhttp.send("test");
+          isWestPressed = true;
+          if(isNorthPressed == true){
+            document.getElementById("status").innerHTML = "NORTHWEST";
+            xhttp.open("POST", "/northwest", true);
+            xhttp.send("test");
+          } else if (isSouthPressed == true){
+            document.getElementById("status").innerHTML = "SOUTHWEST";
+            xhttp.open("POST", "/southwest", true);
+            xhttp.send("test");
+          } else {
+                     // left arrow
+                document.getElementById("status").innerHTML = "LEFT";
+                //SYNCHRONOUS VERSION
+                //document.getElementById("userinput").value = "LEFT";
+            //document.getElementById("the_form").submit();
+            
+            //ASYNCHRONOUS VERSION
+            xhttp.open("POST", "/left", true);
+            xhttp.send("test");
+          }
+       
         }
         else if (e.keyCode == '39')
         {
-            // right arrow
-            document.getElementById("status").innerHTML = "RIGHT";
-            //SYNCHRONOUS VERSION
-            //document.getElementById("userinput").value = "RIGHT";
-   			//document.getElementById("the_form").submit();
-   			
-   			//ASYNCHRONOUS VERSION
-   			xhttp.open("POST", "/right", true);
-     		xhttp.send("test");
+          isEastPressed = true;
+          if (isNorthPressed == true){
+            document.getElementById("status").innerHTML = "NORTHEAST";
+            xhttp.open("POST", "/northeast", true);
+            xhttp.send("test");
+          } else if(isSouthPressed == true){
+            document.getElementById("status").innerHTML = "SOUTHEAST";
+            xhttp.open("POST", "/southeast", true);
+            xhttp.send("test");
+          } else {
+                     // right arrow
+                document.getElementById("status").innerHTML = "RIGHT";
+                //SYNCHRONOUS VERSION
+                //document.getElementById("userinput").value = "RIGHT";
+            //document.getElementById("the_form").submit();
+            
+            //ASYNCHRONOUS VERSION
+            xhttp.open("POST", "/right", true);
+            xhttp.send("test");
+          }
+       
         }
         else if (e.keyCode == '33')
         {
@@ -161,6 +212,18 @@
      	xhttp = new XMLHttpRequest();
      	if (e.keyCode == '37' || e.keyCode == '38' || e.keyCode == '39' || e.keyCode == '40')
      	{
+        if (e.keyCode == '38'){ //north
+          isNorthPressed = false;
+        }
+        if (e.keyCode == '37'){ //west
+          isWestPressed = false;
+        }
+        if (e.keyCode == '39'){ //east
+          isEastPressed = false;
+        }
+        if (e.keyCode == '40'){//south
+          isSouthPressed = false;
+        }
      		document.getElementById("status").innerHTML = "STOP";
      		xhttp.open("POST", "/reset", true);
     		xhttp.send("test");

@@ -63,6 +63,27 @@ def right():
     oid = handle.mycollection.update({"_id":1},{"state":"RIGHT"}, True)
     return redirect ("/")
 
+@app.route("/northwest", methods=['POST'])
+def northwest():
+    oid = handle.mycollection.update({"_id":1},{"state":"NORTHWEST"}, True)
+    return redirect ("/")
+
+@app.route("/northeast", methods=['POST'])
+def northeast():
+    oid = handle.mycollection.update({"_id":1},{"state":"NORTHEAST"}, True)
+    return redirect ("/")
+
+@app.route("/southwest", methods=['POST'])
+def southwest():
+    oid = handle.mycollection.update({"_id":1},{"state":"SOUTHWEST"}, True)
+    return redirect ("/")
+
+@app.route("/southeast", methods=['POST'])
+def southeast():
+    oid = handle.mycollection.update({"_id":1},{"state":"SOUTHEAST"}, True)
+    return redirect ("/")
+
+
 @app.route("/reset", methods=['POST'])
 def reset():
     oid = handle.mycollection.update({"_id":1},{"state":"STOP"}, True)
