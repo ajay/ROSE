@@ -5,3 +5,4 @@ New Features to Add:
   -Designate two addtional keys to rotate the robot CW and CCW
 3. Speed Display
   -Create sliding panels (easier with discrete number of states) to adjust speed
+  -Display current speed
