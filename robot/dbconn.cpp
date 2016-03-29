@@ -17,9 +17,15 @@ using bsoncxx::stdx::string_view;
 
 using namespace std;
 
-struct db_recv data_recv;
+dbconn::dbconn()
+{
+}
 
-void db_recv_update()
+dbconn::~dbconn()
+{
+}
+
+void dbconn::db_recv_update()
 {
 	mongocxx::instance inst{};					// Used to create a client connection and connect to a mongo instance
 	mongocxx::client conn{mongocxx::uri{}}; 	// NOTE: make sure to have "mongocxx::uri{}"
@@ -29,11 +35,10 @@ void db_recv_update()
 	{
 		read_state(db);
 		//read_speed(db);
-		usleep(1000000);
 	}
 }
 
-void read_state(mongocxx::v_noabi::database db)
+void dbconn::read_state(mongocxx::v_noabi::database db)
 {
 	auto state = db["mycollection"];
 
@@ -52,11 +57,11 @@ void read_state(mongocxx::v_noabi::database db)
 
 		// Convert a type bsoncxx::document::element to a type std::string
 		string direction = e.get_utf8().value.to_string();
-		data_recv.direction = direction;
+		this->data_recv.direction = direction;
 	}
 }
 
-void read_speed(mongocxx::v_noabi::database db)
+void dbconn::read_speed(mongocxx::v_noabi::database db)
 {
 	srand(time(NULL));
 	auto speed = db["mycollection"];
@@ -75,6 +80,6 @@ void read_speed(mongocxx::v_noabi::database db)
 
 		// Convert a type bsoncxx::document::element to a type double
 		double s = e.get_double().value;
-		data_recv.speed = s;
+		this->data_recv.speed = s;
 	}
 }

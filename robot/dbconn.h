@@ -20,34 +20,52 @@
 #include <mongocxx/instance.hpp>
 #include <mongocxx/uri.hpp>
 
-struct db_recv
+class dbconn
 {
-	std::string direction;
-	double speed;
+	struct db_recv
+	{
+		std::string direction;
+		double speed;
+	};
+
+	struct db_send
+	{
+		int encoders[4];
+		double twelve_volt_voltage;
+		std::string state;
+	};
+
+	public:
+		dbconn();
+		~dbconn();
+
+		/**
+		 * Get data from the database, sent from the webapp
+		 */
+		void db_recv_update();
+
+		/**
+		 *
+		 */
+		struct db_recv data_recv;
+
+		/**
+		 *
+		 */
+		struct db_send data_send;
+
+	private:
+		/**
+		 * Read state string from mongodb
+		 * @param db Mongodb database instance
+		 */
+		void read_state(mongocxx::v_noabi::database db);
+
+		/**
+		 * Read speed int from mongodb
+		 * @param db Mongodb database instance
+		 */
+		void read_speed(mongocxx::v_noabi::database db);
 };
-
-struct db_send
-{
-	int encoders[4];
-	int twelve_volt_voltage;
-	std::string state;
-};
-
-/**
- * Get data from the database, sent from the webapp
- */
-void db_recv_update();
-
-/**
- * Read state string from mongodb
- * @param db Mongodb database instance
- */
-void read_state(mongocxx::v_noabi::database db);
-
-/**
- * Read speed int from mongodb
- * @param db Mongodb database instance
- */
-void read_speed(mongocxx::v_noabi::database db);
 
 #endif

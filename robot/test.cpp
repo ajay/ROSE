@@ -19,17 +19,20 @@ static arma::vec motion = zeros<vec>(4);
 static bool test_flag = false;
 bool pid_kill = true;
 
+static dbconn db;
+
 void db_update()
 {
-	db_recv_update();
+	db.db_recv_update();
 }
 
 void print_db_data()
 {
 	while (1)
 	{
-		printf("State Received: %s\n", dbconn.data_recv.state)
-		usleep(100000);
+		printf("State Received: %s\n", db.data_recv.direction.c_str());
+		printf("Speed Received: %1.2f\n", db.data_recv.speed);
+		usleep(100000); // 1 sec
 	}
 }
 
@@ -115,6 +118,8 @@ void stop(int signo)
 int main(int argc, char *argv[])
 {
 	std::thread database(db_update);
+	std::thread database_debug(print_db_data);
+
 	std::thread pid(driveStraight);
 
 	rose.startStop = false;
@@ -133,21 +138,25 @@ int main(int argc, char *argv[])
 	{
 		SDL_Color color = { 255, 255, 255, 255 };
 
-		std::ostringstream speed_stream;
+		std::ostringstream speed_stream, voltage_stream, current_stream, db_direction_stream, db_speed_stream;
+
 		speed_stream  << "speed: " << std::setprecision(2) << v;
-		std::string speed_string = speed_stream.str();
-
-		std::ostringstream voltage_stream;
 		voltage_stream  << "12V Voltage: " << std::setprecision(4) << rose.twelve_volt_voltage << " V";
-		std::string voltage_string = voltage_stream.str();
-
-		std::ostringstream current_stream;
 		current_stream  << "12V Current: " << std::setprecision(4) << rose.twelve_volt_current << "A";
+		db_direction_stream << "DB Direction: " << db.data_recv.direction;
+		db_speed_stream << "DB Speed: " << std::setprecision(2) << db.data_recv.speed;
+
+		std::string speed_string = speed_stream.str();
+		std::string voltage_string = voltage_stream.str();
 		std::string current_string = current_stream.str();
+		std::string db_direction_string = db_direction_stream.str();
+		std::string db_speed_string = db_speed_stream.str();
 
 		SDL_Texture *speed_image = renderText(speed_string, "fonts/roboto.ttf", color, 32, renderer);
 		SDL_Texture *voltage_image = renderText(voltage_string, "fonts/roboto.ttf", color, 32, renderer);
 		SDL_Texture *current_image = renderText(current_string, "fonts/roboto.ttf", color, 32, renderer);
+		SDL_Texture *db_direction_image = renderText(db_direction_string, "fonts/roboto.ttf", color, 20, renderer);
+		SDL_Texture *db_speed_image = renderText(db_speed_string, "fonts/roboto.ttf", color, 20, renderer);
 
 		if ((speed_image == nullptr) || (voltage_image == nullptr) || (current_image == nullptr))
 		{
@@ -166,6 +175,8 @@ int main(int argc, char *argv[])
 		renderTexture(speed_image, renderer, 10, 10);
 		renderTexture(voltage_image, renderer, 10, 50);
 		renderTexture(current_image, renderer, 10, 90);
+		renderTexture(db_direction_image, renderer, 10, 130);
+		renderTexture(db_speed_image, renderer, 10, 160);
 		SDL_RenderPresent(renderer);
 
 		SDL_PollEvent(&event);
