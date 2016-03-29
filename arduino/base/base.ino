@@ -8,7 +8,7 @@
 #include <Wire.h>
 
 #define DEV_ID 1
-#define ramp_const 8
+#define ramp_const 16 // Higher is faster
 
 // Variables associated with buffers for serial comm
 const int bufsize = 256;
@@ -194,7 +194,7 @@ void setmotors(int leftFront, int rightFront, int leftBack, int rightBack)
 	// Set motors to correct directions
 	for (int i = 0; i < 4; i++)
 	{
-		if (negative[i])
+	if (negative[i])
 		{
 			motors[i]->run(BACKWARD);
 		}
@@ -305,11 +305,11 @@ void loop()
 	VRaw = analogRead(A0);
 	IRaw = analogRead(A1);
 
-	VFinal = VRaw / 12.99 * 3.3 / 5;
-	IFinal = IRaw / 3.7 * 3.3 / 5;
+	VFinal = (float)(VRaw) / 12.99;
+	IFinal = (float)(IRaw) / 3.7;
 
-	twelve_volt_voltage = VFinal * 1000;
-	twelve_volt_current = IFinal * 100;
+	twelve_volt_voltage = (int)(VFinal * 1000);
+	twelve_volt_current = (int)(IFinal * 1000);
 
 	// Send back data over serial every 100ms
 	if (millis() - msecs > 100)

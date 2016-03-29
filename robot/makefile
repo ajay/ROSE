@@ -9,6 +9,7 @@ CFLAGS 		= -pedantic \
 
 CPPC 		= g++
 CPPFLAGS 	= `pkg-config --cflags sdl2` \
+				`pkg-config --cflags libmongocxx` \
 				-pedantic \
 				-Wall \
 				-Werror \
@@ -19,6 +20,7 @@ CPPFLAGS 	= `pkg-config --cflags sdl2` \
 				-o
 
 LIBS 		= `pkg-config --libs sdl2` \
+				`pkg-config --libs libmongocxx` \
  				-larmadillo \
  				-pthread \
  				-lSDL2_ttf
@@ -26,7 +28,7 @@ LIBS 		= `pkg-config --libs sdl2` \
 COMPILEC 	= $(CC) $(CFLAGS)
 COMPILECPP 	= $(CPPC) $(CPPFLAGS)
 
-OBJECTS 	= serial.o Rose.o test.o window.o
+OBJECTS 	= serial.o window.o Rose.o dbconn.o test.o
 
 all: $(OBJECTS) rose
 

@@ -4,33 +4,11 @@
 #include <unistd.h>
 #include <iomanip>
 #include <iostream>
-#include <stdlib.h>     /* srand, rand */
-#include <time.h>       /* time */
 #include <string>
-#include <unistd.h> /* used to sleep */
 
 #include "Rose.h"
 #include "window.h"
-
-/* mongodb includes */
-
-#include <bsoncxx/builder/stream/document.hpp>
-#include <bsoncxx/types.hpp>
-#include <bsoncxx/json.hpp>
-
-#include <mongocxx/client.hpp>
-#include <mongocxx/options/find.hpp>
-#include <mongocxx/instance.hpp>
-#include <mongocxx/uri.hpp>
-
-using bsoncxx::builder::stream::document;
-using bsoncxx::builder::stream::open_document;
-using bsoncxx::builder::stream::close_document;
-using bsoncxx::builder::stream::open_array;
-using bsoncxx::builder::stream::close_array;
-using bsoncxx::builder::stream::finalize;
-
-/*end of mongodb includes */
+#include "dbconn.h"
 
 using namespace std;
 
@@ -41,26 +19,18 @@ static arma::vec motion = zeros<vec>(4);
 static bool test_flag = false;
 bool pid_kill = true;
 
-// Kendrick:
-// Test flag is updated here
-// Only add code here for mongo connection
-/*this script specifies how the robot will access and manage information
-from the database */
-void update_flag()
+void db_update()
 {
-	//used to create a client connection and connect to a mongo instance
-	mongocxx::instance inst{};
-	//NOTE: make sure to have "mongocxx::uri{}"
-	mongocxx::client conn{mongocxx::uri{}};
-	//connect to the rosedb database
-	auto db = conn["rosedb"];
-	state = db["mycollection"]; //mycollection currently holds the document about the state
+	db_recv_update();
+}
 
-	auto direction = state.distinct("message");
-
-
-	// test_flag = <something>
-	// printf("test_flag is: %d\n", test_flag);
+void print_db_data()
+{
+	while (1)
+	{
+		printf("State Received: %s\n", dbconn.data_recv.state)
+		usleep(100000);
+	}
 }
 
 // Takes in four integers and assignments them to motion
@@ -144,7 +114,7 @@ void stop(int signo)
 
 int main(int argc, char *argv[])
 {
-	std::thread db_update(update_flag);
+	std::thread database(db_update);
 	std::thread pid(driveStraight);
 
 	rose.startStop = false;

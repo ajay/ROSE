@@ -1,7 +1,9 @@
 *.o
 .o
+*~
 test
 sim
+state
 
 .DS_Store
 .AppleDouble
