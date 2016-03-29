@@ -13,6 +13,7 @@ make the robot move accordingly
 #include <string>
 #include <unistd.h> /* used to sleep */
 #include <time.h>
+#include "dbconn.h"
 
 /* mongodb includes */
 
@@ -142,7 +143,8 @@ int main() {
 
 	while (1) {
 		read_state(db);
-		read_speed(db);
+		//commenting out until webapp can push speed
+		//read_speed(db);
 		usleep(1000000);
 	}
 
