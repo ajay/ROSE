@@ -6,11 +6,8 @@ def connect():
 # Substitute the 5 pieces of information you got when creating
 # the Mongo DB Database (underlined in red in the screenshots)
 # Obviously, do not store your password as plaintext in practice
-    #connection = MongoClient()
-    #handle = connection["rosedb"]
-    connection = MongoClient("ds015878.mongolab.com",15878)
+    connection = MongoClient()
     handle = connection["rosedb"]
-    handle.authenticate("Brice","12345678")
     return handle
 
 app = Flask(__name__)
