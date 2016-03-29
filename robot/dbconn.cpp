@@ -58,21 +58,21 @@ void read_state(mongocxx::v_noabi::database db) {
 	//SIMULATOR: tests string retreval
 	// state.delete_many({});
 	// if (test == 0) {
-	// 	state.insert_one(document{} << "message" << "left" << finalize);
+	// 	state.insert_one(document{} << "state" << "left" << finalize);
 	// 	test++;
 	// } else if (test == 1) {
-	// 	state.insert_one(document{} << "message" << "right" << finalize);
+	// 	state.insert_one(document{} << "state" << "right" << finalize);
 	// 	test++;
 	// } else {
-	// 	state.insert_one(document{} << "message" << "up" << finalize);
+	// 	state.insert_one(document{} << "state" << "up" << finalize);
 	// 	test = 0;
 	// }
 
 	//this is used in the cursor for loop to capture the value of the document's key
 	bsoncxx::document::element e;
 
-	//query all documents which have "message" as a key
-	auto cursor = state.find(document{} << "message" << open_document
+	//query all documents which have "state" as a key
+	auto cursor = state.find(document{} << "state" << open_document
 		<< "$exists" << true << close_document << finalize);
 
 	document moveDoc;
@@ -82,9 +82,9 @@ void read_state(mongocxx::v_noabi::database db) {
 		cout<<bsoncxx::to_json(doc)<<endl;
 		*/
 
-		//capture value of "message", NOTE: the operator [] only works on
+		//capture value of "state", NOTE: the operator [] only works on
 		//a type bsoncxx::document::view (which is what "doc" is)
-		e = doc["message"];
+		e = doc["state"];
 		//convert a type bsoncxx::document::element to a type std::string
 		string direction = e.get_utf8().value.to_string();
 		roseData.direction = direction;
@@ -101,10 +101,10 @@ void read_speed(mongocxx::v_noabi::database db) {
 	bsoncxx::document::element e;
 
 	//SIMULATOR: test double retreval
-	// speed.delete_many({});
-	// //NOTE: mongodb cannot implicitly convert an int to double, so
-	// //we need to define the value as a double explicitely before storing
-	// //into the collection if we want to extract as a double
+	//speed.delete_many({});
+	//NOTE: mongodb cannot implicitly convert an int to double, so
+	//we need to define the value as a double explicitely before storing
+	//into the collection if we want to extract as a double
 	// double randDouble = rand() % 10 + 1;
 	// speed.insert_one(document{} << "speed" << randDouble << finalize);
 
