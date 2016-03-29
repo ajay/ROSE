@@ -40,8 +40,7 @@ def test():
 @app.route("/write", methods=['POST'])
 def write():
     userinput = request.form.get("userinput")
-    oid = handle.mycollection.update({"_id":1},{"state":userinput}, True)
-    handle.mycollection.update({"_id":2},{"speed":0},True)
+    oid = handle.mycollection.update({"_id":1},{"state":userinput,"speed":0}, True)
     return redirect ("/")
     
     
