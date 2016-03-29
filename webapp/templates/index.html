@@ -9,7 +9,7 @@
  <h1 id="status" style="text-align:center;">State: {{"OFF" if (userinputs[0] == null) else (userinputs[0].state)}}</h1>
  <h2 id="speedtext" style = "text-align:center;">Speed: {{"OFF" if (userinputs[1] == null) else (userinputs[1].speed)}}</h2>
  
- <input type="number" name="speed" id="speed" min="0" max="1" step="0.05"></input>
+ <input type="number" name="speed" id="speed" min="0" max="1" step="0.05" hidden></input>
 
  <div style="text-align:center;" hidden>
  	<!--The below form is a hidden object that gets posted to the database when the "...submit()" function is

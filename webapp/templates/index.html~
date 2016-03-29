@@ -36,7 +36,6 @@
  </div>
  <div id="devtools" style="text-align:right;visibility:hidden">
  <p id="keypressed">Key Pressed: 0</p>
- <br>
  <button name="test" value="TEST" onclick="test()">Test</button>
  <br>
  <a href="./deleteall">Delete all</a>
