@@ -1,0 +1,96 @@
+1a2
+> #include "sim_lidar.h"
+5d5
+< #include <ctime>
+10,13d9
+< struct timeval currenttime;
+< struct timeval prevtime;
+< vec prevenc(4, fill::zeros);
+< 
+17,24d12
+< static double secdiff(struct timeval &t1, struct timeval &t2);
+< 
+< /** This is the default constructor
+<  */
+< pfilter::pfilter(void) {
+<   // initial start time for odometry (See move function) 
+<   gettimeofday(&prevtime, NULL);
+< }
+53,55d40
+< 
+<   // set the start time for odometry
+<   gettimeofday(&prevtime, NULL);
+90,117c75
+< void pfilter::move(double v, double w, vec enc) {
+<   gettimeofday(&currenttime, NULL);
+<   if (secdiff(prevtime, currenttime) < 50) {
+<     return;
+<   } else {
+<     memcpy(&prevtime, &currenttime, sizeof(struct timeval));
+<   }
+<   if (v > 0.5) {
+<     // calculate displacement based on distance travelled per wheel
+<     // t2iK = 20 * pi / (180 * sqrt(2))
+<     double t2iK = 0.246826621412;
+<     dist = enc - prevenc;
+<     v = mean(dist) * t2iK;
+<     w = 0; // assumption
+<     prevenc = enc;
+<   } else if (w > 0.5) {
+<     // t2iK = 20 * pi / (180) / (8.75)
+<     double t2iK = 0.039893206349;
+<     dist = enc - prevenc;
+<     dist(0) *= -1;  // rightside negative
+<     dist(2) *= -1;
+<     v = 0; // assumption
+<     w = mean(dist) * t2iK;
+<     prevenc = enc;
+<   } else {
+<     return;
+<   }
+<   printf("[pfilter.cpp] moving %lf %lf\n", v, w);
+---
+> void pfilter::move(double vx, double vy, double w) {
+119c77
+<     particles[i].move(0, v, w);
+---
+>     particles[i].move(vx, vy, w);
+135d92
+<   printf("[pfilter.cpp] finished move\n");
+140,141c97
+<  *                      the second row is the y row,
+<  *                      and the third row is the presence
+---
+>  *                      and the second row is the y row
+145d100
+<   printf("[pfilter.cpp] weigh\n");
+164,169c119,122
+<       if (observations(2, j) > 0.5) {
+<         radius[j] = sqrt(pow(landmarks[j].x-particles[i].x, 2) + pow(landmarks[j].y-particles[i].y, 2)); // radius of the robot
+<         theta[j] = atan2(landmarks[j].y - particles[i].y, landmarks[j].x - particles[i].x) - particles[i].t; // theta of the robot
+<         this->health[i] *= gauss(R[j] - radius[j], vs);
+<         this->health[i] *= gauss(T[j] - theta[j], ws);
+<       }
+---
+>       radius[j] = sqrt(pow(landmarks[j].x-particles[i].x, 2) + pow(landmarks[j].y-particles[i].y, 2)); // radius of the robot
+>       theta[j] = atan2(landmarks[j].y - particles[i].y, landmarks[j].x - particles[i].x) - particles[i].t; // theta of the robot
+>       this->health[i] *= gauss(R[j] - radius[j], vs);
+>       this->health[i] *= gauss(T[j] - theta[j], ws);
+179d131
+<   printf("[pfilter.cpp] resample\n");
+204d155
+<   if (observations.n_cols > 0) {
+206,208c157,158
+<     health = ones<vec>(particles.size());
+<     weigh(observations);
+<   }
+---
+>   health = ones<vec>(particles.size());
+>   weigh(observations);
+278,283d227
+< }
+< 
+< static double secdiff(struct timeval &t1, struct timeval &t2) {
+<   double usec = (double)(t2.tv_usec - t1.tv_usec) / 1000000.0;
+<   double sec = (double)(t2.tv_sec - t1.tv_sec);
+<   return sec + usec;
