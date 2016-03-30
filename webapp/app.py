@@ -39,6 +39,7 @@ def write():
     userinput = request.form.get("userinput")
     oid = handle.mycollection.update({"_id":1},{"state":userinput}, True)
     handle.mycollection.update({"_id":2},{"speed":0},True)
+    handle.mycollection.update({"_id":3},{"rotation":0},True);
     return redirect ("/")
     
     
@@ -102,6 +103,21 @@ def speeddown():
 	spe = handle.mycollection.find({"_id":2})[0]["speed"] - 0.05 if handle.mycollection.find({"_id":2})[0]["speed"] > 0 else handle.mycollection.find({"_id":2})[0]["speed"]
 	oid = handle.mycollection.update({"_id":2},{"speed":spe})
 	return redirect ("/")
+
+@app.route("/rotateCW", methods = ['POST'])
+def rotateCW():
+    oid = handle.mycollection.update({"_id":3},{"rotation": 1}, True)
+    return redirect ("/")
+
+@app.route("/rotateCCW", methods = ['POST'])
+def rotateCCW():
+    oid = handle.mycollection.insert({"_id":1},{"rotation":-1}, True)
+    return redirect ("/")
+
+@app.route("/rotatereset", methods = ['POST'])
+def rotatereset():
+    oid = handle.mycollection.update({"_id":3},{"rotation": 0}, True)
+    return redirect ("/")
 
 def threadtest():
 	return
