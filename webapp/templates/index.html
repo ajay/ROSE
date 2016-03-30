@@ -8,6 +8,7 @@
  <br><br>
  <h1 id="status" style="text-align:center;">State: {{"OFF" if (userinputs[0] == null) else (userinputs[0].state)}}</h1>
  <h2 id="speedtext" style = "text-align:center;">Speed: {{"OFF" if (userinputs[1] == null) else (userinputs[1].speed)}}</h2>
+ <h2 id ="rotation" style="text-align:center;">Rotation: {{"OFF" if (userinputs[2] == null) else ("COUNTERCLOCKWISE" if(userinputs[2].rotation == -1) else ("CLOCKWISE" if (userinputs[2].rotation == 1) else "NONE"))}}</h2>
  
  <input type="number" name="speed" id="speed" min="0" max="1" step="0.05" hidden></input>
 
@@ -50,13 +51,13 @@
     
    function test()
    {
-   	document.getElementById("userinput").value = "STOP";
+   	document.getElementById("userinput").value = "State: STOP";
    	document.getElementById("the_form").submit();
    }
  
    function forward()
    {
-   	document.getElementById("status").innerHTML = "FORWARD";
+   	document.getElementById("status").innerHTML = "State: FORWARD";
    	var xhttp;
      	xhttp = new XMLHttpRequest();
      	xhttp.open("POST", "/up", true);
@@ -64,7 +65,7 @@
    }
    function backward()
    {
-   	document.getElementById("status").innerHTML = "BACKWARD";
+   	document.getElementById("status").innerHTML = "State: BACKWARD";
    	var xhttp;
      	xhttp = new XMLHttpRequest();
      	xhttp.open("POST", "/down", true);
@@ -72,7 +73,7 @@
    }
    function left()
    {
-   	document.getElementById("status").innerHTML = "LEFT";
+   	document.getElementById("status").innerHTML = "State: LEFT";
    	var xhttp;
      	xhttp = new XMLHttpRequest();
      	xhttp.open("POST", "/left", true);
@@ -80,7 +81,7 @@
    }
    function right()
    {
-   	document.getElementById("status").innerHTML = "RIGHT";
+   	document.getElementById("status").innerHTML = "State: RIGHT";
    	var xhttp;
      	xhttp = new XMLHttpRequest();
      	xhttp.open("POST", "/right", true);
@@ -103,20 +104,20 @@
           isNorthPressed = true;
           if(isWestPressed == true)
           {
-            document.getElementById("status").innerHTML = "NORTHWEST";
+            document.getElementById("status").innerHTML = "State: NORTHWEST";
             xhttp.open("POST", "/northwest", true);
             xhttp.send("test");
           }
           else if (isEastPressed == true)
           {
-            document.getElementById("status").innerHTML = "NORTHEAST";
+            document.getElementById("status").innerHTML = "State: NORTHEAST";
             xhttp.open("POST", "/northeast", true);
             xhttp.send("test");
           }
           else
           {
                        // up arrow
-                document.getElementById("status").innerHTML = "FORWARD";
+                document.getElementById("status").innerHTML = "State: FORWARD";
                 //SYNCHRONOUS VERSION
                 //document.getElementById("userinput").value = "UP";
             //document.getElementById("the_form").submit();
@@ -132,19 +133,19 @@
           isSouthPressed = true;
           if(isWestPressed == true)
           {
-            document.getElementById("status").innerHTML = "SOUTHWEST";
+            document.getElementById("status").innerHTML = "State: SOUTHWEST";
             xhttp.open("POST", "/southwest", true);
             xhttp.send("test");
           }
           else if(isEastPressed == true){
-            document.getElementById("status").innerHTML = "SOUTHEAST";
+            document.getElementById("status").innerHTML = "State: SOUTHEAST";
             xhttp.open("POST", "/southeast", true);
             xhttp.send("test");
           }
           else
           {
                            // down arrow
-                document.getElementById("status").innerHTML = "BACKWARD";
+                document.getElementById("status").innerHTML = "State: BACKWARD";
                 //SYNCHRONOUS VERSION
                 //document.getElementById("userinput").value = "DOWN";
             //document.getElementById("the_form").submit();
@@ -160,20 +161,20 @@
           isWestPressed = true;
           if(isNorthPressed == true)
           {
-            document.getElementById("status").innerHTML = "NORTHWEST";
+            document.getElementById("status").innerHTML = "State: NORTHWEST";
             xhttp.open("POST", "/northwest", true);
             xhttp.send("test");
           }
           else if (isSouthPressed == true)
           {
-            document.getElementById("status").innerHTML = "SOUTHWEST";
+            document.getElementById("status").innerHTML = "State: SOUTHWEST";
             xhttp.open("POST", "/southwest", true);
             xhttp.send("test");
           }
           else
           {
                      // left arrow
-                document.getElementById("status").innerHTML = "LEFT";
+                document.getElementById("status").innerHTML = "State: LEFT";
                 //SYNCHRONOUS VERSION
                 //document.getElementById("userinput").value = "LEFT";
             //document.getElementById("the_form").submit();
@@ -189,20 +190,20 @@
           isEastPressed = true;
           if (isNorthPressed == true)
           {
-            document.getElementById("status").innerHTML = "NORTHEAST";
+            document.getElementById("status").innerHTML = "State: NORTHEAST";
             xhttp.open("POST", "/northeast", true);
             xhttp.send("test");
           }
           else if(isSouthPressed == true)
           {
-            document.getElementById("status").innerHTML = "SOUTHEAST";
+            document.getElementById("status").innerHTML = "State: SOUTHEAST";
             xhttp.open("POST", "/southeast", true);
             xhttp.send("test");
           }
           else
           {
                      // right arrow
-                document.getElementById("status").innerHTML = "RIGHT";
+                document.getElementById("status").innerHTML = "State: RIGHT";
                 //SYNCHRONOUS VERSION
                 //document.getElementById("userinput").value = "RIGHT";
             //document.getElementById("the_form").submit();
@@ -220,7 +221,7 @@
    			//ASYNCHRONOUS VERSION
    			xhttp.open("POST", "/speedup", true);
      		xhttp.send("test");
-     	    document.getElementById("speedtext").innerHTML = document.getElementById("speed").value;
+     	    document.getElementById("speedtext").innerHTML = "Speed: " + document.getElementById("speed").value;
         }
         else if (e.keyCode == '34')
         {
@@ -229,14 +230,31 @@
    			//ASYNCHRONOUS VERSION
    			xhttp.open("POST", "/speeddown", true);
      		xhttp.send("test");
-     	    document.getElementById("speedtext").innerHTML = document.getElementById("speed").value;
+     	    document.getElementById("speedtext").innerHTML = "Speed: " + document.getElementById("speed").value;
+        }
+
+        else if (e.keyCode == '65')
+        {
+          isRotateCWPressed = true;
+          document.getElementById("rotation").innerHTML = "Rotation: CLOCKWISE";
+          xhttp.open("POST","/rotateCW", true);
+          xhttp.send("test");
+
+        }
+        //Check for rotation CCW- "S" is pressed
+        else if (e.keyCode == '83') 
+        {
+          isRotateCCWPressed = true;
+          document.getElementById("rotation").innerHTML = "Rotation: COUNTERCLOCKWISE";
+          xhttp.open("POST", "/rotateCCW", true);
+          xhttp.send("test");
         }
 
     }
     
     function reset()
     {
-    	document.getElementById("status").innerHTML = "STOP";
+    	document.getElementById("status").innerHTML = "State: STOP";
     	var xhttp;
      	xhttp = new XMLHttpRequest();
     	xhttp.open("POST", "/reset", true);
@@ -270,10 +288,27 @@
           //south
           isSouthPressed = false;
         }
-     		document.getElementById("status").innerHTML = "STOP";
+     		document.getElementById("status").innerHTML = "State: STOP";
      		xhttp.open("POST", "/reset", true);
     		xhttp.send("test");
     	}
+      if(e.keyCode == '65' || e.keyCode == '83')
+      {
+        if(e.keyCode == '65')
+        {
+          isRotateCWPressed = false;
+          document.getElementById("rotation").innerHTML = "Rotation: NONE";
+          xhttp.open("POST", "/rotatereset", true);
+          xhttp.send("test");
+        }
+        else
+        {
+          isRotateCCWPressed = false;
+          document.getElementById("rotation").innerHTML = "Rotation: NONE";
+          xhttp.open("POST", "/rotatereset", true);
+          xhttp.send("test");
+        }
+      }
     	document.getElementById("keypressed").innerHTML = "Key Pressed: 0";
     }
     

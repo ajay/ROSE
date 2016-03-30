@@ -26,6 +26,7 @@ class dbconn
 	{
 		std::string direction;
 		double speed;
+		int rotation;
 	};
 
 	struct db_send
@@ -36,8 +37,8 @@ class dbconn
 	};
 
 	public:
-		dbconn();
-		~dbconn();
+		// dbconn();
+		// ~dbconn();
 
 		/**
 		 * Get data from the database, sent from the webapp
@@ -47,12 +48,12 @@ class dbconn
 		/**
 		 *
 		 */
-		struct db_recv data_recv;
+		struct db_recv rose_data_recv;
 
 		/**
 		 *
 		 */
-		struct db_send data_send;
+		struct db_send rose_data_send;
 
 	private:
 		/**
@@ -66,6 +67,12 @@ class dbconn
 		 * @param db Mongodb database instance
 		 */
 		void read_speed(mongocxx::v_noabi::database db);
+
+		/**
+		 * Read the direction of rotation
+		 * @param db Mongodb database instance
+		 */
+		void read_rotation(mongocxx::v_noabi::database db);
 };
 
 #endif
