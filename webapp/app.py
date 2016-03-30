@@ -111,7 +111,7 @@ def rotateCW():
 
 @app.route("/rotateCCW", methods = ['POST'])
 def rotateCCW():
-    oid = handle.mycollection.insert({"_id":1},{"rotation":-1}, True)
+    oid = handle.mycollection.insert({"_id":3},{"rotation":-1}, True)
     return redirect ("/")
 
 @app.route("/rotatereset", methods = ['POST'])
