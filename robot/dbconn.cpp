@@ -40,12 +40,20 @@ using bsoncxx::stdx::string_view;
 
 using namespace std;
 
-struct data {
+struct data_recieve {
+	//this struct contains all the data that the robot recieves from the webapp
 	string direction;
 	double speed;
+	int rotation;
 };
 
-struct data roseData;
+struct data_send {
+	//this struct contains all data that the robot will send to the webapp
+	int encoders[4];
+	int voltage;
+};
+
+struct data_recieve rose_data_rec;
 //this integer is used for the simulations
 int test = 0;
 
@@ -88,20 +96,20 @@ void read_state(mongocxx::v_noabi::database db) {
 		e = doc["state"];
 		//convert a type bsoncxx::document::element to a type std::string
 		string direction = e.get_utf8().value.to_string();
-		roseData.direction = direction;
+		rose_data_rec.direction = direction;
 	}
 
-	printf("%s\n", roseData.direction.c_str());
+	printf("moving: %s\n", rose_data_rec.direction.c_str());
 
 }
 
 void read_speed(mongocxx::v_noabi::database db) {
-	srand(time(NULL));
 	auto speed = db["mycollection"];
 
 	bsoncxx::document::element e;
 
 	//SIMULATOR: test double retreval
+	//srand(time(NULL));
 	//speed.delete_many({});
 	//NOTE: mongodb cannot implicitly convert an int to double, so
 	//we need to define the value as a double explicitely before storing
@@ -125,11 +133,30 @@ void read_speed(mongocxx::v_noabi::database db) {
 		e = doc["speed"];
 		//convert a type bsoncxx::document::element to a type double
 		double s = e.get_double().value;
-		roseData.speed = s;
+		rose_data_rec.speed = s;
 	}
 
 	
-	printf("%f\n", roseData.speed);
+	printf("speed: %f\n", rose_data_rec.speed);
+}
+
+void read_rotation(mongocxx::v_noabi::database db) {
+	auto rotation = db["mycollection"];
+	//query documents which have a key of "rotation"
+	auto cursor = rotation.find(document{} << "rotation" << open_document
+		<< "$exists" << true << close_document << finalize);
+
+	bsoncxx::document::element e;
+
+	for (auto&& doc : cursor) {
+		//capture the rotation direction. we have a constant speed for rotation
+		e = doc["rotation"];
+		//acquires the rotation state: -1 = counter clockwise, 0 is NULL, 1 is clockwise
+		int s = e.get_int32().value;
+		rose_data_rec.rotation = s;
+	}
+
+	printf("rotation state: %i\n", rose_data_rec.rotation);
 }
 
 int main() {
@@ -143,8 +170,8 @@ int main() {
 
 	while (1) {
 		read_state(db);
-		//commenting out until webapp can push speed
-		//read_speed(db);
+		read_speed(db);
+		read_rotation(db);
 		usleep(1000000);
 	}
 

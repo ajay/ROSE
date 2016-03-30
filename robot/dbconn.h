@@ -35,7 +35,7 @@ using namespace std;
 #define DBCONN_H
 
 void read_state(mongocxx::v_noabi::database db);
-//commenting out until webapp can push speed
-//void read_speed(mongocxx::v_noabi::database db);
+void read_speed(mongocxx::v_noabi::database db);
+void read_rotation(mongocxx::v_noabi::database db);
 
 #endif
