@@ -10,9 +10,9 @@
 class pfilter {
   public:
     pfilter(void);
-    pfilter(int nparticles, sim_map *map, std::vector<sim_landmark> &landmarks, int x, int y, int t);
+    pfilter(int nparticles, sim_map *map, std::vector<sim_landmark> &landmarks, double x, double y, double t);
     ~pfilter(void);
-    void move(double v, double w, int encoders []);
+    void move(double v, double w, int encoders[]);
     void observe(arma::mat observations);
     void predict(arma::vec &mu, arma::mat &sigma);
     void set_noise(double vs, double ws);

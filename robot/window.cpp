@@ -6,8 +6,8 @@ SDL_Surface* initSDL()
 {
 	SDL_Init(SDL_INIT_VIDEO);
 
-	int width = 400;
-	int height = 200;
+	int width = 640;
+	int height = 480;
 
 	window = SDL_CreateWindow("Rose", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_SHOWN);
 	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);

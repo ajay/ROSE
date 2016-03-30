@@ -2,6 +2,7 @@
 #define sim_robot_h
 
 #include "sim_map.h"
+#include <SDL2/SDL.h>
 #include <string>
 #include <armadillo>
 
@@ -13,7 +14,7 @@ class sim_robot {
     void set_pose(double x, double y, double t);
     void set_noise(double vs, double ws);
     void attach_lidar(void *lidar);
-    void move(double v, double w, int encoders []);
+    void move(double vx, double vy, double w);
     void blit(arma::icube &screen);
 
     double x;

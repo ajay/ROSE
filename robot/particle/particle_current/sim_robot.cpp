@@ -1,10 +1,9 @@
 #include "sim_robot.h"
 #include "highgui.h"
-#include <ctime>
+#include <random>
 
 using namespace arma;
-
-static double secdiff(struct timeval &t1, struct timeval &t2);
+using namespace std;
 
 sim_robot::sim_robot(sim_map *map) {
   this->map = map;
@@ -40,27 +39,6 @@ double limitf(double x, double a, double b) {
   return (x < a) ? a : (x > b ? b : x);
 }
 
-static double erfinv(double p) {
-  // approximate maclaurin series (refer to http://mathworld.wolfram.com/InverseErf.html)
-  double sqrt_pi = sqrt(M_PI);
-  vec a = {
-    0.88623,
-    0.23201,
-    0.12756,
-    0.086552
-  };
-  vec x(a.n_elem);
-  for (int i = 0; i < x.n_elem; i++) {
-    x(i) = pow(p, 2 * i + 1);
-  }
-  return dot(a,x);
-}
-
-static double gaussianNoise(double sigma) {
-  double p = (double)rand() / ((double)RAND_MAX / 2) - 1;
-  return erfinv(p) * sigma;
-}
-
 bool sim_robot::collided(double x, double y) {
   if (this->map == NULL) { // don't care about collisions
     return false;
@@ -86,16 +64,41 @@ static bool within(double x, double a, double b) {
   return a <= x && x <= b;
 }
 
-void sim_robot::move(double v, double w, int encoders []) {
-  this->t += w * (1+gaussianNoise(this->ws));
+static double erfinv(double p) {
+  // approximate maclaurin series (refer to http://mathworld.wolfram.com/InverseErf.html)
+  double sqrt_pi = sqrt(M_PI);
+  vec a = {
+    0.88623,
+    0.23201,
+    0.12756,
+    0.086552
+  };
+  vec x(a.n_elem);
+  for (int i = 0; i < x.n_elem; i++) {
+    x(i) = pow(p, 2 * i + 1);
+  }
+  return dot(a,x);
+}
+
+static double gaussianNoise(double sigma) {
+  double p = (double)rand() / ((double)RAND_MAX / 2) - 1;
+  return erfinv(p) * sigma;
+}
+
+void sim_robot::move(double vx, double vy, double w) {
+  this->t += w * (1 + gaussianNoise(this->ws));
+//      (vx * gaussianNoise(this->vs / 100)) +
+//      (vy * gaussianNoise(this->vs / 100)); // arbitrary constant chosen
   while (this->t < -2 * M_PI) {
     this->t += 2 * M_PI;
   }
   while (this->t > 2 * M_PI) {
     this->t -= 2 * M_PI;
   }
-  double x = this->x + (v * (1+gaussianNoise(this->vs))) * cos(this->t);
-  double y = this->y + (v *(1+gaussianNoise(this->vs))) * sin(this->t);
+  double x = this->x + (vy * (1 + gaussianNoise(this->vs))) * cos(this->t) +
+    (vx + gaussianNoise(this->vs)) * sin(this->t);
+  double y = this->y + (vy * (1 + gaussianNoise(this->vs))) * sin(this->t) -
+    (vx + gaussianNoise(this->vs)) * cos(this->t);
   if (!this->collided(x, y)) {
     this->x = x;
     this->y = y;

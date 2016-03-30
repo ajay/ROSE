@@ -4,33 +4,11 @@
 #include <unistd.h>
 #include <iomanip>
 #include <iostream>
-#include <stdlib.h>     /* srand, rand */
-#include <time.h>       /* time */
 #include <string>
-#include <unistd.h> /* used to sleep */
 
 #include "Rose.h"
 #include "window.h"
-
-/* mongodb includes */
-
-#include <bsoncxx/builder/stream/document.hpp>
-#include <bsoncxx/types.hpp>
-#include <bsoncxx/json.hpp>
-
-#include <mongocxx/client.hpp>
-#include <mongocxx/options/find.hpp>
-#include <mongocxx/instance.hpp>
-#include <mongocxx/uri.hpp>
-
-using bsoncxx::builder::stream::document;
-using bsoncxx::builder::stream::open_document;
-using bsoncxx::builder::stream::close_document;
-using bsoncxx::builder::stream::open_array;
-using bsoncxx::builder::stream::close_array;
-using bsoncxx::builder::stream::finalize;
-
-/*end of mongodb includes */
+#include "dbconn.h"
 
 using namespace std;
 
@@ -41,26 +19,21 @@ static arma::vec motion = zeros<vec>(4);
 static bool test_flag = false;
 bool pid_kill = true;
 
-// Kendrick:
-// Test flag is updated here
-// Only add code here for mongo connection
-/*this script specifies how the robot will access and manage information
-from the database */
-void update_flag()
+static dbconn db;
+
+void db_update()
 {
-	//used to create a client connection and connect to a mongo instance
-	mongocxx::instance inst{};
-	//NOTE: make sure to have "mongocxx::uri{}"
-	mongocxx::client conn{mongocxx::uri{}};
-	//connect to the rosedb database
-	auto db = conn["rosedb"];
-	state = db["mycollection"]; //mycollection currently holds the document about the state
+	db.db_recv_update();
+}
 
-	auto direction = state.distinct("message");
-
-
-	// test_flag = <something>
-	// printf("test_flag is: %d\n", test_flag);
+void print_db_data()
+{
+	while (1)
+	{
+		printf("State Received: %s\n", db.data_recv.direction.c_str());
+		printf("Speed Received: %1.2f\n", db.data_recv.speed);
+		usleep(100000); // 1 sec
+	}
 }
 
 // Takes in four integers and assignments them to motion
@@ -70,6 +43,34 @@ void drive(double frontLeft, double frontRight, double backLeft, double backRigh
 	motion[1] = frontRight;
 	motion[2] = backLeft;
 	motion[3] = backRight;
+}
+
+void drive(string direction, double v)
+{
+	if		(direction == "STOP")						{ drive( 0,  0,  0,  0); }
+
+	else if	(direction == "NORTH")						{ drive( v,  v,  v,  v); }
+	else if (direction == "SOUTH")						{ drive(-v, -v, -v, -v); }
+	else if (direction == "WEST")						{ drive(-v,  v,  v, -v); }
+	else if (direction == "EAST")						{ drive( v, -v, -v,  v); }
+
+	else if (direction == "CLOCKWISE")					{ drive( v, -v,  v, -v); }
+	else if	(direction == "COUNTERCLOCKWISE")			{ drive(-v,  v, -v,  v); }
+
+	else if (direction == "NORTHWEST")					{ drive( 0,  v,  v,  0); }
+	else if (direction == "NORTHEAST")					{ drive( v,  0,  0,  v); }
+	else if (direction == "SOUTHWEST")					{ drive(-v,  0,  0, -v); }
+	else if (direction == "SOUTHEAST")					{ drive( 0, -v, -v,  0); }
+
+	else if (direction == "NORTHCLOCKWISE")				{ drive( v,    v/2,    v,  v/2); }
+	else if (direction == "NORTHCOUNTERCLOCKWISE")		{ drive( v/2,    v,  v/2,    v); }
+	else if (direction == "SOUTHCLOCKWISE")				{ drive(-v/2,   -v, -v/2,   -v); }
+	else if (direction == "SOUTHCOUNTERCLOCKWISE")		{ drive(-v,   -v/2,   -v, -v/2); }
+
+	else if (direction == "ONE")						{ drive( v,  0,  0,  0); }
+	else if (direction == "TWO")						{ drive( 0,  v,  0,  0); }
+	else if (direction == "THREE")						{ drive( 0,  0,  v,  0); }
+	else if (direction == "FOUR")						{ drive( 0,  0,  0,  v); }
 }
 
 // Takes in a value between -1 and 1, and drives straight
@@ -142,9 +143,22 @@ void stop(int signo)
 	exit(1);
 }
 
+void print_SDL(std::ostringstream& str, int size, int x, int y)
+{
+	SDL_Renderer* renderer = get_renderer();
+	SDL_Color color = { 255, 255, 255, 255 };
+	std::string font = "fonts/roboto.ttf";
+
+	std::string str_string = str.str();
+	SDL_Texture *str_image = renderText(str_string, font, color, size, renderer);
+	renderTexture(str_image, renderer, x, y);
+}
+
 int main(int argc, char *argv[])
 {
-	std::thread db_update(update_flag);
+	std::thread database(db_update);
+	// std::thread database_debug(print_db_data);
+
 	std::thread pid(driveStraight);
 
 	rose.startStop = false;
@@ -153,6 +167,7 @@ int main(int argc, char *argv[])
 	SDL_Surface *screen = initSDL();
 	bool quit = false;
 	double v = 0.5; // velocity
+	string direction = "STOP";
 	SDL_Event event;
 
 	SDL_Window* window = get_window();
@@ -161,41 +176,20 @@ int main(int argc, char *argv[])
 
 	while(!quit)
 	{
-		SDL_Color color = { 255, 255, 255, 255 };
+		std::ostringstream speed, voltage, current, db_direction, db_speed;
 
-		std::ostringstream speed_stream;
-		speed_stream  << "speed: " << std::setprecision(2) << v;
-		std::string speed_string = speed_stream.str();
-
-		std::ostringstream voltage_stream;
-		voltage_stream  << "12V Voltage: " << std::setprecision(4) << rose.twelve_volt_voltage << " V";
-		std::string voltage_string = voltage_stream.str();
-
-		std::ostringstream current_stream;
-		current_stream  << "12V Current: " << std::setprecision(4) << rose.twelve_volt_current << "A";
-		std::string current_string = current_stream.str();
-
-		SDL_Texture *speed_image = renderText(speed_string, "fonts/roboto.ttf", color, 32, renderer);
-		SDL_Texture *voltage_image = renderText(voltage_string, "fonts/roboto.ttf", color, 32, renderer);
-		SDL_Texture *current_image = renderText(current_string, "fonts/roboto.ttf", color, 32, renderer);
-
-		if ((speed_image == nullptr) || (voltage_image == nullptr) || (current_image == nullptr))
-		{
-			TTF_Quit();
-			SDL_Quit();
-			return 1;
-		}
-
-		// SDL Stuff
-		// int iW, iH;
-		// SDL_QueryTexture(image, NULL, NULL, &iW, &iH);
-		// int x = 200 / 2 - iW / 2;
-		// int y = 200 / 2 - iH / 2;
+		speed  << "speed: " << std::setprecision(2) << v;
+		voltage  << "12V Voltage: " << std::setprecision(4) << rose.twelve_volt_voltage << " V";
+		current  << "12V Current: " << std::setprecision(4) << rose.twelve_volt_current << "A";
+		db_direction << "DB Direction: " << db.data_recv.direction;
+		db_speed << "DB Speed: " << std::setprecision(2) << db.data_recv.speed;
 
 		SDL_RenderClear(renderer);
-		renderTexture(speed_image, renderer, 10, 10);
-		renderTexture(voltage_image, renderer, 10, 50);
-		renderTexture(current_image, renderer, 10, 90);
+		print_SDL(speed, 32, 10, 10);
+		print_SDL(voltage, 32, 10, 50);
+		print_SDL(current, 32, 10, 90);
+		print_SDL(db_direction, 20, 10, 130);
+		print_SDL(db_speed, 20, 10, 160);
 		SDL_RenderPresent(renderer);
 
 		SDL_PollEvent(&event);
@@ -219,24 +213,23 @@ int main(int argc, char *argv[])
 			drive(0.0001, -0.001, 0.0001, 0.001);
 		}
 
-		else if(keystates[SDL_SCANCODE_PAGEUP])		{ drive(-v,  v, -v,  v); }
-		else if(keystates[SDL_SCANCODE_PAGEDOWN])	{ drive( v, -v,  v, -v); }
-		else if(keystates[SDL_SCANCODE_UP]) 		{ drive( v,  v,  v,  v); }
-		else if(keystates[SDL_SCANCODE_DOWN]) 		{ drive(-v, -v, -v, -v); }
-		else if(keystates[SDL_SCANCODE_LEFT]) 		{ drive(-v,  v,  v, -v); }
-		else if(keystates[SDL_SCANCODE_RIGHT]) 		{ drive( v, -v, -v,  v); }
-		else if(keystates[SDL_SCANCODE_1]) 			{ drive( v,  0,  0,  0); }
-		else if(keystates[SDL_SCANCODE_2]) 			{ drive( 0,  v,  0,  0); }
-		else if(keystates[SDL_SCANCODE_3]) 			{ drive( 0,  0,  v,  0); }
-		else if(keystates[SDL_SCANCODE_4]) 			{ drive( 0,  0,  0,  v); }
+		else if(keystates[SDL_SCANCODE_PAGEUP])		{ direction = "COUNTERCLOCKWISE"; }
+		else if(keystates[SDL_SCANCODE_PAGEDOWN])	{ direction = "CLOCKWISE"; }
+		else if(keystates[SDL_SCANCODE_UP]) 		{ direction = "NORTH"; }
+		else if(keystates[SDL_SCANCODE_DOWN]) 		{ direction = "SOUTH"; }
+		else if(keystates[SDL_SCANCODE_LEFT]) 		{ direction = "WEST"; }
+		else if(keystates[SDL_SCANCODE_RIGHT]) 		{ direction = "EAST"; }
+		else if(keystates[SDL_SCANCODE_1]) 			{ direction = "ONE"; }
+		else if(keystates[SDL_SCANCODE_2]) 			{ direction = "TWO"; }
+		else if(keystates[SDL_SCANCODE_3]) 			{ direction = "THREE"; }
+		else if(keystates[SDL_SCANCODE_4]) 			{ direction = "FOUR"; }
 
 		else if(keystates[SDL_SCANCODE_O]) 			{ pid_kill = false; }
 		else if(keystates[SDL_SCANCODE_P]) 			{ pid_kill = true; }
 
-		else
-		{
-			drive(0, 0, 0, 0);
-		}
+		else 										{ direction = "STOP"; }
+
+		drive(direction, v);
 
 		if(keystates[SDL_SCANCODE_Q])
 		{
