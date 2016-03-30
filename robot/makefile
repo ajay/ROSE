@@ -28,7 +28,7 @@ LIBS 		= `pkg-config --libs sdl2` \
 COMPILEC 	= $(CC) $(CFLAGS)
 COMPILECPP 	= $(CPPC) $(CPPFLAGS)
 
-OBJECTS 	= serial.o window.o Rose.o dbconn.o test.o
+OBJECTS 	= serial.o window.o Rose.o dbconn.o planner.o
 
 all: $(OBJECTS) rose
 
