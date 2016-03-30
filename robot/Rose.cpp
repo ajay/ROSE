@@ -28,6 +28,20 @@ Rose::Rose(void)
 		this->reset();
 		this->send(zeros<vec>(4));
 	}
+	else
+	{
+		if (this->numconnected() <= 0)
+		{
+			printf("[ROSE] Could not connect to any arduinos...\n");
+		}
+
+		else
+		{
+			printf("[ROSE] Connecting to a particular arduino failed\n");
+		}
+
+		exit(0);
+	}
 }
 
 Rose::~Rose(void)
@@ -106,7 +120,7 @@ bool Rose::connect(void)
 	if (this->pports.size() == 0)
 	{
 		this->disconnect();
-		return -1;
+		return false;
 	}
 
 	// Create delay to read at correct rate
@@ -180,6 +194,12 @@ bool Rose::connect(void)
 		return false;
 	}
 
+	else if (this->numconnected() == 0)
+	{
+		printf("Could not connect to all arduinos\n");
+		return false;
+	}
+
 	else
 	{
 		printf("[ROSE] Connected to all\n");
@@ -227,9 +247,12 @@ void Rose::disconnect(void)
 void Rose::send(const vec &motion)
 {
 	// Lock the data before setting it...avoids the thread from reading the motion vector before it finishes copying over
-	pthread_mutex_lock(this->commSendLock);
-	this->commSend = motion;
-	pthread_mutex_unlock(this->commSendLock);
+	if (this->numconnected() > 0)
+	{
+		pthread_mutex_lock(this->commSendLock);
+		this->commSend = motion;
+		pthread_mutex_unlock(this->commSendLock);
+	}
 }
 
 void Rose::threadSend(const vec &motion)
@@ -336,7 +359,7 @@ void Rose::threadRecv(void)
 
 		if (msg != NULL)
 		{
-			printf("[ROSE] RECEIVED: %s\n", msg);
+			// printf("[ROSE] RECEIVED: %s\n", msg);
 		}
 
 		switch (this->ids[i])
