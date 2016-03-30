@@ -1,0 +1,38 @@
+{
+  "joint0": {
+    "raw_min": 300,
+    "raw_max": 740,
+    "theta_min": -45,
+    "theta_max": 45
+  },
+  "joint1": {
+    "raw_min": 213,
+    "raw_max": 832,
+    "theta_min": -45,
+    "theta_max": 45
+  },
+  "joint2": {
+    "raw_min": 310,
+    "raw_max": 1000,
+    "theta_min": 0,
+    "theta_max": 170
+  },
+  "joint3": {
+    "raw_min": 100,
+    "raw_max": 894,
+    "theta_min": -90,
+    "theta_max": 90
+  },
+  "joint4": {
+    "raw_min": 100,
+    "raw_max": 930,
+    "theta_min": -90,
+    "theta_max": 90
+  },
+  "joint5": {
+    "raw_min": 600,
+    "raw_max": 950,
+    "theta_min": 0,
+    "theta_max": 90
+  }
+}
