@@ -235,18 +235,18 @@
 
         else if (e.keyCode == '65')
         {
-          isRotateCWPressed = true;
-          document.getElementById("rotation").innerHTML = "Rotation: CLOCKWISE";
-          xhttp.open("POST","/rotateCW", true);
+          isRotateCCWPressed = true;
+          document.getElementById("rotation").innerHTML = "Rotation: COUNTERCLOCKWISE";
+          xhttp.open("POST","/rotateCCW", true);
           xhttp.send("test");
 
         }
         //Check for rotation CCW- "S" is pressed
         else if (e.keyCode == '83') 
         {
-          isRotateCCWPressed = true;
-          document.getElementById("rotation").innerHTML = "Rotation: COUNTERCLOCKWISE";
-          xhttp.open("POST", "/rotateCCW", true);
+          isRotateCWPressed = true;
+          document.getElementById("rotation").innerHTML = "Rotation: CLOCKWISE";
+          xhttp.open("POST", "/rotateCW", true);
           xhttp.send("test");
         }
 
@@ -297,17 +297,14 @@
         if(e.keyCode == '65')
         {
           isRotateCWPressed = false;
-          document.getElementById("rotation").innerHTML = "Rotation: NONE";
-          xhttp.open("POST", "/rotatereset", true);
-          xhttp.send("test");
         }
         else
         {
           isRotateCCWPressed = false;
-          document.getElementById("rotation").innerHTML = "Rotation: NONE";
-          xhttp.open("POST", "/rotatereset", true);
-          xhttp.send("test");
         }
+        document.getElementById("rotation").innerHTML = "Rotation: NONE";
+        xhttp.open("POST", "/rotatereset", true);
+        xhttp.send("test");
       }
     	document.getElementById("keypressed").innerHTML = "Key Pressed: 0";
     }

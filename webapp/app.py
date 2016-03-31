@@ -38,7 +38,7 @@ def test():
 def write():
     userinput = request.form.get("userinput")
     oid = handle.mycollection.update({"_id":1},{"state":userinput}, True)
-    handle.mycollection.update({"_id":2},{"speed":0},True)
+    handle.mycollection.update({"_id":2},{"speed":0.0},True)
     handle.mycollection.update({"_id":3},{"rotation":0},True);
     return redirect ("/")
     
@@ -94,14 +94,14 @@ def reset():
 def speedup():
 	print "speed:%d"%(handle.mycollection.find({"_id":2})[0]["speed"])
 	spe = handle.mycollection.find({"_id":2})[0]["speed"] + 0.05 if handle.mycollection.find({"_id":2})[0]["speed"] < 1 else handle.mycollection.find({"_id":2})[0]["speed"]
-	oid = handle.mycollection.update({"_id":2},{"speed":spe})
+	oid = handle.mycollection.update({"_id":2},{"speed":spe}, True)
 	return redirect ("/")
 
 @app.route("/speeddown", methods=['POST'])
 def speeddown():
 	print "speed:%d"%(handle.mycollection.find({"_id":2})[0]["speed"])
 	spe = handle.mycollection.find({"_id":2})[0]["speed"] - 0.05 if handle.mycollection.find({"_id":2})[0]["speed"] > 0 else handle.mycollection.find({"_id":2})[0]["speed"]
-	oid = handle.mycollection.update({"_id":2},{"speed":spe})
+	oid = handle.mycollection.update({"_id":2},{"speed":spe}, True)
 	return redirect ("/")
 
 @app.route("/rotateCW", methods = ['POST'])
@@ -111,7 +111,7 @@ def rotateCW():
 
 @app.route("/rotateCCW", methods = ['POST'])
 def rotateCCW():
-    oid = handle.mycollection.insert({"_id":1},{"rotation":-1}, True)
+    oid = handle.mycollection.update({"_id":3},{"rotation": -1}, True)
     return redirect ("/")
 
 @app.route("/rotatereset", methods = ['POST'])
