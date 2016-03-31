@@ -37,8 +37,8 @@ class dbconn
 	};
 
 	public:
-		// dbconn();
-		// ~dbconn();
+		dbconn();
+		~dbconn();
 
 		/**
 		 * Get data from the database, sent from the webapp
