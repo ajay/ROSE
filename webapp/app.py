@@ -48,7 +48,7 @@ def write():
     handle.mycollection.update({"_id":3},{"rotation":0},True);
     return redirect ("/")
     
-    
+#
     
 @app.route("/north", methods=['POST'])
 def up():
