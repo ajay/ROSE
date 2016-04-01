@@ -1,0 +1,6 @@
+Features to Add:
+1. Create a new thread in app.py to constantly refresh the DB every 10 ms (or similar interval). 
+   Every 10ms send a datetime string in a new time collection.
+   Leave all other db communication as is.
+2. Fix rotation bugs.
+3. Change states to match those in planner.cpp.

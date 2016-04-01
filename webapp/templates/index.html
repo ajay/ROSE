@@ -98,7 +98,7 @@
      	xhttp = new XMLHttpRequest();
      	
      	document.getElementById("keypressed").innerHTML = "Key Pressed: " + e.keyCode;
-     
+      
         if (e.keyCode == '38') 
         {
           isNorthPressed = true;
@@ -270,7 +270,7 @@
      	{
         if (e.keyCode == '38')
         { 
-          //north
+          //north 
           isNorthPressed = false;
         }
         if (e.keyCode == '37')
@@ -288,9 +288,41 @@
           //south
           isSouthPressed = false;
         }
-     		document.getElementById("status").innerHTML = "State: STOP";
-     		xhttp.open("POST", "/reset", true);
-    		xhttp.send("test");
+
+        if (isNorthPressed) {
+          document.getElementById("status").innerHTML = "State: NORTH";
+          xhttp.open("POST", "/up", true);
+          xhttp.send("test");
+          return;  
+        }
+
+        else if (isSouthPressed) {
+          document.getElementById("status").innerHTML = "State: SOUTH";
+          xhttp.open("POST", "/down", true);
+          xhttp.send("test");
+          return;
+        }
+
+        else if (isEastPressed) {
+          document.getElementById("status").innerHTML = "State: EAST";
+          xhttp.open("POST", "/right", true);
+          xhttp.send("test");
+          return; 
+        }
+
+        else if (isWestPressed) {
+          document.getElementById("status").innerHTML = "State: WEST";
+          xhttp.open("POST", "/left", true);
+          xhttp.send("test");
+          return; 
+        }
+
+        else {
+          document.getElementById("status").innerHTML = "State: STOP";
+          xhttp.open("POST", "/reset", true);
+          xhttp.send("test");
+          return;  
+        } 
     	}
       if(e.keyCode == '65' || e.keyCode == '83')
       {
@@ -302,11 +334,29 @@
         {
           isRotateCCWPressed = false;
         }
-        document.getElementById("rotation").innerHTML = "Rotation: NONE";
-        xhttp.open("POST", "/rotatereset", true);
-        xhttp.send("test");
+
+        if (isRotateCCWPressed) {
+            document.getElementById("rotation").innerHTML = "Rotation: COUNTERCLOCKWISE";
+            xhttp.open("POST", "/rotateCCW", true);
+            xhttp.send("test");
+            return; 
+        }
+
+        else if (isRotateCWPressed) {
+          document.getElementById("rotation").innerHTML = "Rotation: CLOCKWISE";
+          xhttp.open("POST", "/rotateCW", true);
+          xhttp.send("test");
+          return; 
+        }
+
+        else {
+          document.getElementById("rotation").innerHTML = "Rotation: NONE";
+          xhttp.open("POST", "/rotatereset", true);
+          xhttp.send("test");
+          document.getElementById("keypressed").innerHTML = "Key Pressed: 0";
+          return;
+        }
       }
-    	document.getElementById("keypressed").innerHTML = "Key Pressed: 0";
     }
     
     function showdevtools()
