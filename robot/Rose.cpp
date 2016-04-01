@@ -133,12 +133,9 @@ bool Rose::connect(void)
 	// Attempt to connect to all arduinos
 	for (char *pport : this->pports)
 	{
-		printf("pport: %s\n", pport);
-    // Connect Device
+        // Connect Device
 		serial_t *connection = new serial_t;
 		serial_connect(connection, pport, DEV_BAUD);
-
-        printf("Connection port: %s\n", connection->port);
 
 		if (!connection->connected)
 		{
@@ -155,12 +152,10 @@ bool Rose::connect(void)
 	char *msg = (char*)"";
 	for (serial_t *connection : this->connections)
 	{
-        printf("Garbage message port: %s\n", connection->port);
-
-		while (!msg || strlen(msg) == 0)
+		do
 		{
 			msg = serial_read(connection);
-		}
+		} while (!msg || strlen(msg) == 0);
 	}
 
 	// Read another one in case that one was garbage
@@ -169,15 +164,12 @@ bool Rose::connect(void)
 	{
 		serial_t *connection = this->connections[i];
 
-        printf("Real message port: %s\n", connection->port);
-
 		// Read message from arduino
-		while (!msg || strlen(msg) == 0)
+		do
 		{
 			msg = serial_read(connection);
-		}
+		} while (!msg || strlen(msg) == 0);
 
-        printf("received msg --> id: %d, msg: %s\n", i, msg);
 
 		// If a valid device, add as connected, otherwise disconnect
 		int id;
@@ -187,7 +179,6 @@ bool Rose::connect(void)
 		if (id > 0)
 		{
 			this->ids.push_back(id);
-            printf("Added id: %d\n", id);
 		}
 		else
 		{
@@ -374,9 +365,6 @@ void Rose::threadRecv(void)
 		{
 			// printf("[ROSE] RECEIVED: %s\n", msg);
 		}
-
-    printf("this->ids[i]: %d\n", this->ids[i]);
-    printf("connections size: %d\n", this->connections.size());
 
     switch (this->ids[i])
 		{
