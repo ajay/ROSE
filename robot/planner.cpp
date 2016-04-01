@@ -18,6 +18,7 @@ static Rose rose;
 static arma::vec motion = zeros<vec>(4);
 static bool test_flag = false;
 bool pid_kill = true;
+bool webapp_control = false;
 
 static dbconn db;
 
@@ -176,20 +177,23 @@ int main(int argc, char *argv[])
 
 	while(!quit)
 	{
-		std::ostringstream speed, voltage, current, db_direction, db_speed;
+		std::ostringstream speed, voltage, current, db_direction, db_speed, webapp;
 
 		speed  << "speed: " << std::setprecision(2) << v;
 		voltage  << "12V Voltage: " << std::setprecision(4) << rose.twelve_volt_voltage << " V";
 		current  << "12V Current: " << std::setprecision(4) << rose.twelve_volt_current << "A";
 		db_direction << "DB Direction: " << db.rose_data_recv.direction;
 		db_speed << "DB Speed: " << std::setprecision(2) << db.rose_data_recv.speed;
+        std::string web_on_off = webapp_control ? "On" : "Off";
+        webapp << "Webapp Control: " << web_on_off;
 
 		SDL_RenderClear(renderer);
 		print_SDL(speed, 32, 10, 10);
 		print_SDL(voltage, 32, 10, 50);
 		print_SDL(current, 32, 10, 90);
-		print_SDL(db_direction, 20, 10, 130);
-		print_SDL(db_speed, 20, 10, 160);
+        print_SDL(webapp, 20, 10, 130);
+        print_SDL(db_direction, 20, 10, 160);
+		print_SDL(db_speed, 20, 10, 190);
 		SDL_RenderPresent(renderer);
 
 		SDL_PollEvent(&event);
@@ -213,21 +217,30 @@ int main(int argc, char *argv[])
 			drive(0.0001, -0.001, 0.0001, 0.001);
 		}
 
-		else if(keystates[SDL_SCANCODE_PAGEUP])		{ direction = "COUNTERCLOCKWISE"; }
-		else if(keystates[SDL_SCANCODE_PAGEDOWN])	{ direction = "CLOCKWISE"; }
-		else if(keystates[SDL_SCANCODE_UP]) 		{ direction = "NORTH"; }
-		else if(keystates[SDL_SCANCODE_DOWN]) 		{ direction = "SOUTH"; }
-		else if(keystates[SDL_SCANCODE_LEFT]) 		{ direction = "WEST"; }
-		else if(keystates[SDL_SCANCODE_RIGHT]) 		{ direction = "EAST"; }
-		else if(keystates[SDL_SCANCODE_1]) 			{ direction = "ONE"; }
-		else if(keystates[SDL_SCANCODE_2]) 			{ direction = "TWO"; }
-		else if(keystates[SDL_SCANCODE_3]) 			{ direction = "THREE"; }
-		else if(keystates[SDL_SCANCODE_4]) 			{ direction = "FOUR"; }
+		else if (keystates[SDL_SCANCODE_PAGEUP])		{ direction = "COUNTERCLOCKWISE"; }
+		else if (keystates[SDL_SCANCODE_PAGEDOWN])	    { direction = "CLOCKWISE"; }
+		else if (keystates[SDL_SCANCODE_UP])		    { direction = "NORTH"; }
+		else if (keystates[SDL_SCANCODE_DOWN])		    { direction = "SOUTH"; }
+		else if (keystates[SDL_SCANCODE_LEFT])		    { direction = "WEST"; }
+		else if (keystates[SDL_SCANCODE_RIGHT]) 		{ direction = "EAST"; }
+		else if (keystates[SDL_SCANCODE_1]) 			{ direction = "ONE"; }
+		else if (keystates[SDL_SCANCODE_2]) 			{ direction = "TWO"; }
+		else if (keystates[SDL_SCANCODE_3]) 			{ direction = "THREE"; }
+		else if (keystates[SDL_SCANCODE_4]) 			{ direction = "FOUR"; }
 
-		else if(keystates[SDL_SCANCODE_O]) 			{ pid_kill = false; }
-		else if(keystates[SDL_SCANCODE_P]) 			{ pid_kill = true; }
+		else if (keystates[SDL_SCANCODE_O]) 			{ pid_kill = false; }
+		else if (keystates[SDL_SCANCODE_P]) 			{ pid_kill = true; }
 
-		else 										{ direction = "STOP"; }
+        else if (keystates[SDL_SCANCODE_Z]) 			{ webapp_control = true; }
+        else if (keystates[SDL_SCANCODE_X]) 			{ webapp_control = false; }
+
+		else                                            { direction = "STOP"; }
+
+        if (webapp_control == true)
+		{
+			direction = db.rose_data_recv.direction;
+			v = db.rose_data_recv.speed;
+		}
 
 		drive(direction, v);
 

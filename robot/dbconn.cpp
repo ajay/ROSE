@@ -38,15 +38,16 @@ void dbconn::init_rose_status(mongocxx::v_noabi::database db) {
 
 	init.insert_one(move(init_clock));
 
-  initialize voltage */
+    initialize voltage */
+
 	bsoncxx::document::value init_volt = document{} << "_id" << 1 << "current_voltage" << 0 << finalize;
 
 	init.insert_one(move(init_volt));
-
 }
 
-void dbconn::recv_data(mongocxx::v_noabi::database db) {
-	//find the collection the webapp is pushing to
+void dbconn::recv_data(mongocxx::v_noabi::database db)
+{
+	// Find the collection the webapp is pushing to
 	auto mycoll = db["mycollection"];
 
 	// This is used in the cursor for loop to capture the value of the document's key
@@ -81,7 +82,7 @@ void dbconn::recv_data(mongocxx::v_noabi::database db) {
 	*/
 
 
-	/*----------- recieve state ------------*/
+	///// Receive state
 
 	// Query all documents which have "state" as a key
 	auto cursor = mycoll.find(document{} << "state" << open_document << "$exists" << true << close_document << finalize);
@@ -96,7 +97,7 @@ void dbconn::recv_data(mongocxx::v_noabi::database db) {
 		rose_data_recv.direction = direction;
 	}
 
-	/*----------- recieve rotation --------------*/
+	// Receive rotation
 
 	// Query all documents which have "rotation" as a key
 	cursor = mycoll.find(document{} << "rotation" << open_document << "$exists" << true << close_document << finalize);
@@ -110,26 +111,42 @@ void dbconn::recv_data(mongocxx::v_noabi::database db) {
 		rose_data_recv.rotation = s;
 	}
 
-	//this control flow allows the robot to turn corners
-
-  /*
-  if (rose_data_recv.direction == "NORTH") {
-		if (rose_data_recv.rotation == 1) {
+	// This control flow allows the robot to turn
+    if (rose_data_recv.direction == "NORTH")
+    {
+		if (rose_data_recv.rotation == 1)
+        {
 			rose_data_recv.direction = "NORTHCLOCKWISE";
-		} else if (rose_data_recv.rotation == -1) {
+		}
+        else if (rose_data_recv.rotation == -1)
+        {
 			rose_data_recv.direction = "NORTHCOUNTERCLOCKWISE";
 		}
-	} else if (rose_data_recv.direction == "SOUTH") {
-		if (rose_data_recv.rotation == 1) {
+	}
+    else if (rose_data_recv.direction == "SOUTH")
+    {
+		if (rose_data_recv.rotation == 1)
+        {
 			rose_data_recv.direction = "SOUTHCLOCKWISE";
-		} else if (rose_data_recv.rotation == -1) {
+		}
+        else if (rose_data_recv.rotation == -1)
+        {
 			rose_data_recv.direction = "SOUTHCOUNTERCLOCKWISE";
 		}
-	}	
+	}
+    else if (rose_data_recv.direction == "STOP")
+    {
+		if (rose_data_recv.rotation == 1)
+        {
+			rose_data_recv.direction = "CLOCKWISE";
+		}
+        else if (rose_data_recv.rotation == -1)
+        {
+			rose_data_recv.direction = "COUNTERCLOCKWISE";
+		}
+	}
 
-  */
-
-	/*----------- recieve speed -----------------*/
+	///// Receive Speed
 
 	// Query all documents which have "speed" as a key
 	cursor = mycoll.find(document{} << "speed" << open_document << "$exists" << true << close_document << finalize);
@@ -143,17 +160,17 @@ void dbconn::recv_data(mongocxx::v_noabi::database db) {
 		rose_data_recv.speed = s;
 	}
 
-	/* print statements for testing */
-	//printf("timestamp: %f\n", rose_data_recv.time_stamp);
-//	cout<<"move: "<<rose_data_recv.direction<<endl;
+	// print statements for testing
+	// printf("timestamp: %f\n", rose_data_recv.time_stamp);
+    // cout<<"move: "<<rose_data_recv.direction<<endl;
 	// printf("%0.2f\n", rose_data_recv.speed);
 	// printf("rotate: %i\n", rose_data_recv.rotation);
 }
 
 /* ------------ Sending Functions ---------------*/
 
-void dbconn::send_data(mongocxx::v_noabi::database db) {
-
+void dbconn::send_data(mongocxx::v_noabi::database db)
+{
 	init_rose_status(db);
 	auto store_data = db["robo_info"];
 
@@ -164,37 +181,37 @@ void dbconn::send_data(mongocxx::v_noabi::database db) {
 
 	/*------------ Send Timestamp -------------*/
 
-	//this pushes the time since process start. 
+	// This pushes the time since process start.
 
 	document find_clock;
 	find_clock << "clock" << open_document << "$exists" << true << close_document;
 
 	double t;
-	t = ((double)clock() / CLOCKS_PER_SEC) * 1000; //gives the time in seconds
+	t = ((double)clock() / CLOCKS_PER_SEC) * 1000; // Gives the time in seconds
 
 //	printf("%f\n", t);
 
-	//the web app will check to see if the clock has been updated in the database
+	// The web app will check to see if the clock has been updated in the database
 	document update_clock;
 	update_clock << "$set" << open_document << "clock" << t << close_document;
 
-	//perform the update
+	// Perform the update
 	store_data.update_one(find_clock.view(),update_clock.view());
 
 	/*------------ Send Voltage ---------------*/
 
-	//search for a document with a key of "current_voltage"
-	//NOTE: checking for existence is a document unto itself)
+	// Search for a document with a key of "current_voltage"
+	// NOTE: checking for existence is a document unto itself)
 	document volt_doc;
 	volt_doc << "current_voltage" << open_document << "$exists" << true << close_document;
 
-	//update a document with a key of "current_voltage"
-	//NOTE: voltage is stored in a struct within the class dbconn
+	// Update a document with a key of "current_voltage"
+	// NOTE: voltage is stored in a struct within the class dbconn
 	document update_volt;
 	rose_data_send.twelve_volt_voltage = 2.2;
 	update_volt << "$set" << open_document << "current_voltage" << rose_data_send.twelve_volt_voltage << close_document;
 
-	//perform the update
+	// Perform the update
 	store_data.update_one(volt_doc.view(), update_volt.view());
 }
 
@@ -209,7 +226,7 @@ void dbconn::db_update()
 	while (1)
 	{
 		recv_data(db);
-		//send_data(db);
+//      send_data(db);
 //		usleep(1000000);
 	}
 }
