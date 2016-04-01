@@ -23,15 +23,15 @@ static dbconn db;
 
 void db_update()
 {
-	db.db_recv_update();
+	db.db_update();
 }
 
 void print_db_data()
 {
 	while (1)
 	{
-		printf("State Received: %s\n", db.data_recv.direction.c_str());
-		printf("Speed Received: %1.2f\n", db.data_recv.speed);
+		printf("State Received: %s\n", db.rose_data_recv.direction.c_str());
+		printf("Speed Received: %1.2f\n", db.rose_data_recv.speed);
 		usleep(100000); // 1 sec
 	}
 }
@@ -181,8 +181,8 @@ int main(int argc, char *argv[])
 		speed  << "speed: " << std::setprecision(2) << v;
 		voltage  << "12V Voltage: " << std::setprecision(4) << rose.twelve_volt_voltage << " V";
 		current  << "12V Current: " << std::setprecision(4) << rose.twelve_volt_current << "A";
-		db_direction << "DB Direction: " << db.data_recv.direction;
-		db_speed << "DB Speed: " << std::setprecision(2) << db.data_recv.speed;
+		db_direction << "DB Direction: " << db.rose_data_recv.direction;
+		db_speed << "DB Speed: " << std::setprecision(2) << db.rose_data_recv.speed;
 
 		SDL_RenderClear(renderer);
 		print_SDL(speed, 32, 10, 10);
