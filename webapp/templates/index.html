@@ -117,13 +117,13 @@
           else
           {
                        // up arrow
-                document.getElementById("status").innerHTML = "State: FORWARD";
+                document.getElementById("status").innerHTML = "State: NORTH";
                 //SYNCHRONOUS VERSION
                 //document.getElementById("userinput").value = "UP";
             //document.getElementById("the_form").submit();
             
             //ASYNCHRONOUS VERSION
-            xhttp.open("POST", "/up", true);
+            xhttp.open("POST", "/north", true);
             xhttp.send("test");
           }
      
@@ -145,13 +145,13 @@
           else
           {
                            // down arrow
-                document.getElementById("status").innerHTML = "State: BACKWARD";
+                document.getElementById("status").innerHTML = "State: SOUTH";
                 //SYNCHRONOUS VERSION
                 //document.getElementById("userinput").value = "DOWN";
             //document.getElementById("the_form").submit();
             
             //ASYNCHRONOUS VERSION
-            xhttp.open("POST", "/down", true);
+            xhttp.open("POST", "/south", true);
             xhttp.send("test");
           }
  
@@ -174,13 +174,13 @@
           else
           {
                      // left arrow
-                document.getElementById("status").innerHTML = "State: LEFT";
+                document.getElementById("status").innerHTML = "State: WEST";
                 //SYNCHRONOUS VERSION
                 //document.getElementById("userinput").value = "LEFT";
             //document.getElementById("the_form").submit();
             
             //ASYNCHRONOUS VERSION
-            xhttp.open("POST", "/left", true);
+            xhttp.open("POST", "/west", true);
             xhttp.send("test");
           }
        
@@ -203,13 +203,13 @@
           else
           {
                      // right arrow
-                document.getElementById("status").innerHTML = "State: RIGHT";
+                document.getElementById("status").innerHTML = "State: EAST";
                 //SYNCHRONOUS VERSION
                 //document.getElementById("userinput").value = "RIGHT";
             //document.getElementById("the_form").submit();
             
             //ASYNCHRONOUS VERSION
-            xhttp.open("POST", "/right", true);
+            xhttp.open("POST", "/east", true);
             xhttp.send("test");
           }
        

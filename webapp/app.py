@@ -44,24 +44,24 @@ def write():
     
     
     
-@app.route("/up", methods=['POST'])
+@app.route("/north", methods=['POST'])
 def up():
-    oid = handle.mycollection.update({"_id":1},{"state":"FORWARD"}, True)
+    oid = handle.mycollection.update({"_id":1},{"state":"NORTH"}, True)
     return redirect ("/")
 
-@app.route("/down", methods=['POST'])
+@app.route("/south", methods=['POST'])
 def down():
-    oid = handle.mycollection.update({"_id":1},{"state":"BACKWARD"}, True)
+    oid = handle.mycollection.update({"_id":1},{"state":"SOUTH"}, True)
     return redirect ("/")    
 
-@app.route("/left", methods=['POST'])
+@app.route("/west", methods=['POST'])
 def left():
-    oid = handle.mycollection.update({"_id":1},{"state":"LEFT"}, True)
+    oid = handle.mycollection.update({"_id":1},{"state":"WEST"}, True)
     return redirect ("/")
 
-@app.route("/right", methods=['POST'])
+@app.route("/east", methods=['POST'])
 def right():
-    oid = handle.mycollection.update({"_id":1},{"state":"RIGHT"}, True)
+    oid = handle.mycollection.update({"_id":1},{"state":"EAST"}, True)
     return redirect ("/")
 
 @app.route("/northwest", methods=['POST'])
