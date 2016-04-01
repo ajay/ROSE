@@ -24,6 +24,7 @@ class dbconn
 {
 	struct db_recv
 	{
+		double time_stamp = 0;
 		std::string direction;
 		double speed;
 		int rotation;
@@ -37,13 +38,17 @@ class dbconn
 	};
 
 	public:
-		// dbconn();
-		// ~dbconn();
+		dbconn();
+		~dbconn();
+
+		//clear and insert a collection that holds the status of the robot to send to the web app
+		void init_rose_status(mongocxx::v_noabi::database db);
 
 		/**
 		 * Get data from the database, sent from the webapp
 		 */
-		void db_recv_update();
+		void db_update();
+
 
 		/**
 		 *
@@ -56,23 +61,20 @@ class dbconn
 		struct db_send rose_data_send;
 
 	private:
-		/**
-		 * Read state string from mongodb
-		 * @param db Mongodb database instance
+		/* reads data from the database
+		 *currently reads the following:
+		 *State (direction)
+		 *speed
+		 *rotational direction
 		 */
-		void read_state(mongocxx::v_noabi::database db);
+		void recv_data(mongocxx::v_noabi::database db);
 
-		/**
-		 * Read speed int from mongodb
-		 * @param db Mongodb database instance
+		/*sends information about the robot to the database
+		 * for now, only sends voltage
 		 */
-		void read_speed(mongocxx::v_noabi::database db);
+		void send_data(mongocxx::v_noabi::database db);
 
-		/**
-		 * Read the direction of rotation
-		 * @param db Mongodb database instance
-		 */
-		void read_rotation(mongocxx::v_noabi::database db);
+
 };
 
 #endif

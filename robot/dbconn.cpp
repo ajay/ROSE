@@ -7,25 +7,6 @@
 
 #include "dbconn.h"
 
-#include <iostream>
-#include <stdio.h>
-#include <stdlib.h>		// srand, rand
-#include <string>
-#include <time.h>		// time
-#include <unistd.h>		// used to sleep
-
-// Libbson includes
-#include <bsoncxx/builder/stream/document.hpp>
-#include <bsoncxx/types.hpp>
-#include <bsoncxx/json.hpp>
-
-// Mongodb includes
-#include <mongocxx/client.hpp>
-#include <mongocxx/options/find.hpp>
-#include <mongocxx/options/distinct.hpp>
-#include <mongocxx/instance.hpp>
-#include <mongocxx/uri.hpp>
-
 using bsoncxx::builder::stream::document;
 using bsoncxx::builder::stream::open_document;
 using bsoncxx::builder::stream::close_document;
@@ -36,40 +17,68 @@ using bsoncxx::stdx::string_view;
 
 using namespace std;
 
-// struct db_recv {
-// 	//this struct contains all the data that the robot recieves from the webapp
-// 	string direction;
-// 	double speed;
-// 	int rotation;
-// };
-
-// struct data_send {
-// 	//this struct contains all data that the robot will send to the webapp
-// 	int encoders[4];
-// 	double twelve_volt_voltage;
-// 	string state;
-// };
-
-// dbconn::dbconn()
-// {
-// }
-
-// dbconn::~dbconn()
-// {
-// }
-
-//create an instance of the class "dbconn"
-dbconn db;
-
-void dbconn::read_state(mongocxx::v_noabi::database db)
+dbconn::dbconn()
 {
-	auto state = db["mycollection"];
+}
+
+dbconn::~dbconn()
+{
+}
+
+//initialize will reset all documents on system startup
+//will insert corresponding documents if they do not exist yet
+void dbconn::init_rose_status(mongocxx::v_noabi::database db) {
+	auto init = db["robo_info"];
+
+	init.delete_many({});
+
+	/*initialize timestamp*/
+	bsoncxx::document::value init_clock = document{} << "_id" << 0 << "clock" << 0.0 << finalize;
+
+	init.insert_one(move(init_clock));
+
+	/* initialize voltage */
+	bsoncxx::document::value init_volt = document{} << "_id" << 1 << "current_voltage" << 0 << finalize;
+
+	init.insert_one(move(init_volt));
+
+}
+
+void dbconn::recv_data(mongocxx::v_noabi::database db) {
+	//find the collection the webapp is pushing to
+	auto mycoll = db["mycollection"];
 
 	// This is used in the cursor for loop to capture the value of the document's key
 	bsoncxx::document::element e;
 
+	/*----------- recieve timestamp ------------ */
+	//NOTE: needs to be initialized from web app's end before we can test this
+
+	auto cursor = mycoll.find(document{} << "clock" << open_document << "$exists" << true << close_document << finalize);
+
+	for (auto&& doc : cursor) {
+		e = doc["clock"];
+
+		double time_stamp = e.get_double().value;
+		printf("this timestamp: %f\n", time_stamp);
+		//check if more than 10 ms have elapsed. if so, then stop the robot
+		//NOTE: test with the value 0.1 and see if we can still input direction / speed / rotation
+		//we shouldnt be able to though
+		if (time_stamp - rose_data_recv.time_stamp > 10) {
+			rose_data_recv.direction = "STOP";
+			rose_data_recv.speed = 0.0;
+			rose_data_recv.rotation = 0;
+			return;
+		} else {
+			rose_data_recv.time_stamp = time_stamp;
+		}
+	}
+
+
+	/*----------- recieve state ------------*/
+
 	// Query all documents which have "state" as a key
-	auto cursor = state.find(document{} << "state" << open_document << "$exists" << true << close_document << finalize);
+	cursor = mycoll.find(document{} << "state" << open_document << "$exists" << true << close_document << finalize);
 
 	for (auto&& doc : cursor )
 	{
@@ -81,53 +90,94 @@ void dbconn::read_state(mongocxx::v_noabi::database db)
 		rose_data_recv.direction = direction;
 	}
 
-	printf("moving: %s\n", rose_data_recv.direction.c_str());
+	cout<<"move: "<<rose_data_recv.direction<<endl;
 
-}
+	/*----------- recieve speed -----------------*/
 
-void dbconn::read_speed(mongocxx::v_noabi::database db)
-{
-	auto speed = db["mycollection"];
-
-	bsoncxx::document::element e;
-
-	//query all documents which have "speed" as a key
-	auto cursor = speed.find(document{} << "speed" << open_document
-		<< "$exists" << true << close_document << finalize);
+	// Query all documents which have "speed" as a key
+	cursor = mycoll.find(document{} << "speed" << open_document << "$exists" << true << close_document << finalize);
 
 	for (auto&& doc : cursor )
 	{
 		// Capture value of "speed"
 		e = doc["speed"];
-		//convert a type bsoncxx::document::element to a type double
+		// Convert a type bsoncxx::document::element to a type double
 		double s = e.get_double().value;
 		rose_data_recv.speed = s;
 	}
 
-	
-	printf("speed: %f\n", rose_data_recv.speed);
-}
+	/*----------- recieve rotation --------------*/
 
-void dbconn::read_rotation(mongocxx::v_noabi::database db) {
-	auto rotation = db["mycollection"];
-	//query documents which have a key of "rotation"
-	auto cursor = rotation.find(document{} << "rotation" << open_document
-		<< "$exists" << true << close_document << finalize);
+	// Query all documents which have "rotation" as a key
+	cursor = mycoll.find(document{} << "rotation" << open_document << "$exists" << true << close_document << finalize);
 
-	bsoncxx::document::element e;
-
-	for (auto&& doc : cursor) {
-		//capture the rotation direction. we have a constant speed for rotation
+	for (auto&& doc : cursor)
+	{
+		// Capture value of "rotation"
 		e = doc["rotation"];
-		//acquires the rotation state: -1 = counter clockwise, 0 is NULL, 1 is clockwise
+		// Acquires the rotation state: -1 = counter clockwise, 0 is NULL, 1 is clockwise
 		int s = e.get_int32().value;
 		rose_data_recv.rotation = s;
-	}
+	}	
 
-	printf("rotation state: %i\n", rose_data_recv.rotation);
+	/* print statements for testing */
+	//printf("timestamp: %f\n", rose_data_recv.time_stamp);
+	// cout<<"move: "<<rose_data_recv.direction<<endl;
+	// printf("%0.2f\n", rose_data_recv.speed);
+	// printf("rotate: %i\n", rose_data_recv.rotation);
 }
 
-void dbconn::db_recv_update()
+/* ------------ Sending Functions ---------------*/
+
+void dbconn::send_data(mongocxx::v_noabi::database db) {
+
+	init_rose_status(db);
+	auto store_data = db["robo_info"];
+
+	/* NOTE
+	 * for every parameter of the robot that we need push into the database,
+	 * we must first initialize the parameter in the "init_rose_status()" function
+	 */
+
+	/*------------ Send Timestamp -------------*/
+
+	//this pushes the time since process start. 
+
+	document find_clock;
+	find_clock << "clock" << open_document << "$exists" << true << close_document;
+
+	double t;
+	t = ((double)clock() / CLOCKS_PER_SEC) * 1000; //gives the time in seconds
+
+	printf("%f\n", t);
+
+	//the web app will check to see if the clock has been updated in the database
+	document update_clock;
+	update_clock << "$set" << open_document << "clock" << t << close_document;
+
+	//perform the update
+	store_data.update_one(find_clock.view(),update_clock.view());
+
+	/*------------ Send Voltage ---------------*/
+
+	//search for a document with a key of "current_voltage"
+	//NOTE: checking for existence is a document unto itself)
+	document volt_doc;
+	volt_doc << "current_voltage" << open_document << "$exists" << true << close_document;
+
+	//update a document with a key of "current_voltage"
+	//NOTE: voltage is stored in a struct within the class dbconn
+	document update_volt;
+	rose_data_send.twelve_volt_voltage = 2.2;
+	update_volt << "$set" << open_document << "current_voltage" << rose_data_send.twelve_volt_voltage << close_document;
+
+	//perform the update
+	store_data.update_one(volt_doc.view(), update_volt.view());
+}
+
+/* -------------DB connection---------------------*/
+
+void dbconn::db_update()
 {
 	mongocxx::instance inst{};					// Used to create a client connection and connect to a mongo instance
 	mongocxx::client conn{mongocxx::uri{}}; 	// NOTE: make sure to have "mongocxx::uri{}"
@@ -135,15 +185,15 @@ void dbconn::db_recv_update()
 
 	while (1)
 	{
-		read_state(db);
-		read_speed(db);
-		read_rotation(db);
+		recv_data(db);
+		send_data(db);
 		usleep(1000000);
 	}
 }
 
+/*main function for testing purposes only */
 int main() {
-
-	db.db_recv_update();
+	dbconn rose_db;
+	rose_db.db_update();
 	return 0;
 }
