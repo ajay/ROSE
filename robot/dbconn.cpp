@@ -33,14 +33,12 @@ void dbconn::init_rose_status(mongocxx::v_noabi::database db) {
 	init.delete_many({});
 
 	/* SUBJECT TO CHANGE
-	/*initialize timestamp
+	initialize timestamp
 	bsoncxx::document::value init_clock = document{} << "_id" << 0 << "clock" << 0.0 << finalize;
 
 	init.insert_one(move(init_clock));
 
-	*/
-
-	/* initialize voltage */
+  initialize voltage */
 	bsoncxx::document::value init_volt = document{} << "_id" << 1 << "current_voltage" << 0 << finalize;
 
 	init.insert_one(move(init_volt));
@@ -57,7 +55,7 @@ void dbconn::recv_data(mongocxx::v_noabi::database db) {
 	/*
 	 *
 	 * SUBJECT TO CHANGE
-	/*----------- recieve timestamp ------------
+	*----------- recieve timestamp ------------
 	//NOTE: needs to be initialized from web app's end before we can test this
 
 	auto cursor = mycoll.find(document{} << "clock" << open_document << "$exists" << true << close_document << finalize);
@@ -113,7 +111,9 @@ void dbconn::recv_data(mongocxx::v_noabi::database db) {
 	}
 
 	//this control flow allows the robot to turn corners
-	if (rose_data_recv.direction == "NORTH") {
+
+  /*
+  if (rose_data_recv.direction == "NORTH") {
 		if (rose_data_recv.rotation == 1) {
 			rose_data_recv.direction = "NORTHCLOCKWISE";
 		} else if (rose_data_recv.rotation == -1) {
@@ -126,6 +126,8 @@ void dbconn::recv_data(mongocxx::v_noabi::database db) {
 			rose_data_recv.direction = "SOUTHCOUNTERCLOCKWISE";
 		}
 	}	
+
+  */
 
 	/*----------- recieve speed -----------------*/
 
@@ -143,7 +145,7 @@ void dbconn::recv_data(mongocxx::v_noabi::database db) {
 
 	/* print statements for testing */
 	//printf("timestamp: %f\n", rose_data_recv.time_stamp);
-	cout<<"move: "<<rose_data_recv.direction<<endl;
+//	cout<<"move: "<<rose_data_recv.direction<<endl;
 	// printf("%0.2f\n", rose_data_recv.speed);
 	// printf("rotate: %i\n", rose_data_recv.rotation);
 }
@@ -170,7 +172,7 @@ void dbconn::send_data(mongocxx::v_noabi::database db) {
 	double t;
 	t = ((double)clock() / CLOCKS_PER_SEC) * 1000; //gives the time in seconds
 
-	printf("%f\n", t);
+//	printf("%f\n", t);
 
 	//the web app will check to see if the clock has been updated in the database
 	document update_clock;
@@ -207,14 +209,14 @@ void dbconn::db_update()
 	while (1)
 	{
 		recv_data(db);
-		send_data(db);
-		usleep(1000000);
+		//send_data(db);
+//		usleep(1000000);
 	}
 }
 
 /*main function for testing purposes only */
-int main() {
-	dbconn rose_db;
-	rose_db.db_update();
-	return 0;
-}
+//int main() {
+//	dbconn rose_db;
+//	rose_db.db_update();
+//	return 0;
+//}

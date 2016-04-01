@@ -305,65 +305,27 @@
      	xhttp = new XMLHttpRequest();
      	if (e.keyCode == '37' || e.keyCode == '38' || e.keyCode == '39' || e.keyCode == '40')
      	{
-        if (e.keyCode == '38')
-        { 
-          //north 
-          isNorthPressed = false;
-        }
-        if (e.keyCode == '37')
-        {
-          //west
-          isWestPressed = false;
-        }
-        if (e.keyCode == '39')
-        {
-          //east
-          isEastPressed = false;
-        }
-        if (e.keyCode == '40')
-        {
-          //south
-          isSouthPressed = false;
-        }
-<<<<<<< HEAD
+            if (e.keyCode == '38')
+            { 
+              //north 
+              isNorthPressed = false;
+            }
+            if (e.keyCode == '37')
+            {
+              //west
+              isWestPressed = false;
+            }
+            if (e.keyCode == '39')
+            {
+              //east
+              isEastPressed = false;
+            }
+            if (e.keyCode == '40')
+            {
+              //south
+              isSouthPressed = false;
+            }
         updateDirection();
-=======
-
-        if (isNorthPressed) {
-          document.getElementById("status").innerHTML = "State: NORTH";
-          xhttp.open("POST", "/up", true);
-          xhttp.send("test");
-          return;  
-        }
-
-        else if (isSouthPressed) {
-          document.getElementById("status").innerHTML = "State: SOUTH";
-          xhttp.open("POST", "/down", true);
-          xhttp.send("test");
-          return;
-        }
-
-        else if (isEastPressed) {
-          document.getElementById("status").innerHTML = "State: EAST";
-          xhttp.open("POST", "/right", true);
-          xhttp.send("test");
-          return; 
-        }
-
-        else if (isWestPressed) {
-          document.getElementById("status").innerHTML = "State: WEST";
-          xhttp.open("POST", "/left", true);
-          xhttp.send("test");
-          return; 
-        }
-
-        else {
-          document.getElementById("status").innerHTML = "State: STOP";
-          xhttp.open("POST", "/reset", true);
-          xhttp.send("test");
-          return;  
-        } 
->>>>>>> 2d450c17214e7242ece5b30fb2782b261ff64dfb
     	}
 
       if(e.keyCode == '33' || e.keyCode == '34')
