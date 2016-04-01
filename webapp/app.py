@@ -6,9 +6,15 @@ def connect():
 # Substitute the 5 pieces of information you got when creating
 # the Mongo DB Database (underlined in red in the screenshots)
 # Obviously, do not store your password as plaintext in practice
+    #LOCALHOST
     connection = MongoClient()
     handle = connection["rosedb"]
     return handle
+    #MONGOLAB
+    #connection = MongoClient("ds015878.mongolab.com", 15878)
+    #handle = connection["rosedb"]
+    #handle.authenticate("Brice","12345678")
+    #return handle
 
 app = Flask(__name__)
 handle = connect()
@@ -92,15 +98,22 @@ def reset():
 
 @app.route("/speedup", methods=['POST'])
 def speedup():
-	print "speed:%d"%(handle.mycollection.find({"_id":2})[0]["speed"])
-	spe = handle.mycollection.find({"_id":2})[0]["speed"] + 0.05 if handle.mycollection.find({"_id":2})[0]["speed"] < 1 else handle.mycollection.find({"_id":2})[0]["speed"]
+	print (handle.mycollection.find({"_id":2}) is not None)
+	if handle.mycollection.find({"_id":2}) is not None:
+		print ("speed:%f"%handle.mycollection.find({"_id":2})[0]["speed"])
+		spe = handle.mycollection.find({"_id":2})[0]["speed"] + 0.05 if handle.mycollection.find({"_id":2})[0]["speed"] <= 0.95 else handle.mycollection.find({"_id":2})[0]["speed"]
+	else:
+		spe = 0.05
 	oid = handle.mycollection.update({"_id":2},{"speed":spe}, True)
 	return redirect ("/")
 
 @app.route("/speeddown", methods=['POST'])
 def speeddown():
-	print "speed:%d"%(handle.mycollection.find({"_id":2})[0]["speed"])
-	spe = handle.mycollection.find({"_id":2})[0]["speed"] - 0.05 if handle.mycollection.find({"_id":2})[0]["speed"] > 0 else handle.mycollection.find({"_id":2})[0]["speed"]
+	if handle.mycollection.find({"_id":2}) is not None:
+		print ("speed:%f"%handle.mycollection.find({"_id":2})[0]["speed"])
+		spe = handle.mycollection.find({"_id":2})[0]["speed"] - 0.05 if handle.mycollection.find({"_id":2})[0]["speed"] >= 0.05 else handle.mycollection.find({"_id":2})[0]["speed"]
+	else:
+		spe = 0
 	oid = handle.mycollection.update({"_id":2},{"speed":spe}, True)
 	return redirect ("/")
 
