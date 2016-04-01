@@ -32,10 +32,13 @@ void dbconn::init_rose_status(mongocxx::v_noabi::database db) {
 
 	init.delete_many({});
 
-	/*initialize timestamp*/
+	/* SUBJECT TO CHANGE
+	/*initialize timestamp
 	bsoncxx::document::value init_clock = document{} << "_id" << 0 << "clock" << 0.0 << finalize;
 
 	init.insert_one(move(init_clock));
+
+	*/
 
 	/* initialize voltage */
 	bsoncxx::document::value init_volt = document{} << "_id" << 1 << "current_voltage" << 0 << finalize;
@@ -51,7 +54,10 @@ void dbconn::recv_data(mongocxx::v_noabi::database db) {
 	// This is used in the cursor for loop to capture the value of the document's key
 	bsoncxx::document::element e;
 
-	/*----------- recieve timestamp ------------ */
+	/*
+	 *
+	 * SUBJECT TO CHANGE
+	/*----------- recieve timestamp ------------
 	//NOTE: needs to be initialized from web app's end before we can test this
 
 	auto cursor = mycoll.find(document{} << "clock" << open_document << "$exists" << true << close_document << finalize);
@@ -60,7 +66,7 @@ void dbconn::recv_data(mongocxx::v_noabi::database db) {
 		e = doc["clock"];
 
 		double time_stamp = e.get_double().value;
-		//printf("this timestamp: %f\n", time_stamp);
+		printf("this timestamp: %f\n", time_stamp);
 		//check if more than 10 ms have elapsed. if so, then stop the robot
 		//NOTE: test with the value 0.1 and see if we can still input direction / speed / rotation
 		//we shouldnt be able to though
@@ -74,11 +80,13 @@ void dbconn::recv_data(mongocxx::v_noabi::database db) {
 		}
 	}
 
+	*/
+
 
 	/*----------- recieve state ------------*/
 
 	// Query all documents which have "state" as a key
-	cursor = mycoll.find(document{} << "state" << open_document << "$exists" << true << close_document << finalize);
+	auto cursor = mycoll.find(document{} << "state" << open_document << "$exists" << true << close_document << finalize);
 
 	for (auto&& doc : cursor )
 	{
@@ -90,7 +98,34 @@ void dbconn::recv_data(mongocxx::v_noabi::database db) {
 		rose_data_recv.direction = direction;
 	}
 
-	//cout<<"move: "<<rose_data_recv.direction<<endl;
+	/*----------- recieve rotation --------------*/
+
+	// Query all documents which have "rotation" as a key
+	cursor = mycoll.find(document{} << "rotation" << open_document << "$exists" << true << close_document << finalize);
+
+	for (auto&& doc : cursor)
+	{
+		// Capture value of "rotation"
+		e = doc["rotation"];
+		// Acquires the rotation state: -1 = counter clockwise, 0 is NULL, 1 is clockwise
+		int s = e.get_int32().value;
+		rose_data_recv.rotation = s;
+	}
+
+	//this control flow allows the robot to turn corners
+	if (rose_data_recv.direction == "NORTH") {
+		if (rose_data_recv.rotation == 1) {
+			rose_data_recv.direction = "NORTHCLOCKWISE";
+		} else if (rose_data_recv.rotation == -1) {
+			rose_data_recv.direction = "NORTHCOUNTERCLOCKWISE";
+		}
+	} else if (rose_data_recv.direction == "SOUTH") {
+		if (rose_data_recv.rotation == 1) {
+			rose_data_recv.direction = "SOUTHCLOCKWISE";
+		} else if (rose_data_recv.rotation == -1) {
+			rose_data_recv.direction = "SOUTHCOUNTERCLOCKWISE";
+		}
+	}	
 
 	/*----------- recieve speed -----------------*/
 
@@ -106,23 +141,9 @@ void dbconn::recv_data(mongocxx::v_noabi::database db) {
 		rose_data_recv.speed = s;
 	}
 
-	/*----------- recieve rotation --------------*/
-
-	// Query all documents which have "rotation" as a key
-	cursor = mycoll.find(document{} << "rotation" << open_document << "$exists" << true << close_document << finalize);
-
-	for (auto&& doc : cursor)
-	{
-		// Capture value of "rotation"
-		e = doc["rotation"];
-		// Acquires the rotation state: -1 = counter clockwise, 0 is NULL, 1 is clockwise
-		int s = e.get_int32().value;
-		rose_data_recv.rotation = s;
-	}	
-
 	/* print statements for testing */
 	//printf("timestamp: %f\n", rose_data_recv.time_stamp);
-	// cout<<"move: "<<rose_data_recv.direction<<endl;
+	cout<<"move: "<<rose_data_recv.direction<<endl;
 	// printf("%0.2f\n", rose_data_recv.speed);
 	// printf("rotate: %i\n", rose_data_recv.rotation);
 }
@@ -149,7 +170,7 @@ void dbconn::send_data(mongocxx::v_noabi::database db) {
 	double t;
 	t = ((double)clock() / CLOCKS_PER_SEC) * 1000; //gives the time in seconds
 
-	//printf("%f\n", t);
+	printf("%f\n", t);
 
 	//the web app will check to see if the clock has been updated in the database
 	document update_clock;
@@ -187,6 +208,13 @@ void dbconn::db_update()
 	{
 		recv_data(db);
 		send_data(db);
-//		usleep(1000000);
+		usleep(1000000);
 	}
+}
+
+/*main function for testing purposes only */
+int main() {
+	dbconn rose_db;
+	rose_db.db_update();
+	return 0;
 }
