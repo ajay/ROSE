@@ -34,6 +34,8 @@ float IFinal;
 long int twelve_volt_voltage = 0;
 long int twelve_volt_current = 0;
 
+unsigned long timeout;
+
 // QuadEncoder class set up to utilize the encoders
 class QuadEncoder
 {
@@ -235,10 +237,12 @@ void setup()
 	setmotors(0, 0, 0, 0);
 	Serial.begin(57600);
 	msecs = millis();
+	timeout = millis();
 }
 
 void loop()
 {
+    timeout = millis();
 	// See if there are any available bytes to be read over serial comm
 	int nbytes = 0;
 	if ((nbytes = Serial.available()))
@@ -280,10 +284,24 @@ void loop()
 					// Parse string being read
 					// Left front, right front, left back, right back
 					sscanf(s, "[%d %d %d %d]\n", &targetv[1], &targetv[3], &targetv[0], &targetv[2]);
+                    timeout = millis();
 				}
 				memmove(buf, &e[1], strlen(&e[1]) + sizeof(char));
 			}
 		}
+	}
+
+	// EMERGENCY STOP: MASTER COMM LOST (for testing turn this off)
+	if (millis() - timeout > 500)
+	{
+		// After .5 seconds, stop the robot
+		memset(pvel, 0, sizeof(int) * 4);
+		memset(vel, 0, sizeof(int) * 4);
+		setmotors(vel);
+		arm_theta_act = false;
+		arm_vel_act = false;
+		// Safety sets
+		piddiff = millis();
 	}
 
 	// Ramp motors values, and determine next value to set

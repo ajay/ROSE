@@ -123,6 +123,8 @@ bool Rose::connect(void)
 		return false;
 	}
 
+  printf("pports size: %d\n", this->pports.size());
+
 	// Create delay to read at correct rate
 	struct timespec synctime;
 	synctime.tv_nsec = SYNC_NSEC % 1000000000;
@@ -131,7 +133,8 @@ bool Rose::connect(void)
 	// Attempt to connect to all arduinos
 	for (char *pport : this->pports)
 	{
-		// Connect Device
+		printf("pport: %s\n", pport);
+    // Connect Device
 		serial_t *connection = new serial_t;
 		serial_connect(connection, pport, DEV_BAUD);
 
@@ -169,6 +172,8 @@ bool Rose::connect(void)
 			msg = serial_read(connection);
 		}
 
+    printf("received msg --> id: %d, msg: %s\n", i, msg);
+
 		// If a valid device, add as connected, otherwise disconnect
 		int id;
 		sscanf(msg, "[%d ", &id);
@@ -177,6 +182,7 @@ bool Rose::connect(void)
 		if (id > 0)
 		{
 			this->ids.push_back(id);
+      printf("Added id: %d\n", id);
 		}
 		else
 		{
@@ -282,34 +288,36 @@ void Rose::threadSend(const vec &motion)
 			// Arduino #1: Drive base
 			case 1:
 
-				if (new_motion(0) == this->prev_motion(0) && new_motion(1) == this->prev_motion(1) && new_motion(2) == this->prev_motion(2) && new_motion(3) == this->prev_motion(3))
+//				if (new_motion(0) == this->prev_motion(0) && new_motion(1) == this->prev_motion(1) && new_motion(2) == this->prev_motion(2) && new_motion(3) == this->prev_motion(3))
+//				{
+//					continue;
+//				}
+
+//				else
+//				{
+
+				this->prev_motion(0) = new_motion(0);
+				this->prev_motion(1) = new_motion(1);
+				this->prev_motion(2) = new_motion(2);
+				this->prev_motion(3) = new_motion(3);
+					sprintf(msg, "[%d %d %d %d]\n",
+						(int)new_motion(0),
+						(int)new_motion(1),
+						(int)new_motion(2),
+						(int)new_motion(3));
+
+				if (!(this->reset_enc))
 				{
-					continue;
+					serial_write(this->connections[i], msg);
 				}
 
 				else
 				{
-					this->prev_motion(0) = new_motion(0);
-					this->prev_motion(1) = new_motion(1);
-					this->prev_motion(2) = new_motion(2);
-					this->prev_motion(3) = new_motion(3);
-
-					sprintf(msg, "[%d %d %d %d]\n",
-							(int)new_motion(0),
-							(int)new_motion(1),
-							(int)new_motion(2),
-							(int)new_motion(3));
-
-					if (!(this->reset_enc))
-					{
-						serial_write(this->connections[i], msg);
-					}
-					else
-					{
-						serial_write(this->connections[i], (char*)"[reset]\n");
-						this->reset_enc = false;
-					}
+					serial_write(this->connections[i], (char*)"[reset]\n");
+					this->reset_enc = false;
 				}
+
+//				}
 
 				break;
 
@@ -362,11 +370,12 @@ void Rose::threadRecv(void)
 			// printf("[ROSE] RECEIVED: %s\n", msg);
 		}
 
-		switch (this->ids[i])
+    printf("this->ids[i]: %d\n", this->ids[i]);
+    printf("connections size: %d\n", this->connections.size());
+
+    switch (this->ids[i])
 		{
 			case 1: // Arduino #1: Drive base
-
-
 
 				// Convert msg into int array
 				if (msg != NULL)
@@ -390,6 +399,9 @@ void Rose::threadRecv(void)
 					this->twelve_volt_voltage = (float)((float)temp_voltage / 1000);
 					this->twelve_volt_current = (float)((float)temp_current / 1000);
 				}
+
+      default:
+        break;
 		}
 	}
 }
