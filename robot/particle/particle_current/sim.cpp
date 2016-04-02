@@ -14,6 +14,8 @@
 #include "draw.h"
 #include "sdldef.h"
 #include <mutex>
+#include "astar.h"
+
 
 #include "chili_landmarks.h"
 #include "Rose.h"
@@ -126,6 +128,16 @@ int main() {
 	map.load("map_engineering_b_wing.jpg");
 	frame = icube(map.n_rows, map.n_cols, 3, fill::zeros);
 
+	vec goal = vec({76,94});
+  	AStar astar(map, goal);
+  	vector<MotionAction> path;
+  	
+    astar.compute(start, path);
+    if (astar.impossible()) {
+      printf("It is impossible!\n");
+      return;
+    }
+
 	// create the landmarks (custom)
 	// vector<sim_landmark> landmarks;
 	landmarks.push_back(sim_landmark(90, 202));						// 0
@@ -221,6 +233,25 @@ int main() {
 		//printf("[sim.cpp] predicting\n");
 		pf.predict(mu, sigma);
 		cout << "[sim.cpp] position: " << mu(0) << ", " << mu(1) << ", angle: " << mu(2) * 180 / M_PI << "\n[sim.cpp] error: \n" << sigma << endl;
+
+		/****************
+    // INSERT A* HERE
+    ***************
+    
+      # K_i & K_d
+      r.theta_k_i = 0
+      r.theta_k_d = 2.5
+
+      # Assign v_l & v_r
+      v_l = (r.base_velocity - r.theta_k_p * r.delta_theta
+                   - r.theta_k_i * r.integral_error
+                   - r.theta_k_d * r.delta_theta_diff)
+
+      v_r = (r.base_velocity + r.theta_k_p * r.delta_theta
+                   + r.theta_k_i * r.integral_error
+                   + r.theta_k_d * r.delta_theta_diff)
+
+    */
 
 		draw_things();
 
