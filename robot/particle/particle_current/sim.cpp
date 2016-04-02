@@ -30,7 +30,20 @@ static chili_landmarks chili;
 static int stopsig;
 static arma::vec motion = zeros<vec>(4);
 static Rose rose;
+bool auto_enable = false;
+double delta_theta = 0;
 void draw_things();
+
+static void calculate_target_angle(int x1, int y1, int x2, int y2, &delta_theta){ //1 is current and 2 is target
+
+	// MODIFY ATAN2 FOR CPP
+		double angle = (-1 * (math.atan2((self.target_pos[1] - self.robot_pos[1]), (self.target_pos[0] - self.robot_pos[0]))*180/math.pi))
+
+		if (angle < 0):
+			angle = angle + 360;
+
+		delta_theta = angle;
+}
 
 mat sense() {
 	mat sv(3, NUMLANDMARKS);
@@ -207,7 +220,9 @@ int main() {
 		else if (keystates[SDLK_2]) 		{ drive( 0,  1,  0,  0); }
 		else if (keystates[SDLK_3]) 		{ drive( 0,  0,  1,  0); }
 		else if (keystates[SDLK_4]) 		{ drive( 0,  0,  0,  1); }
-		else														{ drive( 0,  0,  0,  0); }
+		else if (keystates[SDLK_n]) 		{ auto_enable = true; }	// 
+		else if (keystates[SDLK_m]) 		{ auto_enable = false; }	// 
+		else if (!auto_enable) 				{ drive( 0,  0,  0,  0); }	// 
 
 		if (keystates[SDLK_x]) {
 			drive(0, 0, 0, 0);
@@ -235,7 +250,7 @@ int main() {
 		cout << "[sim.cpp] position: " << mu(0) << ", " << mu(1) << ", angle: " << mu(2) * 180 / M_PI << "\n[sim.cpp] error: \n" << sigma << endl;
 
 	    // recompute the planner in order to get the most optimal path
-	    astar.compute(mu, path);
+	    astar.compute(mu.subvec(0,1), path);
 	    if (astar.impossible()) {
 	      // do nothing for now
 	      printf("AStar cannot find a path!\n");
@@ -273,14 +288,15 @@ int main() {
 
 	    // Assign v_l & v_r
 	    double v_l, v_r;
-	    v_l = (100 - r.theta_k_p * r.delta_theta
-	                   - r.theta_k_i * r.integral_error
-	                   - r.theta_k_d * r.delta_theta_diff);
+	    if (auto_enable){
+	    	v_l = (100 - theta_k_p * delta_theta
+	                   - theta_k_i * r.integral_error
+	                   - theta_k_d * r.delta_theta_diff);
 
-	    v_r = (100 + r.theta_k_p * r.delta_theta
+	    	v_r = (100 + r.theta_k_p * r.delta_theta
 	                   + r.theta_k_i * r.integral_error
 	                   + r.theta_k_d * r.delta_theta_diff);
-
+	    }
     
 
 		draw_things();
