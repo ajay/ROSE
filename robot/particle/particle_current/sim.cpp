@@ -242,8 +242,28 @@ int main() {
       drive(0, 0, 0, 0);
     }
 
-		/****************
-    // INSERT A* HERE
+    // Make sure all points are evenly spaced out
+	int i = 0;
+	while (1){
+
+		if (i >= len(x_i)-1){
+			break;
+		}
+
+		// Cycle through pairs...if the second is too near the first, then it is removed from the queue
+		if (calculate_distance([x_i[i], y_i[i]], [x_i[i+1], y_i[i+1]]) <= 40){
+			del x_i[i+1]
+			del y_i[i+1]
+		}
+
+		// Else move on to the next point to continue checking
+		else{
+			i = i + 1;
+		}
+	}
+
+	/****************
+    // for assigning left side and right side motor duty cycles.
     ***************
     
       # K_i & K_d
