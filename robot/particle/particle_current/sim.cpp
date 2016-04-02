@@ -234,52 +234,54 @@ int main() {
 		pf.predict(mu, sigma);
 		cout << "[sim.cpp] position: " << mu(0) << ", " << mu(1) << ", angle: " << mu(2) * 180 / M_PI << "\n[sim.cpp] error: \n" << sigma << endl;
 
-    // recompute the planner in order to get the most optimal path
-    astar.compute(mu, path);
-    if (astar.impossible()) {
-      // do nothing for now
-      printf("AStar cannot find a path!\n");
-      drive(0, 0, 0, 0);
-    }
+	    // recompute the planner in order to get the most optimal path
+	    astar.compute(mu, path);
+	    if (astar.impossible()) {
+	      // do nothing for now
+	      printf("AStar cannot find a path!\n");
+	      drive(0, 0, 0, 0);
+	    }
 
-    // Make sure all points are evenly spaced out
-	int i = 0;
-	while (1){
+	    // Make sure all points are evenly spaced out
+		int i = 0;
+		int len = path.size();
+		while (1){
 
-		if (i >= len(x_i)-1){
-			break;
+			if (i >= len-1){
+				break;
+			}
+
+			// Cycle through pairs...if the second is too near the first, then it is removed from the path
+			if (calculate_distance([path[i].x, path[i].y], [path[i+1].x, path[i+1].y]) <= 40){
+				remove path[i+1].x.erase();
+				remove path[i+1].y.erase();
+			}
+
+			// Else move on to the next point to continue checking
+			else{
+				i = i + 1;
+			}
 		}
 
-		// Cycle through pairs...if the second is too near the first, then it is removed from the queue
-		if (calculate_distance([x_i[i], y_i[i]], [x_i[i+1], y_i[i+1]]) <= 40){
-			del x_i[i+1]
-			del y_i[i+1]
-		}
+		/****************
+	    // for assigning left side and right side motor duty cycles.
+	    ***************/
+	    
+	      // K_i & K_d
+	    double theta_k_i = 0
+	    r.theta_k_d = 2.5
 
-		// Else move on to the next point to continue checking
-		else{
-			i = i + 1;
-		}
-	}
+	    // Assign v_l & v_r
+	    double v_l, v_r;
+	    v_l = (100 - r.theta_k_p * r.delta_theta
+	                   - r.theta_k_i * r.integral_error
+	                   - r.theta_k_d * r.delta_theta_diff);
 
-	/****************
-    // for assigning left side and right side motor duty cycles.
-    ***************
+	    v_r = (100 + r.theta_k_p * r.delta_theta
+	                   + r.theta_k_i * r.integral_error
+	                   + r.theta_k_d * r.delta_theta_diff);
+
     
-      # K_i & K_d
-      r.theta_k_i = 0
-      r.theta_k_d = 2.5
-
-      # Assign v_l & v_r
-      v_l = (r.base_velocity - r.theta_k_p * r.delta_theta
-                   - r.theta_k_i * r.integral_error
-                   - r.theta_k_d * r.delta_theta_diff)
-
-      v_r = (r.base_velocity + r.theta_k_p * r.delta_theta
-                   + r.theta_k_i * r.integral_error
-                   + r.theta_k_d * r.delta_theta_diff)
-
-    */
 
 		draw_things();
 
