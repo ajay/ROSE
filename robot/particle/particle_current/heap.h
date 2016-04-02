@@ -1,5 +1,5 @@
-#ifndef __TK_HEAP_H__
-#define __TK_HEAP_H__
+#ifndef heap_h
+#define heap_h
 
 #include <vector>
 #include <stdexcept>

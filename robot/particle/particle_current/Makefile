@@ -12,7 +12,8 @@ LIBS = -L/usr/local/lib \
 OBJS = sim_map.o sim_robot.o sim_landmark.o \
 			 pfilter.o highgui.o draw.o sim.o \
 			 chili_landmarks.o \
-			 serial.o Rose.o
+			 serial.o Rose.o \
+			 astar.o heap.o
 
 
 CC = gcc

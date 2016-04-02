@@ -1,11 +1,5 @@
-//
-//	[Authors] = Ming Tai Ha
-//              Jon Risinger
-//              Timothy Yong
-//
-
-#ifndef __TK_ASTAR_H__
-#define __TK_ASTAR_H__
+#ifndef astar_h
+#define astar_h
 
 #include <vector>
 #include <armadillo>

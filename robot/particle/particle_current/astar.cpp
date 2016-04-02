@@ -1,9 +1,3 @@
-//
-//	[Authors] = Ming Tai Ha
-//              Jon Risinger
-//              Timothy Yong
-//
-
 #include "astar.h"
 #include "heap.h"
 #include "heap.cpp"
