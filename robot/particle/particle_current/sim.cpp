@@ -134,8 +134,8 @@ int main() {
   	
     astar.compute(start, path);
     if (astar.impossible()) {
-      printf("It is impossible!\n");
-      return;
+      printf("AStar cannot find a path!\n");
+      drive(0, 0, 0, 0);
     }
 
 	// create the landmarks (custom)
@@ -233,6 +233,14 @@ int main() {
 		//printf("[sim.cpp] predicting\n");
 		pf.predict(mu, sigma);
 		cout << "[sim.cpp] position: " << mu(0) << ", " << mu(1) << ", angle: " << mu(2) * 180 / M_PI << "\n[sim.cpp] error: \n" << sigma << endl;
+
+    // recompute the planner in order to get the most optimal path
+    astar.compute(mu, path);
+    if (astar.impossible()) {
+      // do nothing for now
+      printf("AStar cannot find a path!\n");
+      drive(0, 0, 0, 0);
+    }
 
 		/****************
     // INSERT A* HERE
