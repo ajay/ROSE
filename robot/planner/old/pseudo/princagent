@@ -1,0 +1,31 @@
+What needs to be done:
+    1) find ball
+    2) move to the destination
+    3) avoid obstacles
+    4) pick up/drop the ball with accuracy
+    5) be able to recalibrate at any time
+    6) determine what it should be doing based on command
+    7) find basket
+
+how:
+
+    1) find ball:
+        take stream from openCV and circle around until it finds ball then tries to center it using tracing
+
+    2) move to the destination:
+        should be able to simply send movement commands and use data from cv tracing to correctly choose path
+
+    3) avoid obstacles:
+        should be able to see with both camera and depth sensor in order to see objects in path and avoid
+
+    4) pick up/drop ball with accuracy:
+        the find ball and move to dest should be able to keep the accuracy maybe depth sensor in order to make sure claw is close enough to pick up ball or use vector in cv
+
+    5) recalibrating:
+        during the tracing, we should be able to see offset errors and recalibrate it using vectors
+
+    6) determining action:
+        should have a constant stream to listen to command. once the command is given an interrupt occurs notifying it of a command and determine where in the queue it should be added.
+
+    7) find basket:
+        same as finding ball use openCV to find basket
