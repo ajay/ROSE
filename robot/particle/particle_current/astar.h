@@ -19,6 +19,7 @@ class AStarProp {
   public:
     AStarProp(enum Ftype f, enum Gtype g, enum Htype h, bool adaptive) :
       f(f), g(g), h(h), adaptive(adaptive) {}
+    AStarProp();
     enum Ftype f;
     enum Gtype g;
     enum Htype h;

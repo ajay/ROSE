@@ -15,7 +15,7 @@ using namespace arma;
 using namespace std;
 
 static MotionAction getPreviousAction(MotionAction currAction, imat &backtrace);
-static vector<MotionAction> getNextAction(MotionAction currAction, imat &map);
+static vector<MotionAction> getNextAction(MotionAction currAction, mat &map);
 
 /** The goal of this function is to initialize the AStar algorithm,
  *  including any data structures which you are to use in the
@@ -33,6 +33,10 @@ AStar::AStar(mat map, vec &goal) :
 }
 
 AStar::~AStar(void) {
+}
+
+AStarProp::AStarProp()
+{
 }
 
 /** In this function, you are to get the next state off the
@@ -132,7 +136,7 @@ static MotionAction getPreviousAction(MotionAction currAction, imat &backtrace) 
  *  @param map the map of the environment
  *  @return the list of possible actions
  */
-static vector<MotionAction> getNextAction(MotionAction currAction, imat &map) {
+static vector<MotionAction> getNextAction(MotionAction currAction, mat &map) {
   mat neighbor4 = reshape(mat({
       0, 0, -1, 1,
       1, -1, 0, 0

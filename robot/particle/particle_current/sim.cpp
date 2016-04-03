@@ -54,6 +54,11 @@ static double calculate_distance(vec &a, vec &b) {
   return sqrt(dot(diff, diff));
 }
 
+void detect_thread()
+{
+	chili.update();
+}
+
 mat sense() {
   mat sv(3, NUMLANDMARKS);
   for (int j = 0; j < NUMLANDMARKS; j++) {
@@ -135,7 +140,8 @@ int main() {
   AStar astar(map.map, goal);
   vector<MotionAction> path;
 
-  astar.compute(vec({ 20, 20 }), path);
+  vec start = vec({20, 20});
+  astar.compute(start, path);
   if (astar.impossible()) {
     printf("AStar cannot find a path!\n");
     drive(0, 0, 0, 0);
@@ -184,7 +190,7 @@ int main() {
   }
 
   // load the chilitag detector
-  std::thread detect(chili.update);
+  std::thread detect(detect_thread);
 
   //icube frame(map.n_rows, map.n_cols, 3, fill::zeros), newframe;
   bool forward = false;
@@ -203,7 +209,9 @@ int main() {
       int len = path.size();
       for (int i = 0; i < len-1; i++){
         // Cycle through pairs...if the second is too near the first, then it is removed from the path
-        if (calculate_distance(vec({path[i].x, path[i].y}), vec({path[i+1].x, path[i+1].y})) <= 30){
+        vec origin = vec({path[i].x, path[i].y});
+        vec target = vec({path[i+1].x, path[i+1].y});
+        if (calculate_distance(origin, target) <= 30){
           path.erase(path.begin() + i);
           i--;
         }
@@ -214,50 +222,51 @@ int main() {
        ***************/
 
       // K_i & K_d
+      double theta_k_p = 1;
       double theta_k_i = 0;
-      double theta_k_d = 2.5;
+      double theta_k_d = 1;
 
         // Assign v_l & v_r
       double v_l, v_r;
-      v_l = (100 - theta_k_p * delta_theta
-          - theta_k_i * r.integral_error
-          - theta_k_d * r.delta_theta_diff);
+      v_l = (100 - theta_k_p * delta_theta);
+          // - theta_k_i * r.integral_error
+          // - theta_k_d * r.delta_theta_diff);
 
-      v_r = (100 + r.theta_k_p * r.delta_theta
-          + r.theta_k_i * r.integral_error
-          + r.theta_k_d * r.delta_theta_diff);
+      v_r = (100 + theta_k_p * delta_theta);
+          // + r.theta_k_i * r.integral_error
+          // + r.theta_k_d * r.delta_theta_diff);
 
       drive(v_l, v_r, v_l, v_r);
     }
 
     SDL_PumpEvents();
-    const Uint8 *keystates = SDL_GetKeyState(NULL);
-    if (keystates[SDLK_q])					{ drive(-1,  1, -1,  1); }	// left turn
-    else if (keystates[SDLK_e])			{ drive( 1, -1,  1, -1); }	// right turn
-    else if (keystates[SDLK_w]) 		{ drive( 1,  1,  1,  1); }	// up
-    else if (keystates[SDLK_s]) 		{ drive(-1, -1, -1, -1); }	// down
-    else if (keystates[SDLK_a]) 		{ drive(-1,  1,  1, -1); }	// left strafe
-    else if (keystates[SDLK_d]) 		{ drive( 1, -1, -1,  1); }	// right strafe
-    else if (keystates[SDLK_1]) 		{ drive( 1,  0,  0,  0); }
-    else if (keystates[SDLK_2]) 		{ drive( 0,  1,  0,  0); }
-    else if (keystates[SDLK_3]) 		{ drive( 0,  0,  1,  0); }
-    else if (keystates[SDLK_4]) 		{ drive( 0,  0,  0,  1); }
-    else if (keystates[SDLK_n]) 		{ auto_enable = true; }	// 
-    else if (keystates[SDLK_m]) 		{ auto_enable = false; }	// 
+    const Uint8 *keystates = SDL_GetKeyboardState(NULL);
+    if (keystates[SDL_SCANCODE_Q])				{ drive(-1,  1, -1,  1); }	// left turn
+    else if (keystates[SDL_SCANCODE_E])			{ drive( 1, -1,  1, -1); }	// right turn
+    else if (keystates[SDL_SCANCODE_W]) 		{ drive( 1,  1,  1,  1); }	// up
+    else if (keystates[SDL_SCANCODE_S]) 		{ drive(-1, -1, -1, -1); }	// down
+    else if (keystates[SDL_SCANCODE_A]) 		{ drive(-1,  1,  1, -1); }	// left strafe
+    else if (keystates[SDL_SCANCODE_D]) 		{ drive( 1, -1, -1,  1); }	// right strafe
+    else if (keystates[SDL_SCANCODE_1]) 		{ drive( 1,  0,  0,  0); }
+    else if (keystates[SDL_SCANCODE_2]) 		{ drive( 0,  1,  0,  0); }
+    else if (keystates[SDL_SCANCODE_3]) 		{ drive( 0,  0,  1,  0); }
+    else if (keystates[SDL_SCANCODE_4]) 		{ drive( 0,  0,  0,  1); }
+    else if (keystates[SDL_SCANCODE_N]) 		{ auto_enable = true; }	// 
+    else if (keystates[SDL_SCANCODE_M]) 		{ auto_enable = false; }	// 
     else if (!auto_enable) 				  { drive( 0,  0,  0,  0); }	// 
 
-    if (keystates[SDLK_x]) {
+    if (keystates[SDL_SCANCODE_X]) {
       drive(0, 0, 0, 0);
       quit = true;
       SDL_Quit();
       break;
     }
-    forward = keystates[SDLK_w];
-    backward = keystates[SDLK_s];
-    turn_left = keystates[SDLK_q];
-    turn_right = keystates[SDLK_e];
-    strafe_left = keystates[SDLK_a];
-    strafe_right = keystates[SDLK_d];
+    forward = keystates[SDL_SCANCODE_W];
+    backward = keystates[SDL_SCANCODE_S];
+    turn_left = keystates[SDL_SCANCODE_Q];
+    turn_right = keystates[SDL_SCANCODE_E];
+    strafe_left = keystates[SDL_SCANCODE_A];
+    strafe_right = keystates[SDL_SCANCODE_D];
 
     rose.send(motion);
     pf.move(forward - backward, turn_left - turn_right, rose.encoder);
@@ -272,7 +281,8 @@ int main() {
     cout << "[sim.cpp] position: " << mu(0) << ", " << mu(1) << ", angle: " << mu(2) * 180 / M_PI << "\n[sim.cpp] error: \n" << sigma << endl;
 
     // recompute the planner in order to get the most optimal path
-    astar.compute(mu.subvec(0,1), path);
+    vec sub_vec = (vec)mu.subvec(0,1);
+    astar.compute(sub_vec, path);
     if (astar.impossible()) {
       // do nothing for now
       printf("AStar cannot find a path!\n");
