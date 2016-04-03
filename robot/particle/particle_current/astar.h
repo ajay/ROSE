@@ -1,5 +1,11 @@
-#ifndef astar_h
-#define astar_h
+//
+//	[Authors] = Ming Tai Ha
+//              Jon Risinger
+//              Timothy Yong
+//
+
+#ifndef __TK_ASTAR_H__
+#define __TK_ASTAR_H__
 
 #include <vector>
 #include <armadillo>
@@ -21,14 +27,13 @@ class AStarProp {
 
 class AStar {
   public:
-    AStar(arma::imat map, arma::vec &goal,
-      AStarProp prop = AStarProp(F_FORWARD, G_MAX, H_EUCLIDEAN, false));
+    AStar(arma::mat map, arma::vec &goal);
     ~AStar(void);
     void compute(arma::vec &start, std::vector<MotionAction> &path);
     bool complete(void);
     bool impossible(void);
 
-    arma::imat map;
+    arma::mat map;
     arma::vec goal;
 
     // stuff for the decision making capability

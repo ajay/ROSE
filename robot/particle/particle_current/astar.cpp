@@ -1,3 +1,9 @@
+//
+//	[Authors] = Ming Tai Ha
+//              Jon Risinger
+//              Timothy Yong
+//
+
 #include "astar.h"
 #include "heap.h"
 #include "heap.cpp"
@@ -17,11 +23,10 @@ static vector<MotionAction> getNextAction(MotionAction currAction, imat &map);
  *  @param map This is the map which you are given
  *  @param goal This is the goal of the robot
  */
-AStar::AStar(imat map, vec &goal, AStarProp prop) :
+AStar::AStar(mat map, vec &goal) :
     isComplete(false),
     isImpossible(false),
-    goal(goal),
-    prop(prop) {
+    goal(goal) {
   this->map = map.t();
   assert(0 <= goal(0) && goal(0) < (int)this->map.n_rows &&
          0 <= goal(1) && goal(1) < (int)this->map.n_cols);
