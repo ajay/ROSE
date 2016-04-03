@@ -11,21 +11,6 @@
 #include <armadillo>
 #include "actions.h"
 
-enum Ftype { F_FORWARD, F_BACKWARD };
-enum Gtype { G_MIN, G_MAX };
-enum Htype { H_MANHATTAN, H_EUCLIDEAN };
-
-class AStarProp {
-  public:
-    AStarProp(enum Ftype f, enum Gtype g, enum Htype h, bool adaptive) :
-      f(f), g(g), h(h), adaptive(adaptive) {}
-    AStarProp();
-    enum Ftype f;
-    enum Gtype g;
-    enum Htype h;
-    bool adaptive;
-};
-
 class AStar {
   public:
     AStar(arma::mat map, arma::vec &goal);
@@ -40,8 +25,6 @@ class AStar {
     // stuff for the decision making capability
 	  bool isComplete;
     bool isImpossible;
-    AStarProp prop;
-
 };
 
 #endif

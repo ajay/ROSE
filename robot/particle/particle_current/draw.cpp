@@ -122,3 +122,31 @@ void draw_circle(icube &I, ivec &v, vec pt, double radius) {
     draw_circle(I.slice(k), v(k), pt, radius);
   }
 }
+
+void draw_line(imat &I, int v, vec pt1, vec pt2) {
+  int x1 = (int)round(pt1(1));
+  int y1 = (int)round(pt1(0));
+  int x2 = (int)round(pt2(1));
+  int y2 = (int)round(pt2(0));
+  if (x1 == x2 && y1 == y2) {
+//    printf("same coord\n");
+    return;
+  }
+  int dx = x2 - x1;
+  int dy = y2 - y1;
+  int d = MAX(abs(dx), abs(dy));
+  vec xs = linspace<vec>(x1, x2, d);
+  vec ys = linspace<vec>(y1, y2, d);
+  for (int i = 0; i < d; i++) {
+    if (xs(i) >= 0 && xs(i) <= (int)I.n_cols-1 &&
+        ys(i) >= 0 && ys(i) <= (int)I.n_rows-1) {
+      I(ys(i), xs(i)) = v;
+    }
+  }
+}
+
+void draw_line(icube &I, const ivec &v, vec pt1, vec pt2) {
+  for (uword k = 0; k < v.n_elem; k++) {
+    draw_line(I.slice(k), v(k), pt1, pt2);
+  }
+}

@@ -16,7 +16,6 @@
 #include <mutex>
 #include "astar.h"
 
-
 #include "chili_landmarks.h"
 #include "Rose.h"
 
@@ -35,6 +34,10 @@ static double delta_theta;
 static double calculate_distance(vec &a, vec &b);
 static double calculate_target_angle(vec &curr, vec &target);
 static void draw_things();
+static void autonomous_decide_trajectory(void);
+static mutex autonomous_lock;
+static vec robot_pos; // make sure this is a 2vec
+static vec robot_auton_drive; // this is an output 2vec
 
 static double calculate_target_angle(vec &curr, vec &target) {
 
@@ -42,7 +45,7 @@ static double calculate_target_angle(vec &curr, vec &target) {
   vec diff = target - curr;
   double angle = atan2(diff(1), diff(0)) * 180 / M_PI;
 
-  if (angle < 0){ 
+  if (angle < 0){
     angle = angle + 360;
   }
 
@@ -56,7 +59,7 @@ static double calculate_distance(vec &a, vec &b) {
 
 void detect_thread()
 {
-	chili.update();
+  chili.update();
 }
 
 mat sense() {
@@ -131,21 +134,8 @@ int main() {
   srand(getpid());
 
   // load the map (custom)
-  sim_map map;
   map.load("map_engineering_b_wing.jpg");
   frame = icube(map.n_rows, map.n_cols, 3, fill::zeros);
-
-  // start up the A* planner to create an initial path for the robot to start moving
-  vec goal = vec({76,94});
-  AStar astar(map.map, goal);
-  vector<MotionAction> path;
-
-  vec start = vec({20, 20});
-  astar.compute(start, path);
-  if (astar.impossible()) {
-    printf("AStar cannot find a path!\n");
-    drive(0, 0, 0, 0);
-  }
 
   // create the landmarks (custom)
   vector<sim_landmark> landmarks;
@@ -172,6 +162,7 @@ int main() {
 
   // load the robot
   rose.startStop = false;
+  robot_pos = vec({ 20, 20 });
   signal(SIGINT, stop);
 
   /////////////////////////
@@ -179,10 +170,13 @@ int main() {
   /////////////////////////
 
   // create the particle filter
-  pf = pfilter(500, &map, landmarks, 20, 20, M_PI_2);
+  pf = pfilter(500, &map, landmarks, robot_pos(0), robot_pos(1), M_PI_2);
   pf.set_size(12);
   pf.set_noise(1.5, 0.002);
 
+  // start up the planner
+  //thread planner(autonomous_decide_trajectory);
+    
   // start up the window
   screen = sim_window::init(500, 500);
   if (!screen) {
@@ -192,7 +186,6 @@ int main() {
   // load the chilitag detector
   std::thread detect(detect_thread);
 
-  //icube frame(map.n_rows, map.n_cols, 3, fill::zeros), newframe;
   bool forward = false;
   bool backward = false;
   bool turn_left = false;
@@ -200,44 +193,9 @@ int main() {
   bool strafe_left = false;
   bool strafe_right = false;
   bool quit = false;
-
   while (!quit) {
     // see if something is about to quit
 
-   // Make sure all points are evenly spaced out
-    if (auto_enable){
-      int len = path.size();
-      for (int i = 0; i < len-1; i++){
-        // Cycle through pairs...if the second is too near the first, then it is removed from the path
-        vec origin = vec({path[i].x, path[i].y});
-        vec target = vec({path[i+1].x, path[i+1].y});
-        if (calculate_distance(origin, target) <= 30){
-          path.erase(path.begin() + i);
-          i--;
-        }
-      }
-
-      /****************
-      // for assigning left side and right side motor duty cycles.
-       ***************/
-
-      // K_i & K_d
-      double theta_k_p = 1;
-      double theta_k_i = 0;
-      double theta_k_d = 1;
-
-        // Assign v_l & v_r
-      double v_l, v_r;
-      v_l = (100 - theta_k_p * delta_theta);
-          // - theta_k_i * r.integral_error
-          // - theta_k_d * r.delta_theta_diff);
-
-      v_r = (100 + theta_k_p * delta_theta);
-          // + r.theta_k_i * r.integral_error
-          // + r.theta_k_d * r.delta_theta_diff);
-
-      drive(v_l, v_r, v_l, v_r);
-    }
 
     SDL_PumpEvents();
     const Uint8 *keystates = SDL_GetKeyboardState(NULL);
@@ -251,9 +209,9 @@ int main() {
     else if (keystates[SDL_SCANCODE_2]) 		{ drive( 0,  1,  0,  0); }
     else if (keystates[SDL_SCANCODE_3]) 		{ drive( 0,  0,  1,  0); }
     else if (keystates[SDL_SCANCODE_4]) 		{ drive( 0,  0,  0,  1); }
-    else if (keystates[SDL_SCANCODE_N]) 		{ auto_enable = true; }	// 
-    else if (keystates[SDL_SCANCODE_M]) 		{ auto_enable = false; }	// 
-    else if (!auto_enable) 				  { drive( 0,  0,  0,  0); }	// 
+    else if (keystates[SDL_SCANCODE_N]) 		{ auto_enable = true; }	//
+    else if (keystates[SDL_SCANCODE_M]) 		{ auto_enable = false; }	//
+    else if (!auto_enable) 				  { drive( 0,  0,  0,  0); }	//
 
     if (keystates[SDL_SCANCODE_X]) {
       drive(0, 0, 0, 0);
@@ -267,28 +225,27 @@ int main() {
     turn_right = keystates[SDL_SCANCODE_E];
     strafe_left = keystates[SDL_SCANCODE_A];
     strafe_right = keystates[SDL_SCANCODE_D];
-
     rose.send(motion);
+    printf("encoder values: \n");
+    for (int i = 0; i < 4; i++) {
+      printf("%d\n", rose.encoder[i]);
+    }
     pf.move(forward - backward, turn_left - turn_right, rose.encoder);
-
     tag_landmarks = sense();
     cout << "sensed: \n" << tag_landmarks << "\n";
     pf.observe(tag_landmarks);
-
     // predict the position
     //printf("[sim.cpp] predicting\n");
     pf.predict(mu, sigma);
     cout << "[sim.cpp] position: " << mu(0) << ", " << mu(1) << ", angle: " << mu(2) * 180 / M_PI << "\n[sim.cpp] error: \n" << sigma << endl;
-
     // recompute the planner in order to get the most optimal path
-    vec sub_vec = (vec)mu.subvec(0,1);
-    astar.compute(sub_vec, path);
-    if (astar.impossible()) {
-      // do nothing for now
-      printf("AStar cannot find a path!\n");
-      drive(0, 0, 0, 0);
+    if (auto_enable) {
+      autonomous_lock.lock();
+      robot_pos = mu(span(0,1));
+      vec speeds = robot_auton_drive;
+      autonomous_lock.unlock();
+      drive(speeds(0), speeds(1), speeds(0), speeds(1));
     }
-
     draw_things();
 
   }
@@ -298,12 +255,72 @@ int main() {
   sim_window::destroy();
 }
 
+static void autonomous_decide_trajectory(void) {
+  // start up the A* planner to create an initial path for the robot to start moving
+  vec goal = vec({76,94});
+  printf("goal of A*:\n");
+  cout << goal << endl;
+  printf("map size: %u %u\n", map.map.n_rows, map.map.n_cols);
+  AStar astar(map.map, goal);
+  vector<MotionAction> path;
+  for (;;) {
+    autonomous_lock.lock();
+    vec currPos = robot_pos;
+    autonomous_lock.unlock();
+    printf("A* currpos:\n");
+    cout << currPos << endl;
+
+    // compute the new path
+    astar.compute(currPos, path);
+    if (astar.impossible()) {
+      // do nothing for now
+      drive(0, 0, 0, 0);
+    }
+
+    int len = path.size();
+    for (int i = 0; i < len-1; i++){
+      // Cycle through pairs...if the second is too near the first, then it is removed from the path
+      vec origin = vec({path[i].x, path[i].y});
+      vec target = vec({path[i+1].x, path[i+1].y});
+      if (calculate_distance(origin, target) <= 30){
+        path.erase(path.begin() + i);
+        i--;
+      }
+    }
+
+    /****************
+    // for assigning left side and right side motor duty cycles.
+     ***************/
+
+    // K_i & K_d
+    double theta_k_p = 1;
+    double theta_k_i = 0;
+    double theta_k_d = 1;
+
+    // Assign v_l & v_r
+    double v_l, v_r;
+    v_l = (100 - theta_k_p * delta_theta);
+    // - theta_k_i * r.integral_error
+    // - theta_k_d * r.delta_theta_diff);
+
+    v_r = (100 + theta_k_p * delta_theta);
+    // + r.theta_k_i * r.integral_error
+    // + r.theta_k_d * r.delta_theta_diff);
+
+    autonomous_lock.lock();
+    robot_auton_drive = vec({ v_l, v_r });
+    autonomous_lock.unlock();
+  }
+
+}
+
 static void draw_things()
 {
   // put stuff on the screen
   int mux = (int)round(mu(0));
   int muy = (int)round(mu(1));
-  icube newframe;
+  double mut;
+  const ivec color({ 0, 0, 255 });
   if (map.map.n_elem > 0) {
     printf("[sim.cpp] [draw] blit map\n");
     map.blit(frame, mux, muy, screen->w, screen->h);
@@ -312,18 +329,18 @@ static void draw_things()
     for (sim_landmark &lm : landmarks) {
       lm.blit(frame);
     }
-    printf("[sim.cpp] [draw] blit landmark detect\n");
+    /*printf("[sim.cpp] [draw] blit landmark detect\n");
     ivec cyan({255,0, 0});
     mat lms = tag_landmarks;
 
-    /* for (int i = 0; i < landmarks.size(); i++)
+     for (int i = 0; i < landmarks.size(); i++)
        {
        if (lms.n_cols != landmarks.size()) {
        printf("[sim.cpp] [draw] not enough landmarks!\n");
        break;
        }
 
-       printf("[sim.cpp] [landmark loop] examime: %d/%d\n", i, landmarks.size()); 
+       printf("[sim.cpp] [landmark loop] examime: %d/%d\n", i, landmarks.size());
 
        if (lms(2,i) > 0.5) {
        vec pt({(double)landmarks[i].x,(double)landmarks[i].y});
@@ -348,17 +365,21 @@ static void draw_things()
         frame(yy,xx,2) = 0;
       }
     }
-    //robot.blit(frame);
-    //printf("[sim.cpp] [draw] blit partial frame\n");
+    mux = (int)round(mu(0));
+    muy = (int)round(mu(1));
+    mut = mu(2);
+    int _xx = (int)round(mux + 10 * cos(mut));
+    int _yy = (int)round(muy + 10 * sin(mut));
+    draw_line(frame, color, vec({(double)muy,(double)mux-1}), vec({(double)_yy,(double)_xx-1}));
+    draw_line(frame, color, vec({(double)muy,(double)mux}), vec({(double)_yy,(double)_xx}));
+    draw_line(frame, color, vec({(double)muy,(double)mux+1}), vec({(double)_yy,(double)_xx+1}));
+    draw_line(frame, color, vec({(double)muy-1,(double)mux}), vec({(double)_yy-1,(double)_xx}));
+    draw_line(frame, color, vec({(double)muy+1,(double)mux}), vec({(double)_yy+1,(double)_xx}));
+    // get a subset of the frame
     newframe = partial_frame(frame, mux, muy, screen->w, screen->h);
-    printf("[sim.cpp] [draw] screenblit\n");
-    //memset(screen->pixels, 0, sizeof(uint32_t) * screen->w * screen->h);
     screenblit(screen, newframe);
-    //screenblit(screen, frame);
 
     // draw the screen
-    printf("[sim.cpp] [draw] flipping screen\n");
-    //SDL_Flip(screen);
     sim_window::update();
     SDL_Delay(25);
   }

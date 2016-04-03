@@ -35,10 +35,6 @@ AStar::AStar(mat map, vec &goal) :
 AStar::~AStar(void) {
 }
 
-AStarProp::AStarProp()
-{
-}
-
 /** In this function, you are to get the next state off the
  *  priority queue and then traverse to that state,
  *  computing the cost and placing the state that was traversed
@@ -146,7 +142,8 @@ static vector<MotionAction> getNextAction(MotionAction currAction, mat &map) {
   for (int i = 0; i < 4; i++) {
     MotionAction action(currAction.x + neighbor4(0, i), currAction.y + neighbor4(1, i), neighborActions[i]);
     // check feasibility of the action
-    if (action.x >= map.n_cols || action.y >= map.n_rows ||
+    if (action.x < 0 || action.y < 0 ||
+        action.x >= map.n_rows || action.y >= map.n_cols ||
         map(action.x, action.y) > 0.5) {
       continue;
     }
@@ -154,7 +151,7 @@ static vector<MotionAction> getNextAction(MotionAction currAction, mat &map) {
     bool v1 = currAction.id == MOVE_FORWARD || currAction.id == MOVE_BACKWARD;
     bool h2 = action.id == MOVE_LEFT || currAction.id == MOVE_RIGHT;
     bool v2 = action.id == MOVE_FORWARD || currAction.id == MOVE_BACKWARD;
-    action.cost = ((h1 && v2) || (v1 && h2)) ? 2 : (action.id != currAction.id ? 3 : 1); // have this cost function take into account the pose difference
+    action.cost = ((h1 && v2) || (v1 && h2)) ? 3 : (action.id != currAction.id ? 5 : 1); // have this cost function take into account the pose difference
     action.gcost = currAction.gcost + action.cost;
     actionlist.push_back(action);
   }

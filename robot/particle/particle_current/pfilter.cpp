@@ -90,16 +90,17 @@ void pfilter::set_size(double r) {
  */
 void pfilter::move(double v, double w, int encoders[]) {
   gettimeofday(&currenttime, NULL);
-  if (secdiff(prevtime, currenttime) < 50) {
+  if (secdiff(prevtime, currenttime) < 0.050) {
     return;
   } else {
     memcpy(&prevtime, &currenttime, sizeof(struct timeval));
   }
+  printf("[pfilter.cpp] computing movement!\n");
   vec enc(4);
   for (int i = 0; i < 4; i++) {
     enc(i) = (double)encoders[i];
   }
-  if (v > 0.5) {
+  /*if (abs(v) > 0.01) {
     // calculate displacement based on distance travelled per wheel
     // t2iK = 20 * pi / (180 * sqrt(2))
     double t2iK = 0.246826621412;
@@ -107,9 +108,9 @@ void pfilter::move(double v, double w, int encoders[]) {
     v = mean(dist) * t2iK;
     w = 0; // assumption
     prevenc = enc;
-  } else if (w > 0.5) {
+  } else if (abs(w) > 0.01) {
     // t2iK = 20 * pi / (180) / (8.75)
-    double t2iK = 0.039893206349;
+    double t2iK = 0.039893206349 / 2;
     vec dist = enc - prevenc;
     dist(0) *= -1;  // rightside negative
     dist(2) *= -1;
@@ -117,8 +118,19 @@ void pfilter::move(double v, double w, int encoders[]) {
     w = mean(dist) * t2iK;
     prevenc = enc;
   } else {
+    printf("[pfilter.cpp] nothing moving\n");
     return;
-  }
+  }*/
+  double t2iK_forward = 0.246826621412;
+  vec dist = enc - prevenc;
+  v = mean(dist) * t2iK_forward;
+  dist -= (mean(dist) / t2iK_forward) * ones<vec>(4);
+  double t2iK_rotation = 0.039893206349 / 2;
+  dist(0) *= -1;
+  dist(2) *= -1;
+  w = mean(dist) * t2iK_rotation;
+  prevenc = enc;
+
   printf("[pfilter.cpp] moving %lf %lf\n", v, w);
   for (int i = 0; i < particles.size(); i++){
     particles[i].move(0, v, w);
@@ -253,7 +265,7 @@ void pfilter::blit(icube &screen) {
       screen(y, x, 1) = 255;
       screen(y, x, 2) = 0;
     }
-    i++;
+    i++;;
   }
 }
 

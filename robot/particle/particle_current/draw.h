@@ -58,5 +58,7 @@ void draw_circle(arma::cube &I, arma::vec &v, arma::vec pt, double radius);
 
 void draw_circle(arma::imat &I, int v, arma::vec pt, double radius);
 void draw_circle(arma::icube &I, arma::ivec &v, arma::vec pt, double radius);
+void draw_line(arma::imat &I, int v, arma::vec pt1, arma::vec pt2);
+void draw_line(arma::icube &I, const arma::ivec &v, arma::vec pt1, arma::vec pt2);
 
 #endif
