@@ -113,7 +113,7 @@ def speeddown():
 		print ("speed:%f"%handle.mycollection.find({"speed":{"$exists":True}})[0]["speed"])
 		spe = handle.mycollection.find({"speed":{"$exists":True}})[0]["speed"] - 0.05 if handle.mycollection.find({"speed":{"$exists":True}})[0]["speed"] >= 0.05 else handle.mycollection.find({"speed":{"$exists":True}})[0]["speed"]
 	else:
-		spe = 0
+		spe = 0.0
 	oid = handle.mycollection.update({"speed":{"$exists":True}},{"speed":spe}, True)
 	return redirect ("/")
 

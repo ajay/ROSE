@@ -6,11 +6,13 @@
 	<!--This represents the first line of text on the HTML.  It displays OFF if there's nothing in the database.
 	    If there is an item, it displays the state contained.                                              -->
  <br><br>
- <h1 id="status" style="text-align:center;">State: {{"OFF" if (userinputs[0] == null) else (userinputs[0].state)}}</h1>
- <h2 id="speedtext" style = "text-align:center;">Speed: {{"OFF" if (userinputs[1] == null) else (userinputs[1].speed)}}</h2>
- <h2 id ="rotation" style="text-align:center;">Rotation: {{"OFF" if (userinputs[2] == null) else ("COUNTERCLOCKWISE" if(userinputs[2].rotation == -1) else ("CLOCKWISE" if (userinputs[2].rotation == 1) else "NONE"))}}</h2>
- 
- <input type="number" name="speed" id="speed" min="0" max="1" step="0.05" value={{"OFF" if (userinputs[1] == null) else (userinputs[1].speed)}} hidden></input>
+<script>
+</script>
+ <h1 id="status" style="text-align:center;">State: {{"OFF" if userinputs[0] == null else((userinputs[0].state) if userinputs[0].state != null else ((userinputs[1].state) if (userinputs[1].state != null) else ((userinputs[2].state) if (userinputs[2].state != null) else "OFF")))}}</h1>
+ <h2 id="speedtext" style = "text-align:center;">Speed: {{"OFF" if userinputs[0] == null else ((userinputs[0].speed) if userinputs[0].speed != null else ((userinputs[1].speed) if (userinputs[1].speed != null) else ((userinputs[2].speed) if (userinputs[2].speed != null) else "OFF")))}}</h2>
+ <h2 id ="rotation" style="text-align:center;">Rotation: {{"OFF" if userinputs[0] == null else("COUNTERCLOCKWISE" if(userinputs[0].rotation == -1) else ("CLOCKWISE" if (userinputs[0].rotation == 1) else "NONE") if userinputs[0].rotation != null else ("COUNTERCLOCKWISE" if(userinputs[1].rotation == -1) else ("CLOCKWISE" if (userinputs[1].rotation == 1) else "NONE") if (userinputs[1].rotation != null) else ("COUNTERCLOCKWISE" if(userinputs[2].rotation == -1) else ("CLOCKWISE" if (userinputs[2].rotation == 1) else "NONE") if (userinputs[2].rotation != null) else "OFF")))}}</h2>
+
+ <input type="number" name="speed" id="speed" min="0" max="1" step="0.05" hidden value={{0 if userinputs[0] == null else (userinputs[0].speed if userinputs[0].speed != null else (userinputs[1].speed if userinputs[1].speed != null else (userinputs[2].speed if userinputs[2].speed != null else 0)))}}></input>
 
  <div style="text-align:center;" hidden>
  	<!---The below form is a hidden object that gets posted to the database when the "...submit()" function is
@@ -18,19 +20,19 @@
  <form action="/write" method="POST" id="the_form">
   <input type="text" name="userinput" id="userinput" hidden>
   <input type="submit" value="Submit" hidden>
-  <br><br>  
+  <br><br>
  </form>
  </div>
- 
+
  <div style="text-align:center;">
   <br><br>
-  <button name="forward" value="FORWARD" onmousedown="forward()" onmouseup="reset()">Forward</button> 
+  <button name="forward" value="FORWARD" onmousedown="forward()" onmouseup="reset()">Forward</button>
   <br>
   <button name="left" value="LEFT" onmousedown="left()" onmouseup="reset()">Left</button>
   <button name="backward" value="BACKWARD" onmousedown="backward()" onmouseup="reset()">Backward</button>
-  <button name="right" value="RIGHT" onmousedown="right()" onmouseup="reset()">Right</button>  
+  <button name="right" value="RIGHT" onmousedown="right()" onmouseup="reset()">Right</button>
  </div>
- 
+
  <div style="text-align:right;">
  <button id="showdev" onclick="showdevtools()">Show Developer Tools</button>
  <button id="hidedev" onclick="hidedevtools()" style="display:none;">Hide Developer Tools</button>
@@ -41,9 +43,9 @@
  <br>
  <a href="./deleteall">Delete all</a>
  </div>
- 
+
  <script>
- 
+
    var isNorthPressed = false;
    var isSouthPressed = false;
    var isEastPressed = false;
@@ -51,19 +53,19 @@
 
    var isSpeedUp = false;
    var isSpeedDown = false;
-    
+
    function test()
    {
    	document.getElementById("userinput").value = "STOP";
    	document.getElementById("the_form").submit();
    }
- 
+
    function forward()
    {
    	document.getElementById("status").innerHTML = "State: NORTH";
    	var xhttp;
      	xhttp = new XMLHttpRequest();
-     	xhttp.open("POST", "/up", true);
+     	xhttp.open("POST", "/north", true);
      	xhttp.send("test");
    }
    function backward()
@@ -71,7 +73,7 @@
    	document.getElementById("status").innerHTML = "State: SOUTH";
    	var xhttp;
      	xhttp = new XMLHttpRequest();
-     	xhttp.open("POST", "/down", true);
+     	xhttp.open("POST", "/south", true);
      	xhttp.send("test");
    }
    function left()
@@ -79,7 +81,7 @@
    	document.getElementById("status").innerHTML = "State: WEST";
    	var xhttp;
      	xhttp = new XMLHttpRequest();
-     	xhttp.open("POST", "/left", true);
+     	xhttp.open("POST", "/west", true);
      	xhttp.send("test");
    }
    function right()
@@ -87,10 +89,10 @@
    	document.getElementById("status").innerHTML = "State: EAST";
    	var xhttp;
      	xhttp = new XMLHttpRequest();
-     	xhttp.open("POST", "/right", true);
+     	xhttp.open("POST", "/east", true);
      	xhttp.send("test");
    }
-   
+
    document.onkeydown = checkKey;
    document.onkeyup = keyRelease;
 
@@ -99,10 +101,10 @@
       e = e || window.event;
 		  var xhttp;
      	xhttp = new XMLHttpRequest();
-     	
+
      	document.getElementById("keypressed").innerHTML = "Key Pressed: " + e.keyCode;
-      
-        if (e.keyCode == '38') 
+
+        if (e.keyCode == '38')
         {
           isNorthPressed = true;
           if(isWestPressed == true)
@@ -124,12 +126,12 @@
                 //SYNCHRONOUS VERSION
                 //document.getElementById("userinput").value = "UP";
             //document.getElementById("the_form").submit();
-            
+
             //ASYNCHRONOUS VERSION
             xhttp.open("POST", "/north", true);
             xhttp.send("test");
           }
-     
+
         }
         else if (e.keyCode == '40')
         {
@@ -152,12 +154,12 @@
                 //SYNCHRONOUS VERSION
                 //document.getElementById("userinput").value = "DOWN";
             //document.getElementById("the_form").submit();
-            
+
             //ASYNCHRONOUS VERSION
             xhttp.open("POST", "/south", true);
             xhttp.send("test");
           }
- 
+
         }
         else if (e.keyCode == '37')
         {
@@ -181,12 +183,12 @@
                 //SYNCHRONOUS VERSION
                 //document.getElementById("userinput").value = "LEFT";
             //document.getElementById("the_form").submit();
-            
+
             //ASYNCHRONOUS VERSION
             xhttp.open("POST", "/west", true);
             xhttp.send("test");
           }
-       
+
         }
         else if (e.keyCode == '39')
         {
@@ -210,12 +212,12 @@
                 //SYNCHRONOUS VERSION
                 //document.getElementById("userinput").value = "RIGHT";
             //document.getElementById("the_form").submit();
-            
+
             //ASYNCHRONOUS VERSION
             xhttp.open("POST", "/east", true);
             xhttp.send("test");
           }
-       
+
         }
         else if (e.keyCode == '33')
         {
@@ -244,10 +246,9 @@
           document.getElementById("rotation").innerHTML = "Rotation: COUNTERCLOCKWISE";
           xhttp.open("POST","/rotateCCW", true);
           xhttp.send("test");
-
         }
         //Check for rotation CCW- "S" is pressed
-        else if (e.keyCode == '83') 
+        else if (e.keyCode == '83')
         {
           isRotateCWPressed = true;
           document.getElementById("rotation").innerHTML = "Rotation: CLOCKWISE";
@@ -264,22 +265,22 @@
       if(isNorthPressed)
       {
         document.getElementById("status").innerHTML = "State: NORTH";
-        xhttp.open("POST", "/up", true);
+        xhttp.open("POST", "/north", true);
       }
       else if(isSouthPressed)
       {
         document.getElementById("status").innerHTML = "State: SOUTH";
-        xhttp.open("POST", "/down", true);
+        xhttp.open("POST", "/south", true);
       }
       else if(isEastPressed)
       {
         document.getElementById("status").innerHTML = "State: EAST";
-        xhttp.open("POST", "/right", true);
+        xhttp.open("POST", "/east", true);
       }
       else if(isWestPressed)
       {
         document.getElementById("status").innerHTML = "State: WEST";
-        xhttp.open("POST", "/left", true);
+        xhttp.open("POST", "/west", true);
       }
       else
       {
@@ -288,7 +289,7 @@
       }
       xhttp.send("test");
     }
-    
+
     function reset()
     {
     	document.getElementById("status").innerHTML = "STOP";
@@ -297,7 +298,7 @@
     	xhttp.open("POST", "/reset", true);
   	xhttp.send("test");
     }
-    
+
     function keyRelease(e)
     {
     	e = e || window.event;
@@ -306,8 +307,8 @@
      	if (e.keyCode == '37' || e.keyCode == '38' || e.keyCode == '39' || e.keyCode == '40')
      	{
             if (e.keyCode == '38')
-            { 
-              //north 
+            {
+              //north
               isNorthPressed = false;
             }
             if (e.keyCode == '37')
@@ -342,59 +343,43 @@
         }
       }
 
-      if(e.keyCode == '65' || e.keyCode == '83')
-      {
-        if(e.keyCode == '65')
+
+
+        if (e.keyCode == '65' || e.keyCode == '83')
         {
-          isRotateCWPressed = false;
-        }
-        else
-        {
-          isRotateCCWPressed = false;
-        }
-
-        if (isRotateCCWPressed) {
-            document.getElementById("rotation").innerHTML = "Rotation: COUNTERCLOCKWISE";
-            xhttp.open("POST", "/rotateCCW", true);
-            xhttp.send("test");
-            return; 
-        }
-
-        else if (isRotateCWPressed) {
-          document.getElementById("rotation").innerHTML = "Rotation: CLOCKWISE";
-          xhttp.open("POST", "/rotateCW", true);
-          xhttp.send("test");
-          return; 
-        }
-
-        else {
           document.getElementById("rotation").innerHTML = "Rotation: NONE";
           xhttp.open("POST", "/rotatereset", true);
           xhttp.send("test");
-          document.getElementById("keypressed").innerHTML = "Key Pressed: 0";
           return;
         }
-      }
+    document.getElementById("keypressed").innerHTML = "Key Pressed: 0";
     }
-    
+
     function showdevtools()
     {
     	document.getElementById("showdev").style.display="none";
     	document.getElementById("hidedev").style.display="inline";
     	document.getElementById("devtools").style.visibility="visible";
     }
-    
+
     function hidedevtools()
     {
     	document.getElementById("showdev").style.display="inline";
     	document.getElementById("hidedev").style.display="none";
     	document.getElementById("devtools").style.visibility="hidden";
     }
-    //document.getElementById("speed").value = 
+
+    if (userinputs[0] != null && userinputs[0].speed != null)
+        document.getElementById("speed").value = userinputs[0].speed;
+    else if (userinputs[1] != null && userinputs[1].speed != null)
+        document.getElementById("speed").value = userinputs[1].speed;
+    else if (userinputs[2] != null && userinputs[2].speed != null)
+        document.getElementById("speed").value = userinputs[2].speed;
+    //document.getElementById("speed").value =
     //document.getElementById("speedtext").innerHTML = document.getElementById("speed").value;
    /*
    {
-   	 
+
      if(document.getElementById("status").innerHTML == "GO")
      {
      	document.getElementById("status").style.color = "green";
