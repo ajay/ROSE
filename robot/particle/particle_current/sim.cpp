@@ -38,18 +38,20 @@ static void autonomous_decide_trajectory(void);
 static mutex autonomous_lock;
 static vec robot_pos; // make sure this is a 2vec
 static vec robot_auton_drive; // this is an output 2vec
+// K_i & K_d
+static  double theta_k_p = 1;
+static  double theta_k_i = 0;
+static  double theta_k_d = 1;
 
 static double calculate_target_angle(vec &curr, vec &target) {
 
-  // MODIFY ATAN2 FOR CPPa
   vec diff = target - curr;
-  double angle = atan2(diff(1), diff(0)) * 180 / M_PI;
+  double delta_theta = atan2(diff(1), diff(0)) * 180 / M_PI;
 
-  if (angle < 0){
-    angle = angle + 360;
+  if (delta_theta < 0){
+    delta_theta += 360;
   }
-
-  return angle;
+  return delta_theta;
 }
 
 static double calculate_distance(vec &a, vec &b) {
@@ -196,7 +198,6 @@ int main() {
   while (!quit) {
     // see if something is about to quit
 
-
     SDL_PumpEvents();
     const Uint8 *keystates = SDL_GetKeyboardState(NULL);
     if (keystates[SDL_SCANCODE_Q])				{ drive(-1,  1, -1,  1); }	// left turn
@@ -292,11 +293,11 @@ static void autonomous_decide_trajectory(void) {
     // for assigning left side and right side motor duty cycles.
      ***************/
 
-    // K_i & K_d
-    double theta_k_p = 1;
-    double theta_k_i = 0;
-    double theta_k_d = 1;
-
+    // update delta_theta for assigning motor velocities
+    vec curr = vec({path[0].x, path[0].y});
+    delta_theta = calculate_target_angle(robot_pos, curr); 
+    // popped off of stack
+    path.erase(path.begin());  
     // Assign v_l & v_r
     double v_l, v_r;
     v_l = (100 - theta_k_p * delta_theta);
