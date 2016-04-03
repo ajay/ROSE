@@ -242,7 +242,7 @@ void setup()
 
 void loop()
 {
-    timeout = millis();
+  // timeout = millis();
 	// See if there are any available bytes to be read over serial comm
 	int nbytes = 0;
 	if ((nbytes = Serial.available()))
@@ -295,13 +295,10 @@ void loop()
 	if (millis() - timeout > 500)
 	{
 		// After .5 seconds, stop the robot
-		memset(pvel, 0, sizeof(int) * 4);
-		memset(vel, 0, sizeof(int) * 4);
-		setmotors(vel);
-		arm_theta_act = false;
-		arm_vel_act = false;
-		// Safety sets
-		piddiff = millis();
+		memset(targetv, 0, sizeof(int) * 4);
+		memset(prevv, 0, sizeof(int) * 4);
+		setmotors(0, 0, 0, 0);
+		timeout = millis();
 	}
 
 	// Ramp motors values, and determine next value to set

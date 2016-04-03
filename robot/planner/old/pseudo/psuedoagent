@@ -1,0 +1,126 @@
+
+
+# open audio stream
+
+activate audiostream
+
+# interrupt handler to look for commands being given
+
+interrupt handler(audio){
+    EnterAudioHandler(audio);
+}
+
+# handles command and go through standard procedure
+
+AudioHandler(audio){
+    push(task,taskqueue);
+    command = getcommand(audio);
+    verifycommand(command);
+    task = pop(taskqueue);
+    execute(task);
+}
+
+#take audio and convert it into a string command
+
+getcommand(audio){
+    //use speach-text
+}
+
+# make sure command recieved is the same as the one given and find out which ordre
+
+verifycommand(command){
+
+    //text-speach
+    say("is %s what you wanted,command);
+    ver = getaudio();
+    //speach-text
+    //verify if yes or no
+    if(ver == yes){
+        say("what about %s,task);
+        ord = getaudio();
+        //speach-text
+        //execute proper action depending on response
+        if(ord == stop){
+            pop(taskqueue);
+            execute(command);
+        }
+        if(ord == later){
+            execute(command);
+        }
+        if(ord == finish){
+            task = pop(taskqueue);
+            pushtofront(command,taskqueue);
+            execute(task);
+        }
+    }
+    else{
+        Audiohandler(audio);
+    }
+}
+
+//will properly execute task at hand
+
+execute(task){
+    //switch case
+    switch(task){
+        //get ball and return
+        case(fetch){
+            if(hasball==true){
+                returntobasket();
+            }
+            else{
+                findball();
+                returntobasket();
+        }
+        //return to basket
+        case(return){
+            returntobasket();
+        }
+
+        case(){
+        }
+    }
+}
+
+//looks for ball and goes to pick it up
+
+findball(){
+
+    while(!ballfound){
+        lookfor(ball);
+    }
+    while(!ballinreach){
+        center(ball);
+        movefoward();
+        checkdist(ball)
+    }
+    pickupball();
+    hasball=true;
+}
+
+returntobasket(){
+    while(!basketfound()){
+        lookfor(basket);
+    }
+    while(!atbasket){
+        center(basket);
+        movefoward();
+        checkdist(basket);
+    }
+}
+
+lookfor(obj){
+    while(!objdetected){
+        raisearm(5);
+        i = 0;
+        while(i < 360){
+            i+=10;
+            turnleft(10);
+        }
+    }
+    if(!objdetected){
+        say(can't find);
+    }
+}
+
+center(obj){
