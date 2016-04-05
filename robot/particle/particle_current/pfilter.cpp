@@ -95,7 +95,7 @@ void pfilter::move(double v, double w, int encoders[]) {
   } else {
     memcpy(&prevtime, &currenttime, sizeof(struct timeval));
   }
-  printf("[pfilter.cpp] computing movement!\n");
+  //printf("[pfilter.cpp] computing movement!\n");
   vec enc(4);
   for (int i = 0; i < 4; i++) {
     enc(i) = (double)encoders[i];
@@ -131,7 +131,7 @@ void pfilter::move(double v, double w, int encoders[]) {
   w = mean(dist) * t2iK_rotation;
   prevenc = enc;
 
-  printf("[pfilter.cpp] moving %lf %lf\n", v, w);
+  //printf("[pfilter.cpp] moving %lf %lf\n", v, w);
   for (int i = 0; i < particles.size(); i++){
     particles[i].move(0, v, w);
     // circular world!!!!
@@ -149,7 +149,7 @@ void pfilter::move(double v, double w, int encoders[]) {
       bot.y = (double)this->map->n_rows-1;
     }
   }
-  printf("[pfilter.cpp] finished move\n");
+  //printf("[pfilter.cpp] finished move\n");
 }
 
 /** Weigh the "health" of each particle using gaussian error
@@ -159,7 +159,7 @@ void pfilter::move(double v, double w, int encoders[]) {
  *  @param health the health vector
  */
 void pfilter::weigh(mat &observations) {
-  printf("[pfilter.cpp] weigh\n");
+  //printf("[pfilter.cpp] weigh\n");
   vec theta = vec(observations.n_cols);
   vec radius(observations.n_cols);
   vec R(observations.n_cols);
@@ -193,7 +193,7 @@ void pfilter::weigh(mat &observations) {
  *  @param health the health of all the particles
  */
 void pfilter::resample(void) {
-  printf("[pfilter.cpp] resample\n");
+  //printf("[pfilter.cpp] resample\n");
   int N = particles.size();
   vector<sim_robot> p2;
   int index = (int)rand() % N;

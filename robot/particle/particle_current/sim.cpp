@@ -37,7 +37,7 @@ static void draw_things();
 static void autonomous_decide_trajectory(void);
 static mutex autonomous_lock;
 static vec robot_pos; // make sure this is a 2vec
-static vec robot_auton_drive; // this is an output 2vec
+static vec robot_auton_drive(2, fill::zeros); // this is an output 2vec
 // K_i & K_d
 static  double theta_k_p = 1;
 static  double theta_k_i = 0;
@@ -164,7 +164,7 @@ int main() {
 
   // load the robot
   rose.startStop = false;
-  robot_pos = vec({ 20, 20 });
+  robot_pos = vec({ 50, 50 });
   signal(SIGINT, stop);
 
   /////////////////////////
@@ -177,7 +177,7 @@ int main() {
   pf.set_noise(1.5, 0.002);
 
   // start up the planner
-  //thread planner(autonomous_decide_trajectory);
+  thread planner(autonomous_decide_trajectory);
     
   // start up the window
   screen = sim_window::init(500, 500);
@@ -227,18 +227,18 @@ int main() {
     strafe_left = keystates[SDL_SCANCODE_A];
     strafe_right = keystates[SDL_SCANCODE_D];
     rose.send(motion);
-    printf("encoder values: \n");
-    for (int i = 0; i < 4; i++) {
-      printf("%d\n", rose.encoder[i]);
-    }
+    //printf("encoder values: \n");
+    //for (int i = 0; i < 4; i++) {
+    //  printf("%d\n", rose.encoder[i]);
+    //}
     pf.move(forward - backward, turn_left - turn_right, rose.encoder);
     tag_landmarks = sense();
-    cout << "sensed: \n" << tag_landmarks << "\n";
+    //cout << "sensed: \n" << tag_landmarks << "\n";
     pf.observe(tag_landmarks);
     // predict the position
     //printf("[sim.cpp] predicting\n");
     pf.predict(mu, sigma);
-    cout << "[sim.cpp] position: " << mu(0) << ", " << mu(1) << ", angle: " << mu(2) * 180 / M_PI << "\n[sim.cpp] error: \n" << sigma << endl;
+    //cout << "[sim.cpp] position: " << mu(0) << ", " << mu(1) << ", angle: " << mu(2) * 180 / M_PI << "\n[sim.cpp] error: \n" << sigma << endl;
     // recompute the planner in order to get the most optimal path
     if (auto_enable) {
       autonomous_lock.lock();
@@ -256,20 +256,24 @@ int main() {
   sim_window::destroy();
 }
 
+static vector<MotionAction> actionpath;
+
 static void autonomous_decide_trajectory(void) {
   // start up the A* planner to create an initial path for the robot to start moving
-  vec goal = vec({76,94});
-  printf("goal of A*:\n");
-  cout << goal << endl;
-  printf("map size: %u %u\n", map.map.n_rows, map.map.n_cols);
+  vec goal = vec({50,202});
   AStar astar(map.map, goal);
   vector<MotionAction> path;
   for (;;) {
+
     autonomous_lock.lock();
     vec currPos = robot_pos;
+    int autonomous_en = auto_enable;
     autonomous_lock.unlock();
-    printf("A* currpos:\n");
-    cout << currPos << endl;
+
+    if (!autonomous_en) {
+      continue;
+    }
+
 
     // compute the new path
     astar.compute(currPos, path);
@@ -277,27 +281,41 @@ static void autonomous_decide_trajectory(void) {
       // do nothing for now
       drive(0, 0, 0, 0);
     }
+    actionpath = path;
 
-    int len = path.size();
-    for (int i = 0; i < len-1; i++){
+
+    vector<vec> newpath;
+    vec origin;
+    for (int i = 0; i < path.size(); i++){
       // Cycle through pairs...if the second is too near the first, then it is removed from the path
-      vec origin = vec({path[i].x, path[i].y});
-      vec target = vec({path[i+1].x, path[i+1].y});
-      if (calculate_distance(origin, target) <= 30){
-        path.erase(path.begin() + i);
-        i--;
+      if (origin.n_elem == 0) {
+        origin = vec({ path[i].x, path[i].y });
+        newpath.push_back(origin);
+        continue;
+      }
+      vec target = vec({ path[i].x, path[i].y });
+      if (calculate_distance(origin, target) >= 5) {
+        origin = target;
+        newpath.push_back(target);
       }
     }
 
-    /****************
+    if (origin.n_elem == 0) {
+      continue;
+    }
+    if (newpath.size() <= 1) {
+      robot_auton_drive.zeros();
+      continue;
+    }
+
+
     // for assigning left side and right side motor duty cycles.
-     ***************/
 
     // update delta_theta for assigning motor velocities
-    vec curr = vec({path[0].x, path[0].y});
+    vec curr = newpath[1];
     delta_theta = calculate_target_angle(robot_pos, curr); 
     // popped off of stack
-    path.erase(path.begin());  
+    //path.erase(path.begin());  
     // Assign v_l & v_r
     double v_l, v_r;
     v_l = (100 - theta_k_p * delta_theta);
@@ -323,9 +341,7 @@ static void draw_things()
   double mut;
   const ivec color({ 0, 0, 255 });
   if (map.map.n_elem > 0) {
-    printf("[sim.cpp] [draw] blit map\n");
     map.blit(frame, mux, muy, screen->w, screen->h);
-    printf("[sim.cpp] [draw] blit landmark\n");
     //frame.zeros();
     for (sim_landmark &lm : landmarks) {
       lm.blit(frame);
@@ -350,9 +366,7 @@ static void draw_things()
        draw_circle(frame, cyan, pt, lms(1,i)+1);
        }
        } */
-    printf("[sim.cpp] [draw] blit particle filter\n");
     pf.blit(frame);
-    printf("[sim.cpp] [draw] blit robot\n");
     for (int _i = -5; _i <= 5; _i++) {
       for (int _j = -5; _j <= 5; _j++) {
         int xx = (int)round(mu(0)) + _j;
@@ -366,6 +380,15 @@ static void draw_things()
         frame(yy,xx,2) = 0;
       }
     }
+
+    // draw A*
+    vector<MotionAction> path = actionpath;
+    for (MotionAction &action : path) {
+      frame(action.y, action.x, 0) = 0;
+      frame(action.y, action.x, 1) = 255;
+      frame(action.y, action.x, 2) = 255;
+    }
+
     mux = (int)round(mu(0));
     muy = (int)round(mu(1));
     mut = mu(2);

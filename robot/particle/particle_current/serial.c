@@ -285,7 +285,7 @@ void serial_write(serial_t *connection, char *message)
 	{
 		if (write(connection->fd, message, strlen(message)) != -1)
 		{
-			printf("[SERIAL] write [%s]: %s\n", connection->port, message);
+//			printf("[SERIAL] write [%s]: %s\n", connection->port, message);
 		}
 	}
 }
