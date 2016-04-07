@@ -68,9 +68,9 @@ int main() {
   robot_pose = vec({ 40, 40, 90 });
 
   // start up the threads
+  rose.startStop = false;
   thread manual_thread(manual_input);
   thread chili_thread(chilitag_detect);
-  rose.startStop = false;
   thread pose_thread(localize_pose);
   thread robot_thread(robot_calcmotion);
   thread path_thread(motion_plan);
