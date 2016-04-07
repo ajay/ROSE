@@ -10,7 +10,7 @@ class sim_landmark {
     sim_landmark(double x, double y);
     double collision(sim_map *map, arma::vec pos);
     arma::vec sense(sim_robot &robot, arma::mat lidarvals = arma::mat(), int flags = 0);
-    void blit(arma::icube &screen);
+    void blit(arma::cube &screen, int mux, int muy);
 
     double x;
     double y;

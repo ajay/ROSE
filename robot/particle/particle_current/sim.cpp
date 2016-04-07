@@ -49,7 +49,7 @@ static double calculate_target_angle(vec &curr, vec &target) {
   double delta_theta = atan2(diff(1), diff(0)) * 180 / M_PI;
 
   if (delta_theta < 0){
-    delta_theta += 360;
+    delta_theta += 360; // I'm changing this to -180 to 180 for easy usage
   }
   return delta_theta;
 }
@@ -120,7 +120,6 @@ icube partial_frame(icube frame, int x, int y, int width, int height) {
   }
   return partial_frame;
 }
-
 
 SDL_Surface *screen;
 sim_map map;

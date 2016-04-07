@@ -10,14 +10,15 @@
 class pfilter {
   public:
     pfilter(void);
-    pfilter(int nparticles, sim_map *map, std::vector<sim_landmark> &landmarks, double x, double y, double t);
+    pfilter(int nparticles, sim_map *map, std::vector<sim_landmark> &landmarks,
+        double x, double y, double t, double initial_sigma);
     ~pfilter(void);
-    void move(double v, double w, int encoders[]);
+    void move(arma::vec &sensors);
     void observe(arma::mat observations);
     void predict(arma::vec &mu, arma::mat &sigma);
     void set_noise(double vs, double ws);
     void set_size(double r);
-    void blit(arma::icube &screen);
+    void blit(arma::cube &screen, int mux, int muy);
 
     std::vector<sim_robot> particles;
     sim_map *map;

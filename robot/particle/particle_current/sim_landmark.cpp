@@ -57,17 +57,17 @@ vec sim_landmark::sense(sim_robot &robot, mat lidarvals, int flags) {
   }
 }
 
-void sim_landmark::blit(icube &screen) {
+void sim_landmark::blit(cube &screen, int mux, int muy) {
   for (int i = -1; i <= 1; i++) {
     for (int j = -1; j <= 1; j++) {
-      int x = (int)round(this->x) + j;
-      int y = (int)round(this->y) + i;
-      if (!within(x, 0, screen.n_cols-1) || !within(y, 0, screen.n_rows-1)) {
+      int x = (int)round(this->x) + j - mux;
+      int y = (int)round(this->y) + i - muy;
+      if (!within(x, 0, (int)screen.n_cols-1) || !within(y, 0, (int)screen.n_rows-1)) {
         continue;
       }
       screen(y, x, 0) = 0;
       screen(y, x, 1) = 0;
-      screen(y, x, 2) = 255;
+      screen(y, x, 2) = 1;
     }
   }
 }

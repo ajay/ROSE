@@ -1,5 +1,5 @@
 CFLAGS = `pkg-config --cflags opencv` \
-				 -std=c++11 -O3 \
+				 -O3 \
 				 -I/usr/local/include \
 				 -I/usr/include
 LIBS = -L/usr/local/lib \
@@ -10,26 +10,29 @@ LIBS = -L/usr/local/lib \
 			 -pthread
 
 OBJS = sim_map.o sim_robot.o sim_landmark.o \
-			 pfilter.o highgui.o draw.o sim.o \
+			 pfilter.o highgui.o draw.o runrobot.o \
 			 chili_landmarks.o \
 			 serial.o Rose.o \
-			 astar.o heap.o actions.o sim_window.o
+			 astar.o heap.o actions.o sim_window.o mathfun.o
 
 
 CC = gcc
 CCFLAGS = -pedantic -Wall -Werror -std=gnu99 -O3 -o
 COMPILEC = $(CC) $(CCFLAGS)
 
-all: $(OBJS) sim
+all: $(OBJS) runrobot
 
-sim: $(OBJS)
+runrobot: $(OBJS)
 	g++ $(CFLAGS) -o $@ $^ $(LIBS)
 
 serial.o: serial.c serial.h
 	$(COMPILEC) $@ -c $<
 
 %.o: %.cpp
-	g++ $(CFLAGS) -o $@ -c $<
+	g++ $(CFLAGS) -std=c++11 -o $@ -c $<
+
+%.o: %.c
+	gcc $(CFLAGS) -std=gnu99 -o $@ -c $<
 
 clean:
-	rm -f sim *.o
+	rm -f sim *.o runrobot

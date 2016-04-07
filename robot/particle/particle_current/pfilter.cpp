@@ -29,7 +29,7 @@ pfilter::pfilter(void) {
  *  @param landmarks a list of landmarks, where each landmark is described in sim_landmark.h
  */
 pfilter::pfilter(int nparticles, sim_map *map, vector<sim_landmark> &landmarks,
-  double x, double y, double t) {
+  double x, double y, double t, double initial_sigma) {
   double x_, y_, t_;
   // STEP 1: store the map and landmark variables
   this->map = map;
@@ -38,9 +38,9 @@ pfilter::pfilter(int nparticles, sim_map *map, vector<sim_landmark> &landmarks,
   // STEP 2: create a bunch of particles, place them into this->particles
   vector<sim_robot> new_particles;
   for (int i = 0; i < nparticles; i++) {
-    x_ = x + gaussianNoise(1.0);
-    y_ = y + gaussianNoise(1.0);
-    t_ = t + gaussianNoise(0.002);
+    x_ = x + gaussianNoise(initial_sigma);
+    y_ = y + gaussianNoise(initial_sigma);
+    t_ = t + gaussianNoise(M_PI);
     sim_robot newbot; 
     newbot.set_pose(x_, y_, t_);
     new_particles.push_back(newbot);
@@ -88,7 +88,7 @@ void pfilter::set_size(double r) {
  *  @param w the angular velocity
  *  @param enc an array of encoder values (from rose)
  */
-void pfilter::move(double v, double w, int encoders[]) {
+void pfilter::move(vec &sensors) {
   gettimeofday(&currenttime, NULL);
   if (secdiff(prevtime, currenttime) < 0.050) {
     return;
@@ -96,10 +96,8 @@ void pfilter::move(double v, double w, int encoders[]) {
     memcpy(&prevtime, &currenttime, sizeof(struct timeval));
   }
   //printf("[pfilter.cpp] computing movement!\n");
-  vec enc(4);
-  for (int i = 0; i < 4; i++) {
-    enc(i) = (double)encoders[i];
-  }
+  vec enc = sensors(span(0,3));
+  double v, w;
   /*if (abs(v) > 0.01) {
     // calculate displacement based on distance travelled per wheel
     // t2iK = 20 * pi / (180 * sqrt(2))
@@ -247,7 +245,7 @@ void pfilter::predict(vec &mu, mat &sigma) {
 /** Blit all the particles onto the screen
  *  @param screen the screen to blit the particles onto
  */
-void pfilter::blit(icube &screen) {
+void pfilter::blit(cube &screen, int mux, int muy) {
   // DO NOT TOUCH THIS FUNCTION
   vec health;
   if (this->health.n_elem != 0) {
@@ -257,12 +255,12 @@ void pfilter::blit(icube &screen) {
   }
   int i = 0;
   for (sim_robot &bot : this->particles) {
-    int x = (int)round(bot.x);
-    int y = (int)round(bot.y);
+    int x = (int)round(bot.x) - mux;
+    int y = (int)round(bot.y) - muy;
     if (x >= 0 && x < (int)screen.n_cols &&
         y >= 0 && y < (int)screen.n_rows) {
       screen(y, x, 0) = 0;
-      screen(y, x, 1) = 255;
+      screen(y, x, 1) = 1;
       screen(y, x, 2) = 0;
     }
     i++;;

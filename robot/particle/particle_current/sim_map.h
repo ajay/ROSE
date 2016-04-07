@@ -10,7 +10,7 @@ class sim_map {
     sim_map(void);
     ~sim_map(void);
     void load(const std::string &map_name);
-    void blit(arma::icube &screen, int x, int y, int w, int h);
+    void blit(arma::cube &screen, int x, int y);
 
     arma::mat map;
     arma::uword n_rows;

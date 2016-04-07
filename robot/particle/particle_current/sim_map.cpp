@@ -18,34 +18,19 @@ void sim_map::load(const std::string &map_name) {
   this->n_cols = this->map.n_cols;
 }
 
-/*void sim_map::blit(icube &screen, int x, int y, int width, int height) {
+void sim_map::blit(cube &screen, int x, int y) {
   assert(screen.n_rows == this->n_rows && screen.n_cols == this->n_cols && screen.n_slices == 3);
   for (int i = 0; i < (int)screen.n_rows; i++) {
     for (int j = 0; j < (int)screen.n_cols; j++) {
-      screen(i, j, 0) = -(int)(this->map(i, j) * 64) + 64;
-      screen(i, j, 1) = -(int)(this->map(i, j) * 64) + 64;
-      screen(i, j, 2) = -(int)(this->map(i, j) * 64) + 64;
-    }
-  }
-} */
-
-
-
-
- 
- void sim_map::blit(icube &screen, int x, int y, int width, int height) {
-  assert(screen.n_rows == this->n_rows && screen.n_cols == this->n_cols && screen.n_slices == 3);
-  for (int i = 0; i < (int)height; i++) {
-    for (int j = 0; j < (int)width; j++) {
-      int x_ = x - width/2 + j;
-      int y_ = y - height/2 + i;
+      int x_ = x - (int)screen.n_cols/2 + j;
+      int y_ = y - (int)screen.n_rows/2 + i;
       if (x_ < 0 || x_ >= (int)screen.n_cols ||
           y_ < 0 || y_ >= (int)screen.n_rows) {
         continue;
       }
-      screen(y_, x_, 0) = -(int)(this->map(y_, x_) * 64) + 64;
-      screen(y_, x_, 1) = -(int)(this->map(y_, x_) * 64) + 64;
-      screen(y_, x_, 2) = -(int)(this->map(y_, x_) * 64) + 64;
+      screen(y_, x_, 0) = -(int)(this->map(y_, x_) * 0.25) + 0.25;
+      screen(y_, x_, 1) = -(int)(this->map(y_, x_) * 0.25) + 0.25;
+      screen(y_, x_, 2) = -(int)(this->map(y_, x_) * 0.25) + 0.25;
     }
   }
 }
