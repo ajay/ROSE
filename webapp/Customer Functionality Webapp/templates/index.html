@@ -1,0 +1,207 @@
+<html>
+<head>
+  <title>WebApp: User Edition</title>
+  <style>
+		.orderbutton 
+		{
+      background-color: #4CAF50;
+      border: 2px solid #4CAF50;
+      color: white;
+      padding: 15px 32px;
+      text-decoration: none;
+      display: inline-block;
+      font-size: 16px;
+      margin: 4px 2px;
+      cursor: pointer;
+      transition-duration: 0.4s;
+    }
+    .orderbutton:hover 
+    {
+      background-color: white;
+      color: black;
+    }
+</style>
+</head>
+<body>
+  <!--The two following tags (after the breaks) are the title.  Centered in the page.               -->
+  <br><br>
+  <h1 style="text-align:center;">WebApp: User Edition</h1>
+  <h2 style="text-align:center;">In Development</h2>
+  <h3 style="text-align:center;">Table {{table}}</h3>
+  <br>
+  <!-- This div element is the two buttons that show and hide the cart items.  Development tool.    -->
+  <div style="text-align:right;">
+  <button id="showcart" onclick="showcart()">Show Cart</button>
+  <button id="hidecart" onclick="hidecart()" style="display:none;">Hide Cart</button>
+  </div>
+  
+  <!--Order Button.  Pushes the cart to the database.  I wanted to make it look fancy.              -->
+  <div style="text-align:center;">
+  <button id="order" class="orderbutton" onclick="order()">Order</button>
+  </div>
+  
+  <!-- This div element refers to the items in the cart.  A for loop ensures they're all displayed. -->
+  <div id="cart" style="text-align:center;display:none;">
+  <h3 id="total">Total: 0.00</h3>
+  </div>
+  
+  <!-- This div element is a collection of food and drink buttons, which add a given item to the cart. -->
+  <div id="drinks" style="text-align:center;">
+  <h3>Drinks</h3>
+  <button id="sierramist" value=0.99 onclick="additem('sierramist', 0.99)">Sierra Mist</button>
+  <button id="pepsi" value=0.99 onclick="additem('pepsi', 0.99)">Pepsi</button>
+  <button id="mountaindew" value=0.99 onclick="additem('mountaindew', 0.99)">Mountain Dew</button>
+  <button id="brisk" value=0.99 onclick="additem('brisk', 0.99)">Brisk</button>
+  <br>
+  <h3>Food</h3>
+  <button id="pizza" value=13.99 onclick="additem('pizza', 13.99)">Pizza</button>
+  <button id="steak" value=21.99 onclick="additem('steak', 21.99)">Steak</button>
+  <button id="cheeseburger" value=3.99 onclick="additem('cheeseburger', 3.99)">Cheeseburger</button>
+  <button id="lobster" value=53.99 onclick="additem('lobster', 53.99)">Lobster</button>
+  </div>
+  <br><br>
+  <!--DEBUG:  These two show the contents of itemlist and pricelist.-->
+  <p id="items"></p>
+  <p id="prices"></p>
+  
+  <!--   JAVASCRIPT JAVASCRIPT JAVASCRIPT JAVASCRIPT JAVASCRIPT JAVASCRIPT JAVASCRIPT JAVASCRIPT    -->
+  <script>
+    
+    var itemlist = [];
+    var pricelist = [];
+    var table = getElementById("table").value;
+    
+    //show and hide cart button functions
+    function showcart()
+    {
+      document.getElementById("showcart").style.display = "none";
+      document.getElementById("hidecart").style.display = "inline";
+      document.getElementById("cart").style.display = "inline";
+    }
+
+    function hidecart()
+    {
+      document.getElementById("showcart").style.display = "inline";
+      document.getElementById("hidecart").style.display = "none";
+      document.getElementById("cart").style.display = "none";
+    }
+
+    //additem: takes in item and price, adds them to the corresponding arrays. In addition, the function creates
+    //a text element to the "cart" div element above.
+    function additem(item, price)
+    {
+    	
+    	//add items to the arrays; change the corresponding debug elements
+      itemlist[itemlist.length] = item;
+      document.getElementById("items").innerHTML = itemlist;
+      pricelist[pricelist.length] = price;
+      document.getElementById("prices").innerHTML = pricelist;
+      
+      //create a page break between each entry.
+    	if(itemlist.length != 0)
+    	{
+    		var brk = document.createElement("br");
+    		brk.setAttribute("id","brk" + (pricelist.length-1));
+    		document.getElementById("cart").appendChild(brk);
+    	}
+      
+      //add all of the prices together, and change the "total" element to reflect that.
+      document.getElementById("total").innerHTML = "Total: " + pricelist.reduce(add,0);
+      
+      //reflect the addition into the cart by adding text to the HTML "cart" element.
+      var elem = document.createElement("pre");
+      var text = document.createTextNode(item + "     " + price + "     ");
+      elem.appendChild(text);
+      elem.style.display = "inline-block";
+      elem.setAttribute("id","item" + (pricelist.length-1));
+      document.getElementById("cart").appendChild(elem);
+      
+      //create a button that will delete the item from the cart.
+      var butt = document.createElement("button");
+      var text2 = document.createTextNode("Drop");
+      butt.appendChild(text2);
+      butt.setAttribute("id","butt" + (pricelist.length-1));
+      butt.setAttribute("onclick","drop(" + (pricelist.length-1) + ")");
+      document.getElementById("cart").appendChild(butt);
+    }
+    
+    //function used to add total together; functional programming and Javascript mandate that + isn't good enough.
+    function add(a, b)
+    {
+      return a + b;
+    }
+    
+    //order: the function called by the order button.  The only difference between this and its
+    //helper method is that this one confirms that you wish to order before you do, to prevent
+    //accidents.
+    function order()
+    {
+      var result = confirm("Click \"OK\" to place your order.")
+      if(result)
+      {
+        orderhelper();
+        alert("Thank you!  Your order has been placed.\n(WARNING: DO NOT CHECK THE BOX BELOW)");
+      }
+    }
+    
+    //orderhelper: sends cart items to the order queue on the database.  Woohoo!
+    //The only reason I have a helper method is so that I could implement a confirmation pop-up.
+    function orderhelper()
+    {
+    	var xhttp;
+     	xhttp = new XMLHttpRequest();
+     	var vals = "table=" + {{table}} + "&items=" + itemlist + "&prices=" + pricelist;
+    	xhttp.open("POST", "/order/"+vals, true);
+  	  xhttp.send("test");
+  	  
+  	  //Delete all the cart items that were just ordered.
+  	  for(i = 0; i < itemlist.length; i++)
+    	{
+    		document.getElementById("cart").removeChild(document.getElementById("item"+i));
+    	  document.getElementById("cart").removeChild(document.getElementById("butt"+i));
+    	  document.getElementById("cart").removeChild(document.getElementById("brk"+i));
+    	}
+    	
+    	itemlist.length = 0;
+    	pricelist.length = 0;
+    	document.getElementById("total").innerHTML = "Total: 0.00";
+    	
+    	//it looks tidier when the cart is hidden after an order.
+    	hidecart();
+    	
+    	//DEBUG ITEMS UPDATE
+    	document.getElementById("items").innerHTML = itemlist;
+    	document.getElementById("prices").innerHTML = pricelist;
+    }
+    
+    //drop: drop an item from the cart.  Splices the item from the item array and updates the total.
+    function drop(i)
+    {
+    	itemlist.splice(i, 1);
+    	pricelist.splice(i, 1);
+    	//update DEBUG TOOLS
+    	document.getElementById("items").innerHTML = itemlist;
+    	document.getElementById("prices").innerHTML = pricelist;
+    	document.getElementById("total").innerHTML = "Total: " + pricelist.reduce(add,0);
+    	//WARNING: This is apparently not well supported around browsers.  Seek alternative.
+    	//remove the dropped item's cart tags.
+    	document.getElementById("cart").removeChild(document.getElementById("item"+i));
+    	document.getElementById("cart").removeChild(document.getElementById("butt"+i));
+    	if(i != 0)
+    	{
+    	  document.getElementById("cart").removeChild(document.getElementById("brk"+i));
+      }
+      
+    	//update all the cart HTML elements so that they work correctly.
+    	//If this isn't done, the drop buttons affect the item at their old index, rather than updated.
+    	for(l = i+1; l <= itemlist.length; l++)
+    	{
+    		document.getElementById("item"+l).setAttribute("id","item"+(l-1));
+    		document.getElementById("butt"+l).setAttribute("onclick","drop("+ (l-1) + ")");
+    		document.getElementById("butt"+l).setAttribute("id","butt"+(l-1));
+    		document.getElementById("brk"+l).setAttribute("id","brk"+(l-1));
+    	}
+    }
+  </script>
+</body>
+</html>
