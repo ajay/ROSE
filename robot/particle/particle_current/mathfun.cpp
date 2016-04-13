@@ -8,13 +8,15 @@ double limit_value(double x, double a, double b) {
   return ((x < a) ? a : ((x > b) ? b : x));
 }
 
- double map_value(double x, double a1, double b1, double a2, double b2) {
+/** This maps a value from one domain to another
+ */
+double map_value(double x, double a1, double b1, double a2, double b2) {
   assert(a1 != b1);
   double ratio = (b2 - a2) / (b1 - a1);
   return a2 + ratio * (x - a1);
 }
 
- double wrap_value(double x, double a, double b) {
+double wrap_value(double x, double a, double b) {
   assert(a < b);
   double diff = b - a;
   while (x < a) {

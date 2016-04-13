@@ -18,6 +18,7 @@ SDL_Surface *sim_window::init(int width, int height) {
       SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
   screen = SDL_CreateRGBSurface(0, width, height, 32, 0, 0, 0, 0);
   texture = SDL_CreateTextureFromSurface(renderer, screen);
+  printf("init'ing: %p %p %zu\n", texture, screen->pixels, screen->pitch);
   return screen;
 }
 
@@ -40,10 +41,15 @@ void sim_window::blit(SDL_Surface *s, icube &frame) {
 }
 
 void sim_window::update(void) {
+  printf("updating: %p %p %zu\n", texture, screen->pixels, screen->pitch);
   SDL_UpdateTexture(texture, NULL, screen->pixels, screen->pitch);
+  printf("1\n");
   SDL_RenderClear(renderer);
+  printf("2\n");
   SDL_RenderCopy(renderer, texture, NULL, NULL);
+  printf("3\n");
   SDL_RenderPresent(renderer);
+  printf("4\n");
 }
 
 void sim_window::destroy(void) {

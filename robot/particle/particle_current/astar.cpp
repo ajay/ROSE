@@ -61,7 +61,7 @@ void AStar::compute(vec &start, vector<MotionAction> &path) {
 
     closed(x, y) = true;
     // if this state is the goal state, then return the path
-    if (x == start(0) && y == start(1)) { // changed to backward
+    if (abs(x - start(0)) < 0.5 && abs(y - start(1)) < 0.5) { // changed to backward
       path.clear();
       while (x != this->goal(0) || y != this->goal(1)) { // changed to backward
         path.push_back(curr);
@@ -142,9 +142,9 @@ static vector<MotionAction> getNextAction(MotionAction currAction, mat &map) {
   for (int i = 0; i < 4; i++) {
     MotionAction action(currAction.x + neighbor4(0, i), currAction.y + neighbor4(1, i), neighborActions[i]);
     // check feasibility of the action
-    if (action.x < 0 || action.y < 0 ||
-        action.x >= map.n_rows || action.y >= map.n_cols ||
-        map(action.x, action.y) > 0.5) {
+    if (action.x-10 < 0 || action.y-10 < 0 ||
+        action.x+10 >= map.n_rows || action.y+10 >= map.n_cols ||
+        accu(map(span(action.x-10, action.x+10), span(action.y-10, action.y+10))) > 0.5) {
       continue;
     }
     bool h1 = currAction.id == MOVE_LEFT || currAction.id == MOVE_RIGHT;

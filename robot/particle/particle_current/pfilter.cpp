@@ -4,6 +4,20 @@
 #include <random>
 #include <ctime>
 
+// TODO: MAKE EVERYTHING DEGREES FROM RADIANS
+// DEGREES > RADIANS
+// DEGREES > RADIANS
+// DEGREES > RADIANS
+// DEGREES > RADIANS
+// DEGREES > RADIANS
+// DEGREES > RADIANS
+// DEGREES > RADIANS
+// DEGREES > RADIANS
+// DEGREES > RADIANS
+// DEGREES > RADIANS
+// DEGREES > RADIANS
+
+
 using namespace arma;
 using namespace std;
 
@@ -40,7 +54,7 @@ pfilter::pfilter(int nparticles, sim_map *map, vector<sim_landmark> &landmarks,
   for (int i = 0; i < nparticles; i++) {
     x_ = x + gaussianNoise(initial_sigma);
     y_ = y + gaussianNoise(initial_sigma);
-    t_ = t + gaussianNoise(M_PI);
+    t_ = t + gaussianNoise(0.01);
     sim_robot newbot; 
     newbot.set_pose(x_, y_, t_);
     new_particles.push_back(newbot);
@@ -255,8 +269,8 @@ void pfilter::blit(cube &screen, int mux, int muy) {
   }
   int i = 0;
   for (sim_robot &bot : this->particles) {
-    int x = (int)round(bot.x) - mux;
-    int y = (int)round(bot.y) - muy;
+    int x = (int)round(bot.x) - mux + (int)screen.n_cols / 2;
+    int y = (int)round(bot.y) - muy + (int)screen.n_rows / 2;
     if (x >= 0 && x < (int)screen.n_cols &&
         y >= 0 && y < (int)screen.n_rows) {
       screen(y, x, 0) = 0;

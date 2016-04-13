@@ -5,15 +5,15 @@ CFLAGS = `pkg-config --cflags opencv` \
 LIBS = -L/usr/local/lib \
 			 `pkg-config --libs opencv` \
 			 -larmadillo \
-			 -lSDL2 \
+			 -lSDL \
 			 -lchilitags \
 			 -pthread
 
-OBJS = sim_map.o sim_robot.o sim_landmark.o \
+OBJS = serial.o sim_map.o sim_robot.o sim_landmark.o \
 			 pfilter.o highgui.o draw.o runrobot.o \
 			 chili_landmarks.o \
-			 serial.o Rose.o \
-			 astar.o heap.o actions.o sim_window.o mathfun.o
+			 Rose.o \
+			 astar.o heap.o actions.o mathfun.o
 
 
 CC = gcc
@@ -35,4 +35,4 @@ serial.o: serial.c serial.h
 	gcc $(CFLAGS) -std=gnu99 -o $@ -c $<
 
 clean:
-	rm -f sim *.o runrobot
+	rm -rfv *.o runrobot

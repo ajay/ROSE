@@ -20,6 +20,17 @@ Rose::Rose(void)
 {
   this->motion_const = ones<vec>(10);
   this->motion_const(span(0,3)) *= 255;
+  this->startStop = false;
+
+  // ARM STUFF
+  this->arm_active = false;
+  this->calibration_loaded = false;
+  this->arm_mint = zeros<vec>(6);
+  this->arm_maxt = zeros<vec>(6);
+  this->arm_minv = zeros<vec>(6);
+  this->arm_maxv = zeros<vec>(6);
+  this->arm_link_length = { 0.2, 5.0, 10.5, 6.5, 4.5, 3.8, 3.75 };
+
   if (this->connect())
   {
     this->reset();
@@ -40,15 +51,6 @@ Rose::Rose(void)
     printf("Exiting due to the existance of a mind without the body.\n");
     exit(0);
   }
-
-  // ARM STUFF
-  this->arm_active = false;
-  this->calibration_loaded = false;
-  this->arm_mint = zeros<vec>(6);
-  this->arm_maxt = zeros<vec>(6);
-  this->arm_minv = zeros<vec>(6);
-  this->arm_maxv = zeros<vec>(6);
-  this->arm_link_length = { 0.2, 5.0, 10.5, 6.5, 4.5, 3.8, 3.75 };
 }
 
 Rose::~Rose(void)
@@ -90,11 +92,12 @@ void* Rose::commHandler(void* args)
     vec tempSendVec;
     pthread_mutex_lock(rose->commSendLock);
     tempSendVec = rose->commSend;
+    //cout << rose->commSend << endl;
     pthread_mutex_unlock(rose->commSendLock);
     rose->threadSend(tempSendVec);
-
     rose->threadRecv();
   }
+  printf("Exiting\n");
 
   return NULL;
 }
@@ -224,7 +227,6 @@ bool Rose::connect(void)
 
     // Start the update thread
     pthread_create(this->update_thread, NULL, this->commHandler, this);
-
     return true;
   }
 }
@@ -283,9 +285,9 @@ void Rose::threadSend(const vec &motion)
     new_motion(i) = limit_value(new_motion(i), -1.0, 1.0);
   }
   if (this->calibrated()) {
-    for (int i = 4; i < 10; i++) {
-      new_motion(i) = map_value(new_motion(i), arm_mint(i), arm_maxt(i), arm_minv(i), arm_maxv(i));
-      new_motion(i) = limit_value(new_motion(i), arm_minv(i), arm_maxv(i));
+    for (int i = 0; i < 6; i++) {
+      new_motion(i+4) = map_value(new_motion(i+4), arm_mint(i), arm_maxt(i), arm_minv(i), arm_maxv(i));
+      new_motion(i+4) = limit_value(new_motion(i+4), arm_minv(i), arm_maxv(i));
     }
   } else {
     arm_active = false; // don't turn on if not calibrated
@@ -296,6 +298,9 @@ void Rose::threadSend(const vec &motion)
 
   char instr_activate = 0x80 | (this->arm_active);
   char msg[WBUFSIZE];
+
+  //cout << new_motion << endl;
+
   for (int i = 0; i < (int)this->connections.size(); i++)
   {
     switch (this->ids[i])
@@ -456,8 +461,8 @@ void Rose::set_arm(double base_joint, double pivot1, double pivot2, double pivot
   this->commSend(7) = pivot3;
   this->commSend(8) = rotate_wrist;
   this->commSend(9) = close_claw;
-  pthread_mutex_unlock(this->commSendLock);
   this->arm_active = true;
+  pthread_mutex_unlock(this->commSendLock);
 }
 
 void Rose::stop_arm(void) {
@@ -503,7 +508,7 @@ bool Rose::calibrated(void) {
 
 
 /////////////////////
-// ARM
+// ARM IK & FK
 /////////////////////
 
 vec Rose::get_end_effector_pos(int linkid) {
