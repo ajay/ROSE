@@ -74,6 +74,10 @@ static void screenblit(SDL_Surface *s, cube &frame) {
   }
 }
 
+static void chilicamdetect_thread(void) {
+  chili.update();
+}
+
 int main() {
   // preemptive init
   printf("[main] preemptive init\n");
@@ -84,13 +88,19 @@ int main() {
     printf("No screen found, please check your SDL configurations\n");
     return 1;
   }
+<<<<<<< HEAD
+  robot_pose = vec({ 75, 60, 90 * M_PI / 180 });
+  globalmap.load("ece_hallway_partial.jpg");
+=======
   robot_pose = vec({ 40, 40, 90 * M_PI / 180 });
   globalmap.load("map_engineering_b_wing.jpg");
+>>>>>>> 7db80ab095891f206e45a6cbd545ed7dcafa106c
 
   // start up the threads
   printf("[main] start up the threads\n");
   rose.startStop = false;
   thread manual_thread(manual_input);
+  thread chilicamthread(chilicamdetect_thread);
   thread chili_thread(chilitag_detect);
   thread pose_thread(localize_pose);
   thread path_thread(motion_plan);
@@ -172,6 +182,18 @@ void manual_input(void) {
     }
 
     // input manual feedback
+<<<<<<< HEAD
+        if (keystates[SDLK_q]) rose.set_wheels(-1, 1, -1, 1);
+        else if (keystates[SDLK_e]) rose.set_wheels(1, -1, 1, -1);
+        else if (keystates[SDLK_a]) rose.set_wheels(-1, 1, 1, -1);
+        else if (keystates[SDLK_d]) rose.set_wheels(1, -1, -1, 1);
+        else if (keystates[SDLK_s]) rose.set_wheels(-1, -1, -1, -1);
+        else if (keystates[SDLK_w]) rose.set_wheels(1, 1, 1, 1);
+        else if (keystates[SDLK_1]) rose.set_wheels(1, 0, 0, 0);
+        else if (keystates[SDLK_2]) rose.set_wheels(0, 1, 0, 0);
+        else if (keystates[SDLK_3]) rose.set_wheels(0, 0, 1, 0);
+        else if (keystates[SDLK_4]) rose.set_wheels(0, 0, 0, 1);
+=======
         if (keystates[SDLK_q]) rose.set_wheels(-1, 1, -1, 1); 
         else if (keystates[SDLK_e]) rose.set_wheels(1, -1, 1, -1); 
         else if (keystates[SDLK_a]) rose.set_wheels(-1, 1, 1, -1); 
@@ -182,6 +204,7 @@ void manual_input(void) {
         else if (keystates[SDLK_2]) rose.set_wheels(0, 1, 0, 0); 
         else if (keystates[SDLK_3]) rose.set_wheels(0, 0, 1, 0); 
         else if (keystates[SDLK_4]) rose.set_wheels(0, 0, 0, 1); 
+>>>>>>> 7db80ab095891f206e45a6cbd545ed7dcafa106c
         else rose.set_wheels(0, 0, 0, 0);
 
 /*
@@ -229,13 +252,7 @@ void manual_input(void) {
 }
 
 void chilitag_detect(void) {
-  // create a chilitag object
-  chili_landmarks chili;
-
   while (!stopsig) {
-    // update the chilitags
-    chili.update();
-
     // place the chilitags' positions into a matrix
     mat sv(3, 20, fill::zeros);
     for (int j = 0; j < 20; j++) {
@@ -243,6 +260,8 @@ void chilitag_detect(void) {
         sv.col(j) = vec({ chili.tags[j][1], chili.tags[j][2], chili.tags[j][0] });
       }
     }
+
+    cout << chilitags << endl;
 
     // store the matrix
     chili_lock.lock();
@@ -253,26 +272,49 @@ void chilitag_detect(void) {
 
 void localize_pose(void) {
   // create the landmarks (custom)
-  landmarks.push_back(sim_landmark(90, 202));           // 00
-  landmarks.push_back(sim_landmark(601, 617));          // 01
-  landmarks.push_back(sim_landmark(0, 416));            // 02
-  landmarks.push_back(sim_landmark(98, 627));           // 03
-  landmarks.push_back(sim_landmark(384, 627));          // 04
-  landmarks.push_back(sim_landmark(1225, 627));         // 05
-  landmarks.push_back(sim_landmark(3400, 513));         // 06
-  landmarks.push_back(sim_landmark(3442, 583));         // 07
-  landmarks.push_back(sim_landmark(1961, 539));         // 08
-  landmarks.push_back(sim_landmark(3442-460, 539+80));  // 09
-  landmarks.push_back(sim_landmark(0, 517));            // 10
-  landmarks.push_back(sim_landmark(78, 202));           // 11
-  landmarks.push_back(sim_landmark(111, 627));          // 12
-  landmarks.push_back(sim_landmark(384, 707));          // 13
-  landmarks.push_back(sim_landmark(601, 537));          // 14
-  landmarks.push_back(sim_landmark(1165, 540));         // 15
-  landmarks.push_back(sim_landmark(1961, 539+80));      // 16
-  landmarks.push_back(sim_landmark(3442, 583-37));      // 17
-  landmarks.push_back(sim_landmark(3400+14, 513));      // 18
-  landmarks.push_back(sim_landmark(3442-460, 539));     // 19
+  landmarks.push_back(sim_landmark(8, 1200-24));           // 00
+  landmarks.push_back(sim_landmark(8, 480-24));           // 01
+  landmarks.push_back(sim_landmark(8, 720-24));           // 02
+  landmarks.push_back(sim_landmark(8, 960-24));           // 03
+  landmarks.push_back(sim_landmark(8, 1200-24));          // 04
+  landmarks.push_back(sim_landmark(146, 1200-24));        // 05
+  landmarks.push_back(sim_landmark(146, 960-24));         // 06
+  landmarks.push_back(sim_landmark(146, 720-24));         // 07
+  landmarks.push_back(sim_landmark(146, 480-24));         // 08
+  landmarks.push_back(sim_landmark(146, 240-24));         // 09
+  landmarks.push_back(sim_landmark(8, 240));              // 10
+  landmarks.push_back(sim_landmark(8, 480));              // 11
+  landmarks.push_back(sim_landmark(8, 720));              // 12
+  landmarks.push_back(sim_landmark(8, 960));              // 13
+  landmarks.push_back(sim_landmark(8, 1200));             // 14
+  landmarks.push_back(sim_landmark(146, 1200));           // 15
+  landmarks.push_back(sim_landmark(146, 960));            // 16
+  landmarks.push_back(sim_landmark(146, 720));            // 17
+  landmarks.push_back(sim_landmark(146, 480));            // 18
+  landmarks.push_back(sim_landmark(146, 240));            // 19
+
+
+
+//  landmarks.push_back(sim_landmark(90, 202));           // 00
+//  landmarks.push_back(sim_landmark(601, 617));          // 01
+//  landmarks.push_back(sim_landmark(0, 416));            // 02
+//  landmarks.push_back(sim_landmark(98, 627));           // 03
+//  landmarks.push_back(sim_landmark(384, 627));          // 04
+//  landmarks.push_back(sim_landmark(1225, 627));         // 05
+//  landmarks.push_back(sim_landmark(3400, 513));         // 06
+//  landmarks.push_back(sim_landmark(3442, 583));         // 07
+//  landmarks.push_back(sim_landmark(1961, 539));         // 08
+//  landmarks.push_back(sim_landmark(3442-460, 539+80));  // 09
+//  landmarks.push_back(sim_landmark(0, 517));            // 10
+//  landmarks.push_back(sim_landmark(78, 202));           // 11
+//  landmarks.push_back(sim_landmark(111, 627));          // 12
+//  landmarks.push_back(sim_landmark(384, 707));          // 13
+//  landmarks.push_back(sim_landmark(601, 537));          // 14
+//  landmarks.push_back(sim_landmark(1165, 540));         // 15
+//  landmarks.push_back(sim_landmark(1961, 539+80));      // 16
+//  landmarks.push_back(sim_landmark(3442, 583-37));      // 17
+//  landmarks.push_back(sim_landmark(3400+14, 513));      // 18
+//  landmarks.push_back(sim_landmark(3442-460, 539));     // 19
 
   // start the particle filter
   pose_lock.lock();
@@ -335,7 +377,11 @@ void robot_calcmotion(void) {
     }
 
     if (path_plan.n_cols == 2) {
+<<<<<<< HEAD
+      printf("Reached goal, autonomous stopping\n");
+=======
       printf("FUCK THIS SHIT, I'M OUT\n");
+>>>>>>> 7db80ab095891f206e45a6cbd545ed7dcafa106c
       rose.set_wheels(0, 0, 0, 0);
       continue;
     }
@@ -376,7 +422,12 @@ void robot_calcmotion(void) {
 
     // angle check
     vec diff = path_plan(target_index) - pos;
+<<<<<<< HEAD
+    if (!within_value((atan2(diff(1), diff(0)) - pose(2)) * 180 / M_PI, -45, 45) &&
+        within_value(sqrt(dot(diff, diff)), 0, 40)) {
+=======
     if (!within_value(atan2(diff(1), diff(0)) * 180 / M_PI, -45, 45) && within_value(sqrt(dot(diff, diff)), 0, 40)) {
+>>>>>>> 7db80ab095891f206e45a6cbd545ed7dcafa106c
       target_index++;
       if (target_index >= (int)distance.n_elem) {
         printf("target reached\n");
@@ -386,6 +437,11 @@ void robot_calcmotion(void) {
       }
     }
 
+<<<<<<< HEAD
+    cout << pose << endl;
+
+=======
+>>>>>>> 7db80ab095891f206e45a6cbd545ed7dcafa106c
     vec target = path_plan.col(target_index);
 
     // once the target is found, then calculate the trajectory
@@ -450,7 +506,11 @@ void robot_calcmotion(void) {
 }
 
 void motion_plan(void) {
+<<<<<<< HEAD
+  vec goal = vec({ 73, 1000 }); // this will have to change later somehow
+=======
   vec goal = vec({ 40, 300 }); // this will have to change later somehow
+>>>>>>> 7db80ab095891f206e45a6cbd545ed7dcafa106c
   // grab the map
   mat localmap = globalmap.map;
 
@@ -500,7 +560,11 @@ void motion_plan(void) {
       } else {
         vec target({ actionpath[i].x, actionpath[i].y });
         vec diff = target - origin;
+<<<<<<< HEAD
+        if (sqrt(dot(diff, diff)) >= 30) {
+=======
         if (sqrt(dot(diff, diff)) >= 20) {
+>>>>>>> 7db80ab095891f206e45a6cbd545ed7dcafa106c
           prunedpath.push_back(target);
           origin = target;
         }
@@ -541,14 +605,24 @@ void display_interface(void) {
     globalmap.blit(frame, mux, muy);
 
     // draw the landmarks
-    for (sim_landmark &lm : landmarks) {
+    vec white({ 1, 1, 1 });
+    for (int i = 0; i < landmarks.size(); i++) {
+      sim_landmark &lm = landmarks[i];
       lm.blit(frame, mux, muy);
+      if (chilitags(2, i) > 0.5) {
+        draw_circle(frame, white, vec({ lm.x, screen->h - lm.y - 1 }), 3.0);
+      }
     }
 
     // draw the particle filter
     pf.blit(frame, mux, muy);
 
     // draw the robot's position and pose
+    //acceptance radius
+    int _xx = (int)round(sw2 + (10 * cos(mut)));
+    int _yy = (int)round(sh2 + (10 * sin(mut)));
+    vec yellow({ 1, 1, 0 });
+    draw_circle(frame, yellow, vec({ (double)sw2, (double)sh2 }), 20);
     for (int _i = -5; _i <= 5; _i++) {
       for (int _j = -5; _j <= 5; _j++) {
         int xx = sw2 + _j;
@@ -562,8 +636,11 @@ void display_interface(void) {
         frame(yy,xx,2) = 0;
       }
     }
+<<<<<<< HEAD
+=======
     int _xx = (int)round(sw2 + (10 * cos(mut)));
     int _yy = (int)round(sh2 + (10 * sin(mut)));
+>>>>>>> 7db80ab095891f206e45a6cbd545ed7dcafa106c
     vec color({ 0, 1, 1 });
     draw_line(frame, color, vec({(double)sh2,(double)sw2-1}), vec({(double)_yy,(double)_xx-1}));
     draw_line(frame, color, vec({(double)sh2,(double)sw2+1}), vec({(double)_yy,(double)_xx+1}));
@@ -577,10 +654,17 @@ void display_interface(void) {
     path_lock.unlock();
     if (auto_enable) {
       vec purple({ 1, 0, 1 });
+<<<<<<< HEAD
+      for (int j = 0; j < (int)path_plan.n_cols; j++) {
+        //vec action1 = path_plan.col(j-1) + vec({ (double)(sw2 - mux), (double)(sh2 - muy) });
+        vec action1 = path_plan.col(j) + vec({ (double)(sw2 - mux), (double)(sh2 - muy) });
+        draw_circle(frame, purple, vec({ action1(0), action1(1) }), 2.0);
+=======
       for (int j = 1; j < (int)path_plan.n_cols; j++) {
         vec action1 = path_plan.col(j-1) + vec({ (double)(sw2 - mux), (double)(sh2 - muy) });
         vec action2 = path_plan.col(j) + vec({ (double)(sw2 - mux), (double)(sh2 - muy) });
         draw_line(frame, purple, vec({ action1(1), action1(0) }), vec({ action2(1), action2(0) }));
+>>>>>>> 7db80ab095891f206e45a6cbd545ed7dcafa106c
       }
     }
 
