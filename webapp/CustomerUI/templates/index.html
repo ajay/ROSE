@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<!--
+ * A Design by GraphBerry
+ * Author: GraphBerry
+ * Author URL: http://graphberry.com
+ * License: http://graphberry.com/pages/license
+-->
+<html lang="en-us">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>ROSE Webapp</title>
+
+	<!-- Load fonts -->
+	<link href='http://fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css'>
+	<link href='http://fonts.googleapis.com/css?family=Lora' rel='stylesheet' type='text/css'>
+
+	<!-- Load css styles -->
+	<link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='css/bootstrap.css') }}"/>
+	<link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='css/font-awesome.css') }}"/>
+	<link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='css/style.css') }}"/>
+
+</head>
+<body>
+	<div class="jumbotron home home-fullscreen" id="home">
+		<div class="mask"></div>
+		<!-- <a href="#" class="logo">
+			<img src="img/logo.png" alt="Moderno - Theme by GraphBerry.com">
+		</a> -->
+		<a href="" class="menu-toggle" id="nav-expander"><i class="fa fa-bars"></i></a>
+		<!-- Offsite navigation -->
+		<nav class="menu">
+			<a href="#" class="close"><i class="fa fa-close"></i></a>
+			<h3>Table {{ table }}</h3>
+			<ul class="nav">
+				<li><a data-scroll href="#home">Home</a></li>
+				<li><a data-scroll href="#drinks">Drinks</a></li>
+				<li><a data-scroll href="#viewcart">View Cart</a></li>
+				<li><a data-scroll href="#checkout">Checkout</a></li>
+			</ul>
+			<!-- <h4>Table {{ table }}</h4> -->
+			<!-- <ul class="social-icons">
+				<li><a href=""><i class="fa fa-facebook"></i></a></li>
+				<li><a href=""><i class="fa fa-twitter"></i></a></li>
+				<li><a href=""><i class="fa fa-dribbble"></i></a></li>
+				<li><a href=""><i class="fa fa-behance"></i></a></li>
+				<li><a href=""><i class="fa fa-pinterest"></i></a></li>
+			</ul> -->
+		</nav>
+		<div class="container">
+			<div class="header-info">
+				<a href="#" class="logo">
+					<img id="title" src="{{ url_for('static',filename='img/Rose.png') }}" alt="Rose Team">
+				</a>
+					<p>A caterer for your every need.</p>
+				<!-- <a href="#" class="btn btn-primary">Get in Touche</a> -->
+			</div>
+		</div>
+	</div>
+	<!-- Drinks section start -->
+	<section id="drinks">
+		<div class="container">
+			<header>
+				<h1>Drinks</h1>
+			</header>
+			<div class="row">
+				<div class="col-md-4">
+					<div class="service-item">
+						<img id="title" src="{{ url_for('static',filename='img/coke.png') }}" alt="Rose Team">
+						<!-- <a href="#drinks" class="btn btn-primary">Coke</a> -->
+						 <button id="coke" value=1.99 onclick="additem('coke', 1.99)">Coke</button>
+						<p>$1.99</p>
+					</div>
+				</div>
+				<div class="col-md-4">
+					<div class="service-item">
+						<img id="title" src="{{ url_for('static',filename='img/sprite.png') }}" alt="Rose Team">
+						<button id="sprite" value=1.99 onclick="additem('sprite', 1.99)">Sprite</button>
+						<p>$1.99</p>
+					</div>
+				</div>
+				<div class="col-md-4">
+					<div class="service-item">
+						<img id="title" src="{{ url_for('static',filename='img/fanta.png') }}" alt="Rose Team">
+						<button id="fanta" value=1.99 onclick="additem('fanta', 1.99)">Fanta</button>
+						<p>$1.99</p>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+	<!-- Services section end -->
+	<!-- Cart section start -->
+	<section id="viewcart" class="darker">
+		<div class="container">
+			<header>
+				<h2>Cart</h2>
+				<p>Unordered Items</p>
+				<div id="cart">
+					<!-- Cart Items will show up here as they are ordered. -->
+					<div class="row">
+						<div id="cartitems" class="col-md-4">
+							<div class="service-item">
+								<!-- Cart Items will show up here as they are ordered. -->
+							</div>
+						</div>
+						<div id="cartprices" class="col-md-4">
+							<div class="service-item">
+								<!-- Item prices will show up here as they are ordered. -->
+							</div>
+						</div>
+						<div id="cartbutts" class="col-md-4">
+							<div class="service-item">
+								<!-- Drop buttons will show up here as they are ordered. -->
+							</div>
+						</div>
+					</div>
+				</div>
+			</header>
+			<button id="order" class="orderbutton" onclick="order()">Order</button>
+	</section>
+	<!-- Cart section end -->
+	<!-- Contact section start -->
+	<section id="checkout">
+		<div class="container">
+			<header>
+				<h2>Items Ordered</h2>
+			</header>
+			<!-- put checkout cart here -->
+			<a id="button" href="#" class="btn btn-primary">Checkout</a>
+			
+			</div>
+		</div>
+	</section>
+	<!-- Contact section end -->
+	<!-- Footer start -->
+	<footer>
+		<div class="container">
+			<div class="row">
+				<div class="col-md-8">
+					<p>&copy; 2016 ROSE Team</p>
+				</div>
+				<div class="col-md-4">
+					<!-- Can put whatever we want for managerlogin -->
+					<p><a href="http://google.com">Manager Login</a></p>
+					<!-- <ul class="social-icons">
+						<li><a href=""><i class="fa fa-facebook"></i></a></li>
+						<li><a href=""><i class="fa fa-twitter"></i></a></li>
+						<li><a href=""><i class="fa fa-dribbble"></i></a></li>
+						<li><a href=""><i class="fa fa-behance"></i></a></li>
+						<li><a href=""><i class="fa fa-pinterest"></i></a></li>
+					</ul> -->
+				</div>
+			</div>
+		</div>
+	</footer>
+	<!-- Footer end  -->
+
+	<!-- Load jQuery -->
+	<script type="text/javascript" src="{{ url_for('static',filename='js/jquery-1.11.2.min.js') }}"></script>
+
+	<!-- Load Booststrap -->
+	<script type="text/javascript" src="{{ url_for('static',filename='js/bootstrap.js') }}"></script>
+
+	<script type="text/javascript" src="{{ url_for('static',filename='js/smooth-scroll.js') }}"></script>
+
+	<script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?sensor=false"></script>
+
+	<!-- Load custom js for theme -->
+	<script type="text/javascript" src="{{ url_for('static',filename='js/app.js') }}"></script>
+
+	 <script>
+    
+    var itemlist = [];
+    var pricelist = [];
+    var table = {{table}};
+
+    //additem: takes in item and price, adds them to the corresponding arrays. In addition, the function creates
+    //a text element to the "cart" div element above.
+    function additem(item, price)
+    {
+    	//add entries to respective arrays
+    	itemlist[itemlist.length] = item;
+      	pricelist[pricelist.length] = price;
+
+      	//append item string to item column
+      	var item0 = document.createElement("h3");
+      	var itemtext = document.createTextNode(item);
+      	item0.appendChild(itemtext);
+      	item0.style.display = "inline-block";
+      	item0.setAttribute("id","item" + (pricelist.length-1));
+      	document.getElementById("cartitems").appendChild(item0);
+
+      	//append price string to price column
+      	var price0 = document.createElement("h3");
+      	var pricetext = document.createTextNode(price);
+      	price0.appendChild(pricetext);
+      	price0.style.display = "inline-block";
+      	price0.setAttribute("id","price" + (pricelist.length-1));
+      	document.getElementById("cartprices").appendChild(price0);
+
+    	//append line break to button column
+    	var brk = document.createElement("br");
+    	brk.setAttribute("id","brk" + (pricelist.length-1));
+    	document.getElementById("cartbutts").appendChild(brk);
+
+    	//append button to button column
+    	var butt = document.createElement("button");
+      	var butttext = document.createTextNode("Drop");
+      	butt.appendChild(butttext);
+      	butt.setAttribute("id","butt" + (pricelist.length-1));
+      	butt.setAttribute("onclick","drop(" + (pricelist.length-1) + ")");
+      	butt.style.height = "35px";
+      	document.getElementById("cartbutts").appendChild(butt);
+
+      	//append line break to button column
+    	var bbrk = document.createElement("br");
+    	bbrk.setAttribute("id","bbrk" + (pricelist.length-1));
+    	document.getElementById("cartbutts").appendChild(bbrk);
+
+    	//append line break to price column
+    	var pbrk = document.createElement("br");
+    	pbrk.setAttribute("id","pbrk" + (pricelist.length-1));
+    	document.getElementById("cartprices").appendChild(pbrk);
+
+    	//append line break to item column
+    	var ibrk = document.createElement("br");
+    	ibrk.setAttribute("id","ibrk" + (pricelist.length-1));
+    	document.getElementById("cartitems").appendChild(ibrk);
+    }
+    
+    //function used to add total together; functional programming and Javascript mandate that + isn't good enough.
+    function add(a, b)
+    {
+      return a + b;
+    }
+    
+    //order: the function called by the order button.  The only difference between this and its
+    //helper method is that this one confirms that you wish to order before you do, to prevent
+    //accidents.
+    function order()
+    {
+      var result = confirm("Click \"OK\" to place your order.")
+      if(result)
+      {
+        orderhelper();
+        alert("Thank you!  Your order has been placed.\n(WARNING: DO NOT CHECK THE BOX BELOW)");
+      }
+    }
+    
+    //orderhelper: sends cart items to the order queue on the database.  Woohoo!
+    //The only reason I have a helper method is so that I could implement a confirmation pop-up.
+    function orderhelper()
+    {
+    	var xhttp;
+     	xhttp = new XMLHttpRequest();
+     	var vals = "table=" + {{table}} + "&items=" + itemlist + "&prices=" + pricelist;
+    	xhttp.open("POST", "/order/"+vals, true);
+  	  xhttp.send("test");
+  	  
+  	  //Delete all the cart items that were just ordered.
+  	  for(i = 0; i < itemlist.length; i++)
+    	{
+    		document.getElementById("cartitems").removeChild(document.getElementById("item"+i));
+    		document.getElementById("cartbutts").removeChild(document.getElementById("butt"+i));
+    		document.getElementById("cartbutts").removeChild(document.getElementById("brk"+i));
+    		document.getElementById("cartprices").removeChild(document.getElementById("price"+i));
+
+    		document.getElementById("cartitems").removeChild(document.getElementById("ibrk"+i));
+    		document.getElementById("cartprices").removeChild(document.getElementById("pbrk"+i));
+    		document.getElementById("cartbutts").removeChild(document.getElementById("bbrk"+i));
+    	}
+    	
+    	itemlist.length = 0;
+    	pricelist.length = 0;
+    	
+    	//it looks tidier when the cart is hidden after an order.
+    	hidecart();
+    	
+    }
+    
+    //drop: drop an item from the cart.  Splices the item from the item array and updates the total.
+    function drop(i)
+    {
+    	itemlist.splice(i, 1);
+    	pricelist.splice(i, 1);
+    	
+    	//WARNING: This is apparently not well supported around browsers.  Seek alternative.
+    	//remove the dropped item's cart tags.
+    	document.getElementById("cartitems").removeChild(document.getElementById("item"+i));
+    	document.getElementById("cartbutts").removeChild(document.getElementById("butt"+i));
+    	document.getElementById("cartbutts").removeChild(document.getElementById("brk"+i));
+    	document.getElementById("cartprices").removeChild(document.getElementById("price"+i));
+
+    	document.getElementById("cartprices").removeChild(document.getElementById("pbrk"+i));
+    	document.getElementById("cartbutts").removeChild(document.getElementById("bbrk"+i));
+    	document.getElementById("cartitems").removeChild(document.getElementById("ibrk"+i));
+      
+    	//update all the cart HTML elements so that they work correctly.
+    	//If this isn't done, the drop buttons affect the item at their old index, rather than updated.
+    	for(l = i+1; l <= itemlist.length; l++)
+    	{
+    		document.getElementById("item"+l).setAttribute("id","item"+(l-1));
+    		document.getElementById("butt"+l).setAttribute("onclick","drop("+ (l-1) + ")");
+    		document.getElementById("butt"+l).setAttribute("id","butt"+(l-1));
+    		document.getElementById("brk"+l).setAttribute("id","brk"+(l-1));
+    		document.getElementById("price"+l).setAttribute("id","price"+(l-1));
+    		document.getElementById("pbrk"+l).setAttribute("id","pbrk"+(l-1));
+    		document.getElementById("bbrk"+l).setAttribute("id","bbrk"+(l-1));
+    		document.getElementById("ibrk"+l).setAttribute("id","ibrk"+(l-1));
+    	}
+    }
+  </script>
+
+
+
+</body>
+</html>
