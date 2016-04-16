@@ -13,7 +13,7 @@ class pfilter {
     pfilter(int nparticles, sim_map *map, std::vector<sim_landmark> &landmarks,
         double x, double y, double t, double initial_sigma);
     ~pfilter(void);
-    void move(arma::vec &sensors);
+    void move(arma::vec sensors);
     void observe(arma::mat observations);
     void predict(arma::vec &mu, arma::mat &sigma);
     void set_noise(double vs, double ws);

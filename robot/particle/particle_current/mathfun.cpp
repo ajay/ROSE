@@ -19,6 +19,7 @@ double map_value(double x, double a1, double b1, double a2, double b2) {
 double wrap_value(double x, double a, double b) {
   assert(a < b);
   double diff = b - a;
+	// TODO: inefficient, fix later
   while (x < a) {
     x += diff;
   }
@@ -32,11 +33,28 @@ int within_value(double x, double a, double b) {
   return a <= x && x <= b;
 }
 
+double rad2deg(double x) {
+	return x * 180 / M_PI;
+}
+
+double deg2rad(double x) {
+	return x * M_PI / 180;
+}
+
+double eucdist(vec v) {
+	return sqrt(dot(v, v));
+}
+
+double angle(vec v) {
+	assert(v.n_elem == 2);
+	return rad2deg(atan2(v(1), v(0)));
+}
+
 double cos_rule_angle(double A, double B, double C) {
   return acos((A * A + B * B - C * C) / (2.0 * A * B)) * 180 / M_PI;
 }
 
-arma::mat genRotateMat(double x, double y, double z) {
+arma::mat rotationMat(double x, double y, double z) {
   // convert the degrees into radians
   x = x * M_PI / 180.0;
   y = y * M_PI / 180.0;

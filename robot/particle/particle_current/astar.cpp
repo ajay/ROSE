@@ -1,12 +1,7 @@
-//
-//	[Authors] = Ming Tai Ha
-//              Jon Risinger
-//              Timothy Yong
-//
-
 #include "astar.h"
 #include "heap.h"
 #include "heap.cpp"
+#include "mathfun.h"
 #include <iostream>
 #include <vector>
 #include <cassert>
@@ -83,7 +78,7 @@ void AStar::compute(vec &start, vector<MotionAction> &path) {
         backtrace(x, y) = action.id;
         assert(action.id != 0); // just in case
         // euclidean distance
-        double hcost = action.gcost + sqrt(dot(action.pos - goal, action.pos - goal));
+        double hcost = action.gcost + eucdist(action.pos - goal);
         opened.push(action, hcost);
       }
     }

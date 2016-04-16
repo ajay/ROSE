@@ -518,12 +518,12 @@ vec Rose::get_end_effector_pos(int linkid) {
 
   // get the rotations
   vector<mat> rotate = {
-    genRotateMat(0, 0, angles(0)),
-    genRotateMat(-angles(1), 0, 0),
-    genRotateMat(-angles(2), 0, 0),
-    genRotateMat(-angles(3), 0, 0),
-    genRotateMat(0, 0, angles(4)),
-    genRotateMat(0, 0, 0)
+    rotationMat(0, 0, angles(0)),
+    rotationMat(-angles(1), 0, 0),
+    rotationMat(-angles(2), 0, 0),
+    rotationMat(-angles(3), 0, 0),
+    rotationMat(0, 0, angles(4)),
+    rotationMat(0, 0, 0)
   };
 
   // get the translations
@@ -560,27 +560,27 @@ bool Rose::get_arm_position_placement(vec target_pos, vec target_pose, double ta
   vec angles(DOF);
 
   // solve first for the direction of the base
-  angles(JOINT0) = atan2(target_pos(1), target_pos(0)) * 180.0 / M_PI - 90.0; // this is due to the y axis
-  target_pose = genRotateMat(0, 0, -angles(JOINT0)) * target_pose;
-  double r = sqrt(dot(target_pos(span(0, 1)), target_pos(span(0, 1))));
+  angles(JOINT0) = angle(target_pos(span(0,1))); // this is due to the y axis
+  target_pose = rotationMat(0, 0, -angles(JOINT0)) * target_pose;
+  double r = eucdist(target_pos(span(0, 1)));
   // solve for the height next
   double h = target_pos(2) - sum(this->arm_link_length(span(0, 1)));
   vec interpos({ 0, r, h });
 
   // grab the target pose and the distance away necessary to make such a pose
-  target_pose /= sqrt(dot(target_pose, target_pose));
+  target_pose /= eucdist(target_pose);
   target_pose *= sum(this->arm_link_length(span(4, 6)));
   interpos -= target_pose;
 
   // find the length
-  double l = sqrt(dot(interpos, interpos));
+  double l = eucdist(interpos);
   // if longer than the maximum length, just stop trying
   if (l > sum(this->arm_link_length(span(2, 3)))) {
     return false;
   }
 
   // determine some offset angle
-  double phi = atan2(interpos(2), interpos(1)) * 180.0 / M_PI;
+  double phi = angle(interpos(span(1,2)));
 
   // calculate the triangle edges
   double link2 = this->arm_link_length(2);
@@ -590,7 +590,7 @@ bool Rose::get_arm_position_placement(vec target_pos, vec target_pose, double ta
   angles(JOINT2) = 180.0 - cos_rule_angle(link2, link3, l); // this is due to the z axis
 
   // calculate the angle of the next joint from the offset angle
-  angles(JOINT3) = 90.0 - atan2(target_pose(2), target_pose(1)) * 180.0 / M_PI  - angles(JOINT1) - angles(JOINT2); // this is due to the z axis
+  angles(JOINT3) = 90.0 - angle(target_pose(span(1,2)))  - angles(JOINT1) - angles(JOINT2); // this is due to the z axis
 
   // leave spinning and grabbing up to the programmer
   angles(JOINT4) = target_spin;
