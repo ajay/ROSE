@@ -20,6 +20,8 @@ double wrap_value(double x, double a, double b) {
   assert(a < b);
   double diff = b - a;
 	// TODO: inefficient, fix later
+	int ratio = (int)(x / diff);
+	x -= (double)ratio * diff;
   while (x < a) {
     x += diff;
   }
@@ -51,14 +53,14 @@ double angle(vec v) {
 }
 
 double cos_rule_angle(double A, double B, double C) {
-  return acos((A * A + B * B - C * C) / (2.0 * A * B)) * 180 / M_PI;
+  return rad2deg(acos((A * A + B * B - C * C) / (2.0 * A * B)));
 }
 
 arma::mat rotationMat(double x, double y, double z) {
   // convert the degrees into radians
-  x = x * M_PI / 180.0;
-  y = y * M_PI / 180.0;
-  z = z * M_PI / 180.0;
+  x = deg2rad(x);
+  y = deg2rad(y);
+  z = deg2rad(z);
 
   mat X = reshape(mat({
         1, 0, 0,

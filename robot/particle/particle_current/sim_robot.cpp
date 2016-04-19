@@ -86,13 +86,13 @@ static double gaussianNoise(double sigma) {
 }
 
 void sim_robot::move(double vx, double vy, double w) {
-	this->t += wrap_value((w + gaussianNoise(2)) * (1 + gaussianNoise(this->ws)), -180, 180);
+	this->t += w * (1 + gaussianNoise(this->ws));
 //			(vx * gaussianNoise(this->vs / 100)) +
 //			(vy * gaussianNoise(this->vs / 100)); // arbitrary constant chosen
-	double x = this->x + ((vy + gaussianNoise(1)) * (1 + gaussianNoise(this->vs))) * cos(deg2rad(this->t)) +
-		((vx + gaussianNoise(1)) * (1 + gaussianNoise(this->vs))) * sin(deg2rad(this->t));
-	double y = this->y + ((vy + gaussianNoise(1)) * (1 + gaussianNoise(this->vs))) * sin(deg2rad(this->t)) -
-		((vx + gaussianNoise(1)) * (1 + gaussianNoise(this->vs))) * cos(deg2rad(this->t));
+	double x = this->x + (vy * (1 + gaussianNoise(this->vs))) * cos(deg2rad(this->t)) +
+		(vx + gaussianNoise(this->vs)) * sin(deg2rad(this->t));
+	double y = this->y + (vy * (1 + gaussianNoise(this->vs))) * sin(deg2rad(this->t)) -
+		(vx + gaussianNoise(this->vs)) * cos(deg2rad(this->t));
 	if (!this->collided(x, y)) {
 		this->x = x;
 		this->y = y;
@@ -110,7 +110,7 @@ void sim_robot::blit(cube &screen) {
 		for (int j = 0; j < radius; j++) {
 			double x_ = (double)j - this->r/2;
 			double y_ = (double)i - this->r/2;
-			if (!within(sqrt(x_*x_+y_*y_), 0, this->r/2)) {
+			if (!within(eucdist({x_,y_}), 0, this->r/2)) {
 				continue;
 			}
 			int x = (int)round(x_ + this->x);

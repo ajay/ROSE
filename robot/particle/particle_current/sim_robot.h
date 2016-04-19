@@ -2,7 +2,6 @@
 #define sim_robot_h
 
 #include "sim_map.h"
-#include <SDL2/SDL.h>
 #include <string>
 #include <armadillo>
 

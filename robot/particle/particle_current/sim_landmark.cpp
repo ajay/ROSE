@@ -15,7 +15,7 @@ double sim_landmark::collision(sim_map *map, vec pos) {
 	}
 	vec unit({ this->x - pos(0), this->y - pos(1) });
 	int maxr = (int)(map->n_rows + map->n_cols);
-	double radius = eucdist(vec({ this->x, this->y }) - pos);
+	double radius = eucdist(unit);
 	unit /= radius;
 
 	for (int r = 0; r < maxr; r++) {
@@ -47,10 +47,10 @@ vec sim_landmark::sense(sim_robot &robot, mat lidarvals, int flags) {
 	if (flags & 0x01) {
 		return vec({ -1, -1 }); // TODO: make better analysis later
 	} else {
-		vec diff = vec({ robot.x, robot.y }) - vec({ this->x, this->y });
-		double radius = eucdist(diff);
-		double theta = angle(diff) - robot.t;
-		return vec({ radius * cos(deg2rad(theta)), radius * sin(deg2rad(theta)) });
+		vec diff = vec({ this->x - robot.x, this->y - robot.y });
+		double radius = eucdist(diff);// + gauss(0, 1.0);
+		double theta = wrap_value(angle(diff) - robot.t, -180, 180);// + gauss(0, 2.0);
+		return vec({ radius, theta });
 	}
 }
 

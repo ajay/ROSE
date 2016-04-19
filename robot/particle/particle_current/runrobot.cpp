@@ -8,6 +8,7 @@
 #include <signal.h>
 #include <unistd.h>
 #include "SDL/SDL.h"
+#include <time.h>
 
 #include "chili_landmarks.h"
 #include "Rose.h"
@@ -31,6 +32,8 @@ void localize_pose(void);
 void robot_calcmotion(void);
 void motion_plan(void);
 void display_interface(void);
+
+static double secdiff(struct timeval &t1, struct timeval &t2);
 
 static void stoprunning(int signum) {
 	stopsig = 1;
@@ -93,12 +96,19 @@ int main() {
 	// start up the threads
 	printf("[main] start up the threads\n");
 	rose.startStop = false;
+  printf("1\n");
 	thread manual_thread(manual_input);
+  printf("2\n");
 	thread chilicamthread(chilicamdetect_thread);
+  printf("3\n");
 	thread chili_thread(chilitag_detect);
+  printf("4\n");
 	thread pose_thread(localize_pose);
+  printf("5\n");
 	thread path_thread(motion_plan);
+  printf("6\n");
 	thread robot_thread(robot_calcmotion);
+  printf("7\n");
 	thread display_thread(display_interface);
 
 	// wait until program closes
@@ -111,7 +121,7 @@ int main() {
 	rose.set_wheels(0, 0, 0, 0);
 	rose.stop_arm();
 	rose.startStop = true;
-	rose.disconnect();
+  rose.disconnect();
 	chili_thread.join();
 	chilicamthread.join();
 	pose_thread.join();
@@ -124,7 +134,12 @@ int main() {
 	return 0;
 }
 
+static bool arm_enabled = false;
+static vec garm({ 0, -15, 90, 30, 0, 0 });
+
 void manual_input(void) {
+  struct timeval starttime;
+  gettimeofday(&starttime, NULL);
 	while (!stopsig) {
 		SDL_PumpEvents();
 		Uint8 *keystates = SDL_GetKeyState(NULL);
@@ -150,11 +165,43 @@ void manual_input(void) {
 			autonomous_lock.unlock();
 		} else if (keystates[SDLK_n]) {
 			autonomous_lock.lock();
-			auto_enable = true;
+			auto_enable = false;//true;
 			auto_confirmed = false;
 			manual_confirmed = true;
 			autonomous_lock.unlock();
 		}
+
+    // input arm manual feedback
+    struct timeval currtime;
+    gettimeofday(&currtime, NULL);
+    if (secdiff(starttime, currtime) > 0.05) {
+      if (keystates[SDLK_p]) { garm(0) += 2; }
+      if (keystates[SDLK_l]) { garm(0) -= 2; }
+      if (keystates[SDLK_o]) { garm(1) += 2; }
+      if (keystates[SDLK_k]) { garm(1) -= 2; }
+      if (keystates[SDLK_i]) { garm(2) += 2; }
+      if (keystates[SDLK_j]) { garm(2) -= 2; }
+      if (keystates[SDLK_u]) { garm(3) += 2; }
+      if (keystates[SDLK_h]) { garm(3) -= 2; }
+      if (keystates[SDLK_y]) { garm(4) += 2; }
+      if (keystates[SDLK_g]) { garm(4) -= 2; }
+      if (keystates[SDLK_t]) { garm(5) += 10; }
+      if (keystates[SDLK_f]) { garm(5) -= 10; }
+      memcpy(&starttime, &currtime, sizeof(struct timeval));
+    }
+
+    if (keystates[SDLK_v]) {
+      arm_enabled = true;
+    }
+    if (keystates[SDLK_b]) {
+      arm_enabled = false;
+    }
+
+    if (arm_enabled) {
+      rose.set_arm(garm(0), garm(1), garm(2), garm(3), garm(4), garm(5));
+    } else {
+      rose.stop_arm();
+    }
 
 		// if not manual en, then continue
 		if (auto_enable || !auto_confirmed) {
@@ -173,6 +220,7 @@ void manual_input(void) {
 		else if (keystates[SDLK_3]) rose.set_wheels(0,0,1,0);
 		else if (keystates[SDLK_4]) rose.set_wheels(0,0,0,1);
 		else rose.set_wheels(0,0,0,0);
+
 	}
 }
 
@@ -184,6 +232,12 @@ void chilitag_detect(void) {
 			if (chili.tags[j][0] != 0.0) {
 				sv.col(j) = vec({ chili.tags[j][1], chili.tags[j][2], chili.tags[j][0] });
 			}
+		}
+
+		for (int j = 0; j < 20; j++) {
+			vec pt({ sv(0, j), sv(1, j) });
+			sv(0, j) = eucdist(pt);
+			sv(1, j) = angle(pt);
 		}
 
 		// store the matrix
@@ -317,8 +371,6 @@ void robot_calcmotion(void) {
 			}
 		}
 
-    cout << pose << endl;
-
 		// once the target is found, then calculate the trajectory
 		double theta_k_p = 0.025;
 		double delta_theta = angle(target - pos) - theta;
@@ -353,14 +405,14 @@ void robot_calcmotion(void) {
 		for (int i = 0; i <= 90; i += 5) { // 5 degree granularity
 			mat R = rotationMat(0, 0, baseangle);
 			// if a negative pose proves to find a solution, stop
-			vec negpose({ 0, cos(-i * M_PI / 180), sin(-i * M_PI / 180) });
+			vec negpose({ 0, cos(deg2rad(-i)), sin(deg2rad(-i)) });
 			negpose = R * negpose;
 			if (rose.get_arm_position_placement(poseplan, negpose, twist, grab, enc)) {
 				feasible_found = true;
 				break;
 			}
 			// if a positive pose proves to find a solution, stop
-			vec pospose({ 0, cos(i * M_PI / 180), sin(i * M_PI / 180) });
+			vec pospose({ 0, cos(deg2rad(i)), sin(deg2rad(i)) });
 			pospose = R * pospose;
 			if (rose.get_arm_position_placement(poseplan, negpose, twist, grab, enc)) {
 				feasible_found = true;
@@ -396,10 +448,7 @@ void motion_plan(void) {
 
 		// if we are indeed enabled, then we can compute the path to take
 		if (!en) {
-      //printf("Autonomous: DISABLED\n");
 			continue;
-		} else {
-			printf("Autonomous: ENABLED\n");
 		}
 
 		// grab the current position
@@ -460,7 +509,6 @@ void display_interface(void) {
 		pose_lock.lock();
 		vec pose = robot_pose;
 		pose_lock.unlock();
-    //cout << pose << endl;
 
 		// create a window around the pose
 		int mux = (int)round(pose(0));
@@ -478,15 +526,11 @@ void display_interface(void) {
 			sim_landmark &lm = landmarks[i];
 			lm.blit(frame, mux, muy, chilitags.col(i));
 		}
-    cout << chilitags.row(2) << endl;
 
 		// draw the particle filter
 		pf.blit(frame, mux, muy);
 
 		// draw the robot's position and pose
-		//acceptance radius
-		//int x = (int)round(sw2 + (10 * cos(mut)));
-		//int y = (int)round(sh2 + (10 * sin(mut)));
 		int x, y;
 		vec yellow({ 1, 1, 0 });
 		draw_circle(frame, yellow, vec({ (double)sw2, (double)sh2 }), 20);
@@ -529,4 +573,10 @@ void display_interface(void) {
 		SDL_Flip(screen);
 		SDL_Delay(25);
 	}
+}
+
+static double secdiff(struct timeval &t1, struct timeval &t2) {
+	double usec = (double)(t2.tv_usec - t1.tv_usec) / 1000000.0;
+	double sec = (double)(t2.tv_sec - t1.tv_sec);
+	return sec + usec;
 }
