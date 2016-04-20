@@ -1,8 +1,8 @@
-#ifndef __TK_HIGHGUI_H__
-#define __TK_HIGHGUI_H__
+#ifndef HIGHGUI_H
+#define HIGHGUI_H
 
-#include <string>
 #include <opencv2/core/core.hpp>
+#include <string>
 
 #ifndef __NVCC__
 
@@ -165,5 +165,4 @@ gcube gpu_rgb2gray(const gcube &image);
 gcube gpu_gray2rgb(const gcube &image);
 
 #endif
-
 #endif

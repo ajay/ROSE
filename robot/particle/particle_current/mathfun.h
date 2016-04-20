@@ -1,5 +1,5 @@
-#ifndef mathfun_h
-#define mathfun_h
+#ifndef MATHFUN_H
+#define MATHFUN_H
 
 #include <armadillo>
 

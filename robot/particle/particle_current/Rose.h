@@ -112,38 +112,37 @@ class Rose
 		 */
 		arma::vec recv(void);
 
-    /** Easier versions of the earlier functions
-     *  @param front_left move the topleft wheel
-     *  @param front_right move the topright wheel
-     *  @param back_left move the backleft wheel
-     *  @param back_right move the backright wheel
-     *  @param base_joint move the base joint of the arm
-     *  @param pivot1 move the first pivot of the arm
-     *  @param pivot2 move the second pivot of the arm
-     *  @param pivot3 move the third pivot of the arm
-     *  @param rotate_wrist rotate the wrist of the arm
-     *  @param close_claw close the claw of the arm
-     */
-    void set_wheels(double front_left, double front_right, double back_left, double back_right);
-    void set_arm(double base_joint, double pivot1, double pivot2, double pivot3, double rotate_wrist, double close_claw);
-    void stop_arm(void);
+		/** Easier versions of the earlier functions
+		 *  @param front_left move the topleft wheel
+		 *  @param front_right move the topright wheel
+		 *  @param back_left move the backleft wheel
+		 *  @param back_right move the backright wheel
+		 *  @param base_joint move the base joint of the arm
+		 *  @param pivot1 move the first pivot of the arm
+		 *  @param pivot2 move the second pivot of the arm
+		 *  @param pivot3 move the third pivot of the arm
+		 *  @param rotate_wrist rotate the wrist of the arm
+		 *  @param close_claw close the claw of the arm
+		 */
+		void set_wheels(double front_left, double front_right, double back_left, double back_right);
+		void set_arm(double base_joint, double pivot1, double pivot2, double pivot3, double rotate_wrist, double close_claw);
+		void stop_arm(void);
 
-    /** Calibration functions
-     */
-    void load_calibration_params(const std::string &filename);
-    void set_calibration_params(nlohmann::json cp);
-    bool calibrated(void);
+		/** Calibration functions
+		 */
+		void load_calibration_params(const std::string &filename);
+		void set_calibration_params(nlohmann::json cp);
+		bool calibrated(void);
 
-    /** Kinematic functions
-     *  @param linkid 0, 1, 2, 3, 4, 5, or 6
-     *  @param target_pos the target position of the end-effector
-     *  @param target_pose the target pose of the end-effector
-     *  @param target_spin the orientation of the wrist motor
-     *  @param solution_enc (output) the solution to the system
-     */
-    arma::vec get_end_effector_pos(int linkid);
-    bool get_arm_position_placement(arma::vec target_pos, arma::vec target_pose,
-        double target_spin, double target_grab, arma::vec &solution_enc);
+		/** Kinematic functions
+		 *  @param linkid 0, 1, 2, 3, 4, 5, or 6
+		 *  @param target_pos the target position of the end-effector
+		 *  @param target_pose the target pose of the end-effector
+		 *  @param target_spin the orientation of the wrist motor
+		 *  @param solution_enc (output) the solution to the system
+		 */
+		arma::vec get_end_effector_pos(int linkid);
+		bool get_arm_position_placement(arma::vec target_pos, arma::vec target_pose, double target_spin, double target_grab, arma::vec &solution_enc);
 
 	private:
 		/**
@@ -203,14 +202,14 @@ class Rose
 		pthread_mutex_t *commSendLock;
 		pthread_mutex_t *commRecvLock;
 
-    // ARM STUFF
-    arma::vec arm_mint;
-    arma::vec arm_maxt;
-    arma::vec arm_minv;
-    arma::vec arm_maxv;
-    arma::vec arm_link_length;
-    bool arm_active;
-    bool calibration_loaded;
+		// ARM STUFF
+		arma::vec arm_mint;
+		arma::vec arm_maxt;
+		arma::vec arm_minv;
+		arma::vec arm_maxv;
+		arma::vec arm_link_length;
+		bool arm_active;
+		bool calibration_loaded;
 };
 
 #endif

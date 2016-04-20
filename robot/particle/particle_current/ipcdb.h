@@ -1,10 +1,12 @@
-#ifndef ipcdb_h
-#define ipcdb_h
+#ifndef IPCDB_H
+#define IPCDB_H
 
 #include <armadillo>
 #include <vector>
+
 #include "chili_landmarks.h"
 #include "Rose.h"
+#include "pfilter.h"
 
 // for stopping the robot, no matter what
 static int stopsig;

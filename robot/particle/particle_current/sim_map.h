@@ -1,20 +1,22 @@
-#ifndef sim_map_h
-#define sim_map_h
+#ifndef SIM_MAP_H
+#define SIM_MAP_H
 
-#include <string>
 #include <armadillo>
+#include <string>
+
 #include "sdldef.h"
 
-class sim_map {
-  public:
-    sim_map(void);
-    ~sim_map(void);
-    void load(const std::string &map_name);
-    void blit(arma::cube &screen, int x, int y);
+class sim_map
+{
+	public:
+		sim_map(void);
+		~sim_map(void);
+		void load(const std::string &map_name);
+		void blit(arma::cube &screen, int x, int y);
 
-    arma::mat map;
-    arma::uword n_rows;
-    arma::uword n_cols;
+		arma::mat map;
+		arma::uword n_rows;
+		arma::uword n_cols;
 };
 
 #endif

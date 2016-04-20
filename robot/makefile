@@ -1,5 +1,5 @@
-CC 			= gcc
-CFLAGS 		= -pedantic \
+CC			= gcc
+CFLAGS		= -pedantic \
 				-Wall \
 				-Werror \
 				-std=gnu99 \
@@ -7,8 +7,8 @@ CFLAGS 		= -pedantic \
 				-g \
 				-o
 
-CPPC 		= g++
-CPPFLAGS 	= `pkg-config --cflags sdl2` \
+CPPC		= g++
+CPPFLAGS	= `pkg-config --cflags sdl2` \
 				`pkg-config --cflags libmongocxx` \
 				-pedantic \
 				-Wall \
@@ -19,16 +19,16 @@ CPPFLAGS 	= `pkg-config --cflags sdl2` \
 				-g \
 				-o
 
-LIBS 		= `pkg-config --libs sdl2` \
+LIBS		= `pkg-config --libs sdl2` \
 				`pkg-config --libs libmongocxx` \
- 				-larmadillo \
- 				-pthread \
- 				-lSDL2_ttf
+				-larmadillo \
+				-pthread \
+				-lSDL2_ttf
 
-COMPILEC 	= $(CC) $(CFLAGS)
-COMPILECPP 	= $(CPPC) $(CPPFLAGS)
+COMPILEC	= $(CC) $(CFLAGS)
+COMPILECPP	= $(CPPC) $(CPPFLAGS)
 
-OBJECTS 	= serial.o window.o Rose.o dbconn.o planner.o
+OBJECTS		= serial.o window.o Rose.o dbconn.o planner.o
 
 all: $(OBJECTS) rose
 

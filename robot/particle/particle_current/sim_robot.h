@@ -1,11 +1,13 @@
-#ifndef sim_robot_h
-#define sim_robot_h
+#ifndef SIM_ROBOT_H
+#define SIM_ROBOT_H
+
+#include <armadillo>
+#include <string>
 
 #include "sim_map.h"
-#include <string>
-#include <armadillo>
 
-class sim_robot {
+class sim_robot
+{
 	public:
 		sim_robot(sim_map *map = NULL);
 		~sim_robot(void);

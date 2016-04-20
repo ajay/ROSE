@@ -1,5 +1,5 @@
-#ifndef __TK_DRAW_H__
-#define __TK_DRAW_H__
+#ifndef DRAW_H
+#define DRAW_H
 
 #include <armadillo>
 
