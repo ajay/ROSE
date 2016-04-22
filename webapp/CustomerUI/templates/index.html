@@ -312,8 +312,16 @@
     function payment()
     {
     	alert("Thank you! Your total is $"+total+".\nPlease pay at the front desk.");
-    	itemlist.length = 0;
-    	pricelist.length = 0;
+
+    	  //Delete all the cart items that were just ordered.
+  	  	for(i = 0; i < checkout_item.length; i++)
+    	{
+    		document.getElementById("checkout_cart_items").removeChild(document.getElementById("coitem"+i));
+    		document.getElementById("checkout_cart_items").removeChild(document.getElementById("coibrk"+i));
+    		document.getElementById("checkout_cart_prices").removeChild(document.getElementById("coprice"+i));
+    		document.getElementById("checkout_cart_prices").removeChild(document.getElementById("pbrk"+i));
+    	}
+
     	checkout_item.length = 0;
     	checkout_price.length = 0;
     	total = 0;
