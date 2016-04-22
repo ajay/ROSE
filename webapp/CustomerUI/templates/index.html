@@ -312,9 +312,11 @@
     function payment()
     {
     	alert("Thank you! Your total is $"+total+".\nPlease pay at the front desk.");
-    	checkout_cart_prices.length = 0;
-    	checkout_cart_items.length = 0;
-
+    	itemlist.length = 0;
+    	pricelist.length = 0;
+    	checkout_item.length = 0;
+    	checkout_price.length = 0;
+    	total = 0;
     }
     
     //orderhelper: sends cart items to the order queue on the database.  Woohoo!
