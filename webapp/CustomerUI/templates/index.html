@@ -126,8 +126,18 @@
 			<header>
 				<h2>Items Ordered</h2>
 			</header>
+			<div id="checkout_cart" class="row">
+				<div id="checkout_cart_items" class="col-md-6" style="text-align:left;">
+					<!-- Cart Items will show up here as they are ordered. -->
+				</div>
+				<div id="checkout_cart_prices" class="col-md-6" style="text-align:right;">
+					<!-- Item prices will show up here as they are ordered. -->
+					<div id="total">
+					</div>
+				</div>
+			</div>
 			<!-- put checkout cart here -->
-			<a id="button" href="#" class="btn btn-primary">Checkout</a>
+			<a id="button" href="#" onclick="payment()" class="btn btn-primary">Checkout</a>
 			
 			</div>
 		</div>
@@ -174,6 +184,9 @@
     var itemlist = [];
     var pricelist = [];
     var table = {{table}};
+    var checkout_item = [];
+    var checkout_price = [];
+    var total = 0;
 
     //additem: takes in item and price, adds them to the corresponding arrays. In addition, the function creates
     //a text element to the "cart" div element above.
@@ -234,6 +247,53 @@
     {
       return a + b;
     }
+
+    //addtocheckout: this function adds the array of items into the visual aspect of the checkout section.
+    function addtocheckout()
+    {
+    	//append all order cart items to the checkout cart
+      	for(i = 0; i < itemlist.length; i++)
+      	{
+      		//append item string to item column
+      		var item0 = document.createElement("p");
+      		var itemtext = document.createTextNode(itemlist[i]);
+      		item0.appendChild(itemtext);
+      		item0.style.display = "inline-block";
+      		item0.setAttribute("id","coitem" + i);
+      		document.getElementById("checkout_cart_items").appendChild(item0);
+
+      		//append line break to item column
+    		var ibrk = document.createElement("br");
+    		ibrk.setAttribute("id","coibrk" + i);
+    		document.getElementById("checkout_cart_items").appendChild(ibrk);
+
+      		//append price string to price column
+      		var price0 = document.createElement("p");
+      		var pricetext = document.createTextNode(pricelist[i]);
+      		price0.appendChild(pricetext);
+      		price0.style.display = "inline-block";
+      		price0.setAttribute("id","coprice" + i);
+      		document.getElementById("checkout_cart_prices").appendChild(price0);
+
+      		//append line break to price column
+    		var pbrk = document.createElement("br");
+    		pbrk.setAttribute("id","pbrk" + i);
+    		document.getElementById("checkout_cart_prices").appendChild(pbrk);
+      	}
+
+      	//delete old total element
+      	//document.getElementById("checkout_cart_prices").removeChild(document.getElementById("total"));
+      	//append price string to price column
+      	/*var total = document.createElement("h3");
+      	var totaltext = document.createTextNode("Total: " + pricelist.reduce(add,0));
+      	total.appendChild(pricetext);
+      	total.style.display = "inline-block";
+      	total.setAttribute("id","cototal");
+      	document.getElementById("total").appendChild(total);*/
+
+      	//FOR SINGLE ELEMENT CHANGE
+      	//document.getElementById("total").innerHTML = "Total: $" + pricelist.reduce(add,0);
+    }
     
     //order: the function called by the order button.  The only difference between this and its
     //helper method is that this one confirms that you wish to order before you do, to prevent
@@ -244,8 +304,17 @@
       if(result)
       {
         orderhelper();
-        alert("Thank you!  Your order has been placed.\n(WARNING: DO NOT CHECK THE BOX BELOW)");
+        alert("Your order has been placed!\n(WARNING: DO NOT CHECK THE BOX BELOW)");
       }
+    }
+
+    //When the checkout button is pressed
+    function payment()
+    {
+    	alert("Thank you! Your total is $"+total+".\nPlease pay at the front desk.");
+    	checkout_cart_prices.length = 0;
+    	checkout_cart_items.length = 0;
+
     }
     
     //orderhelper: sends cart items to the order queue on the database.  Woohoo!
@@ -270,12 +339,19 @@
     		document.getElementById("cartprices").removeChild(document.getElementById("pbrk"+i));
     		document.getElementById("cartbutts").removeChild(document.getElementById("bbrk"+i));
     	}
+
+    	//add order to checkout list
+    	for(i = 0; i < itemlist.length; i++)
+    	{
+    		total = total + pricelist[i];
+    		checkout_item.push(itemlist[i]);
+    		checkout_price.push(pricelist[i]);
+    	}
+
+    	addtocheckout();
     	
     	itemlist.length = 0;
-    	pricelist.length = 0;
-    	
-    	//it looks tidier when the cart is hidden after an order.
-    	hidecart();
+    	pricelist.length = 0; 
     	
     }
     
@@ -310,9 +386,7 @@
     		document.getElementById("ibrk"+l).setAttribute("id","ibrk"+(l-1));
     	}
     }
+
   </script>
-
-
-
 </body>
 </html>
