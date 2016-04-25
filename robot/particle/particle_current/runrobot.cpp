@@ -109,23 +109,16 @@ int main()
 	// start up the threads
 	printf("[main] start up the threads\n");
 	rose.startStop = false;
-	printf("1\n");
 	thread manual_thread(manual_input);
-	printf("2\n");
 	thread chilicamthread(chilicamdetect_thread);
-	printf("3\n");
 	thread chili_thread(chilitag_detect);
-	printf("4\n");
 	thread pose_thread(localize_pose);
-	printf("5\n");
 	thread path_thread(motion_plan);
-	printf("6\n");
 	thread robot_thread(robot_calcmotion);
-	printf("7\n");
 	thread display_thread(display_interface);
 
 	// wait until program closes
-	printf("[main] wait until program closes\n");
+	printf("[main] all threads started\n");
 	while (!stopsig);
 	alarm(1);
 
@@ -148,7 +141,10 @@ int main()
 }
 
 static bool arm_enabled = false;
-static vec garm({ 0, -15, 90, 30, 0, 0 });
+static vec garm 	 ({ 0, -15, 90, 20, 0, 0 }); // degrees
+static vec garm_init ({ 0, -15, 90, 20, 0, 0 });
+static vec grab_pos	 ({ 0, 23, 114, -58, 0, 0 });
+static vec rest_pos	 ({ 0, -21, 108, 90, 0, 70 });
 
 void manual_input(void)
 {
@@ -210,10 +206,28 @@ void manual_input(void)
 			memcpy(&starttime, &currtime, sizeof(struct timeval));
 		}
 
+		// limit garm values
+		for (int i = 0; i < garm.size(); i++)
+		{
+			garm(i) = limit_value(garm(i), rose.arm_mint(i), rose.arm_maxt(i));
+		}
+
 		if (keystates[SDLK_v])
 		{
 			arm_enabled = true;
+			garm = garm_init;
 		}
+
+		if (keystates[SDLK_c])
+		{
+			garm = grab_pos;
+		}
+
+		if (keystates[SDLK_z])
+		{
+			garm = rest_pos;
+		}
+
 		if (keystates[SDLK_b])
 		{
 			arm_enabled = false;
@@ -222,6 +236,7 @@ void manual_input(void)
 		if (arm_enabled)
 		{
 			rose.set_arm(garm(0), garm(1), garm(2), garm(3), garm(4), garm(5));
+			cout << garm << endl;
 		}
 		else
 		{
@@ -245,7 +260,10 @@ void manual_input(void)
 		else if (keystates[SDLK_2]) rose.set_wheels(0,1,0,0);
 		else if (keystates[SDLK_3]) rose.set_wheels(0,0,1,0);
 		else if (keystates[SDLK_4]) rose.set_wheels(0,0,0,1);
+		else if (keystates[SDLK_r]) rose.reset_encoders();
 		else rose.set_wheels(0,0,0,0);
+
+		cout << rose.encoder[0] << " " << rose.encoder[1] << " " << rose.encoder[2] << " " << rose.encoder[3] << endl;
 
 	}
 }
@@ -309,8 +327,8 @@ void localize_pose(void)
 	double x = robot_pose(0);
 	double y = robot_pose(1);
 	double t = robot_pose(2);
-	double vs = 10.0;
-	double ws = 2.0;
+	double vs = 0.1;
+	double ws = 0.2;
 	pf = pfilter(nparticles, &globalmap, landmarks, x, y, t, initial_sigma);
 	pf.set_noise(vs, ws);
 	pose_lock.unlock();
@@ -343,7 +361,6 @@ void robot_calcmotion(void)
 {
 	while (!stopsig)
 	{
-
 		autonomous_lock.lock();
 		if (!auto_enable)
 		{
