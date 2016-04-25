@@ -90,6 +90,7 @@ void setmotors(int vv[])
 	v[grab] = limit(v[grab] * 90 / 255 + 90, 0, 180);
 
 	claw.write(v[grab]);
+	// analogWrite(v[grab]);
 
 	int speeds[8] = { v[elbow], v[elbow], v[elbow], v[elbow],
 					  v[wrist], v[wrist], v[twist], 0 };
@@ -117,6 +118,7 @@ void setup()
 
 	// Set up the motors
 	claw.attach(10);
+	// pinMode(10, OUTPUT);
 	for (int i = 0; i < 4; i++)
 	{
 		motors[i] = AFMS_base_pivot1.getMotor(i + 1);
