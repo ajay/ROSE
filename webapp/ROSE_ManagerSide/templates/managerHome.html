@@ -1,0 +1,37 @@
+<html>
+<head>
+ <title>WebApp Manager Side</title>
+</head>
+<body>
+	<!--This represents the first line of text on the HTML.  It displays OFF if there's nothing in the database.
+	    If there is an item, it displays the state contained.                                              -->
+ <br><br>
+ <h1 id="homeTitle" style="text-align:center;">Manager Interface Home Page</h1>
+ <h2 id="robotStatus" style = "text-align:center;">Current Robot Status: </h2>
+ 
+ <h2 id="orderList" style="text-align:right;">List of Customer Orders:</h2>
+ <p id = "test1"></p>
+ <p id = "test2"></p>
+ 	<script>
+ 	var xhttp;
+    xhttp = new XMLHttpRequest();
+    xhttp.open("GET", "/getOrders", true);
+    xhttp.onreadystatechange = function () {
+    	if (xhttp.readyState == 4 && xhttp.status == 200) {
+    		console.log(xhttp.responseText);
+    		var JSObj = JSON.parse(xhttp.responseText);
+            var key = "prices";
+    		document.getElementById("test1").innerHTML = JSObj.results[0].prices;
+
+            /*var i;		//iterate through each order
+    		var j; 		//iterate for each item within each order
+    		for (i = 0; i < JSObj.)*/
+    		//document.getElementById("test1").innerHTML = JSObj.results[0].table;
+    		/*document.getElementById("test1").innerHTML = "Table: " + JSObj.results[i].table;*/
+    		
+    	}
+	};
+    xhttp.send();
+ </script>
+</body>
+</html>

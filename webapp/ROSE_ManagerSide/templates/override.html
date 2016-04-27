@@ -1,0 +1,398 @@
+<html>
+<head>
+ <title>WebApp Version 1.0</title>
+</head>
+<body>
+	<!--This represents the first line of text on the HTML.  It displays OFF if there's nothing in the database.
+	    If there is an item, it displays the state contained.                                              -->
+ <br><br>
+<script>
+</script>
+ <h1 id="status" style="text-align:center;">State: {{"OFF" if userinputs[0] == null else((userinputs[0].state) if userinputs[0].state != null else ((userinputs[1].state) if (userinputs[1].state != null) else ((userinputs[2].state) if (userinputs[2].state != null) else "OFF")))}}</h1>
+ <h2 id="speedtext" style = "text-align:center;">Speed: {{"OFF" if userinputs[0] == null else ((userinputs[0].speed) if userinputs[0].speed != null else ((userinputs[1].speed) if (userinputs[1].speed != null) else ((userinputs[2].speed) if (userinputs[2].speed != null) else "OFF")))}}</h2>
+ <h2 id ="rotation" style="text-align:center;">Rotation: {{"OFF" if userinputs[0] == null else("COUNTERCLOCKWISE" if(userinputs[0].rotation == -1) else ("CLOCKWISE" if (userinputs[0].rotation == 1) else "NONE") if userinputs[0].rotation != null else ("COUNTERCLOCKWISE" if(userinputs[1].rotation == -1) else ("CLOCKWISE" if (userinputs[1].rotation == 1) else "NONE") if (userinputs[1].rotation != null) else ("COUNTERCLOCKWISE" if(userinputs[2].rotation == -1) else ("CLOCKWISE" if (userinputs[2].rotation == 1) else "NONE") if (userinputs[2].rotation != null) else "OFF")))}}</h2>
+
+ <input type="number" name="speed" id="speed" min="0" max="1" step="0.05" hidden value={{0 if userinputs[0] == null else (userinputs[0].speed if userinputs[0].speed != null else (userinputs[1].speed if userinputs[1].speed != null else (userinputs[2].speed if userinputs[2].speed != null else 0)))}}></input>
+
+ <div style="text-align:center;" hidden>
+ 	<!---The below form is a hidden object that gets posted to the database when the "...submit()" function is
+ 	    called.  This occurs when the GO and STOP buttons are pressed.                                       -->
+ <form action="/write" method="POST" id="the_form">
+  <input type="text" name="userinput" id="userinput" hidden>
+  <input type="submit" value="Submit" hidden>
+  <br><br>
+ </form>
+ </div>
+
+ <div style="text-align:center;">
+  <br><br>
+  <button name="forward" value="FORWARD" onmousedown="forward()" onmouseup="reset()">Forward</button>
+  <br>
+  <button name="left" value="LEFT" onmousedown="left()" onmouseup="reset()">Left</button>
+  <button name="backward" value="BACKWARD" onmousedown="backward()" onmouseup="reset()">Backward</button>
+  <button name="right" value="RIGHT" onmousedown="right()" onmouseup="reset()">Right</button>
+ </div>
+
+ <div style="text-align:right;">
+ <button id="showdev" onclick="showdevtools()">Show Developer Tools</button>
+ <button id="hidedev" onclick="hidedevtools()" style="display:none;">Hide Developer Tools</button>
+ </div>
+ <div id="devtools" style="text-align:right;visibility:hidden">
+ <p id="keypressed">Key Pressed: 0</p>
+ <button name="test" value="TEST" onclick="test()">Test</button>
+ <br>
+ <a href="./deleteall">Delete all</a>
+ </div>
+
+ <script>
+
+   var isNorthPressed = false;
+   var isSouthPressed = false;
+   var isEastPressed = false;
+   var isWestPressed = false;
+
+   var isSpeedUp = false;
+   var isSpeedDown = false;
+
+   function test()
+   {
+   	document.getElementById("userinput").value = "STOP";
+   	document.getElementById("the_form").submit();
+   }
+
+   function forward()
+   {
+   	document.getElementById("status").innerHTML = "State: NORTH";
+   	var xhttp;
+     	xhttp = new XMLHttpRequest();
+     	xhttp.open("POST", "/north", true);
+     	xhttp.send("test");
+   }
+   function backward()
+   {
+   	document.getElementById("status").innerHTML = "State: SOUTH";
+   	var xhttp;
+     	xhttp = new XMLHttpRequest();
+     	xhttp.open("POST", "/south", true);
+     	xhttp.send("test");
+   }
+   function left()
+   {
+   	document.getElementById("status").innerHTML = "State: WEST";
+   	var xhttp;
+     	xhttp = new XMLHttpRequest();
+     	xhttp.open("POST", "/west", true);
+     	xhttp.send("test");
+   }
+   function right()
+   {
+   	document.getElementById("status").innerHTML = "State: EAST";
+   	var xhttp;
+     	xhttp = new XMLHttpRequest();
+     	xhttp.open("POST", "/east", true);
+     	xhttp.send("test");
+   }
+
+   document.onkeydown = checkKey;
+   document.onkeyup = keyRelease;
+
+    function checkKey(e)
+    {
+      e = e || window.event;
+		  var xhttp;
+     	xhttp = new XMLHttpRequest();
+
+     	document.getElementById("keypressed").innerHTML = "Key Pressed: " + e.keyCode;
+
+        if (e.keyCode == '38')
+        {
+          isNorthPressed = true;
+          if(isWestPressed == true)
+          {
+            document.getElementById("status").innerHTML = "State: NORTHWEST";
+            xhttp.open("POST", "/northwest", true);
+            xhttp.send("test");
+          }
+          else if (isEastPressed == true)
+          {
+            document.getElementById("status").innerHTML = "State: NORTHEAST";
+            xhttp.open("POST", "/northeast", true);
+            xhttp.send("test");
+          }
+          else
+          {
+                       // up arrow
+                document.getElementById("status").innerHTML = "State: NORTH";
+                //SYNCHRONOUS VERSION
+                //document.getElementById("userinput").value = "UP";
+            //document.getElementById("the_form").submit();
+
+            //ASYNCHRONOUS VERSION
+            xhttp.open("POST", "/north", true);
+            xhttp.send("test");
+          }
+
+        }
+        else if (e.keyCode == '40')
+        {
+          isSouthPressed = true;
+          if(isWestPressed == true)
+          {
+            document.getElementById("status").innerHTML = "State: SOUTHWEST";
+            xhttp.open("POST", "/southwest", true);
+            xhttp.send("test");
+          }
+          else if(isEastPressed == true){
+            document.getElementById("status").innerHTML = "State: SOUTHEAST";
+            xhttp.open("POST", "/southeast", true);
+            xhttp.send("test");
+          }
+          else
+          {
+                           // down arrow
+                document.getElementById("status").innerHTML = "State: SOUTH";
+                //SYNCHRONOUS VERSION
+                //document.getElementById("userinput").value = "DOWN";
+            //document.getElementById("the_form").submit();
+
+            //ASYNCHRONOUS VERSION
+            xhttp.open("POST", "/south", true);
+            xhttp.send("test");
+          }
+
+        }
+        else if (e.keyCode == '37')
+        {
+          isWestPressed = true;
+          if(isNorthPressed == true)
+          {
+            document.getElementById("status").innerHTML = "State: NORTHWEST";
+            xhttp.open("POST", "/northwest", true);
+            xhttp.send("test");
+          }
+          else if (isSouthPressed == true)
+          {
+            document.getElementById("status").innerHTML = "State: SOUTHWEST";
+            xhttp.open("POST", "/southwest", true);
+            xhttp.send("test");
+          }
+          else
+          {
+                     // left arrow
+                document.getElementById("status").innerHTML = "State: WEST";
+                //SYNCHRONOUS VERSION
+                //document.getElementById("userinput").value = "LEFT";
+            //document.getElementById("the_form").submit();
+
+            //ASYNCHRONOUS VERSION
+            xhttp.open("POST", "/west", true);
+            xhttp.send("test");
+          }
+
+        }
+        else if (e.keyCode == '39')
+        {
+          isEastPressed = true;
+          if (isNorthPressed == true)
+          {
+            document.getElementById("status").innerHTML = "State: NORTHEAST";
+            xhttp.open("POST", "/northeast", true);
+            xhttp.send("test");
+          }
+          else if(isSouthPressed == true)
+          {
+            document.getElementById("status").innerHTML = "State: SOUTHEAST";
+            xhttp.open("POST", "/southeast", true);
+            xhttp.send("test");
+          }
+          else
+          {
+                     // right arrow
+                document.getElementById("status").innerHTML = "State: EAST";
+                //SYNCHRONOUS VERSION
+                //document.getElementById("userinput").value = "RIGHT";
+            //document.getElementById("the_form").submit();
+
+            //ASYNCHRONOUS VERSION
+            xhttp.open("POST", "/east", true);
+            xhttp.send("test");
+          }
+
+        }
+        else if (e.keyCode == '33')
+        {
+          isSpeedUp = true;
+            // page up
+            document.getElementById("speed").stepUp();
+   			//ASYNCHRONOUS VERSION
+   			xhttp.open("POST", "/speedup", true);
+     		xhttp.send("test");
+     	    document.getElementById("speedtext").innerHTML = "Speed: " + document.getElementById("speed").value;
+        }
+        else if (e.keyCode == '34')
+        {
+          isSpeedDown = true;
+            // page down
+            document.getElementById("speed").stepDown();
+   			//ASYNCHRONOUS VERSION
+   			xhttp.open("POST", "/speeddown", true);
+     		xhttp.send("test");
+     	    document.getElementById("speedtext").innerHTML = "Speed: " + document.getElementById("speed").value;
+        }
+
+        else if (e.keyCode == '65')
+        {
+          isRotateCCWPressed = true;
+          document.getElementById("rotation").innerHTML = "Rotation: COUNTERCLOCKWISE";
+          xhttp.open("POST","/rotateCCW", true);
+          xhttp.send("test");
+        }
+        //Check for rotation CCW- "S" is pressed
+        else if (e.keyCode == '83')
+        {
+          isRotateCWPressed = true;
+          document.getElementById("rotation").innerHTML = "Rotation: CLOCKWISE";
+          xhttp.open("POST", "/rotateCW", true);
+          xhttp.send("test");
+        }
+
+    }
+
+    function updateDirection()
+    {
+      var xhttp;
+      xhttp = new XMLHttpRequest();
+      if(isNorthPressed)
+      {
+        document.getElementById("status").innerHTML = "State: NORTH";
+        xhttp.open("POST", "/north", true);
+      }
+      else if(isSouthPressed)
+      {
+        document.getElementById("status").innerHTML = "State: SOUTH";
+        xhttp.open("POST", "/south", true);
+      }
+      else if(isEastPressed)
+      {
+        document.getElementById("status").innerHTML = "State: EAST";
+        xhttp.open("POST", "/east", true);
+      }
+      else if(isWestPressed)
+      {
+        document.getElementById("status").innerHTML = "State: WEST";
+        xhttp.open("POST", "/west", true);
+      }
+      else
+      {
+        document.getElementById("status").innerHTML = "State: STOP";
+        xhttp.open("POST", "/reset", true);
+      }
+      xhttp.send("test");
+    }
+
+    function reset()
+    {
+    	document.getElementById("status").innerHTML = "STOP";
+    	var xhttp;
+     	xhttp = new XMLHttpRequest();
+    	xhttp.open("POST", "/reset", true);
+  	xhttp.send("test");
+    }
+
+    function keyRelease(e)
+    {
+    	e = e || window.event;
+    	var xhttp;
+     	xhttp = new XMLHttpRequest();
+     	if (e.keyCode == '37' || e.keyCode == '38' || e.keyCode == '39' || e.keyCode == '40')
+     	{
+            if (e.keyCode == '38')
+            {
+              //north
+              isNorthPressed = false;
+            }
+            if (e.keyCode == '37')
+            {
+              //west
+              isWestPressed = false;
+            }
+            if (e.keyCode == '39')
+            {
+              //east
+              isEastPressed = false;
+            }
+            if (e.keyCode == '40')
+            {
+              //south
+              isSouthPressed = false;
+            }
+        updateDirection();
+    	}
+
+      if(e.keyCode == '33' || e.keyCode == '34')
+      {
+        if (e.keyCode == '33')
+        {
+          //speed up
+          isSpeedUp = false;
+        }
+        if (e.keyCode == '34')
+        {
+          //speed down
+          isSpeedDown = false;
+        }
+      }
+
+
+
+        if (e.keyCode == '65' || e.keyCode == '83')
+        {
+          document.getElementById("rotation").innerHTML = "Rotation: NONE";
+          xhttp.open("POST", "/rotatereset", true);
+          xhttp.send("test");
+          return;
+        }
+    document.getElementById("keypressed").innerHTML = "Key Pressed: 0";
+    }
+
+    function showdevtools()
+    {
+    	document.getElementById("showdev").style.display="none";
+    	document.getElementById("hidedev").style.display="inline";
+    	document.getElementById("devtools").style.visibility="visible";
+    }
+
+    function hidedevtools()
+    {
+    	document.getElementById("showdev").style.display="inline";
+    	document.getElementById("hidedev").style.display="none";
+    	document.getElementById("devtools").style.visibility="hidden";
+    }
+
+    if (userinputs[0] != null && userinputs[0].speed != null)
+        document.getElementById("speed").value = userinputs[0].speed;
+    else if (userinputs[1] != null && userinputs[1].speed != null)
+        document.getElementById("speed").value = userinputs[1].speed;
+    else if (userinputs[2] != null && userinputs[2].speed != null)
+        document.getElementById("speed").value = userinputs[2].speed;
+    //document.getElementById("speed").value =
+    //document.getElementById("speedtext").innerHTML = document.getElementById("speed").value;
+   /*
+   {
+
+     if(document.getElementById("status").innerHTML == "GO")
+     {
+     	document.getElementById("status").style.color = "green";
+     }
+     else if(document.getElementById("status").innerHTML == "STOP")
+     {
+     	document.getElementById("status").style.color = "red";
+     }
+     else
+     	document.getElementById("status").style.color = "black";
+   }
+   */
+ </script>
+</body>
+
+</html>
