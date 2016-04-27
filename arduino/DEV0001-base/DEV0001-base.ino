@@ -19,12 +19,14 @@ char wbuf[safesize];
 unsigned long msecs;
 
 // Mounting motorshield
-Adafruit_MotorShield AFMS = Adafruit_MotorShield();
-Adafruit_DCMotor *motors[4];
+Adafruit_MotorShield AFMS_bottom = Adafruit_MotorShield(0x60);
+Adafruit_MotorShield AFMS_top = Adafruit_MotorShield(0x61);
+Adafruit_DCMotor *motors[8];
 
 // Arrays that hold target and previous values for the motors
 static int targetv[4];
 static int prevv[4];
+static int reset_encoders;
 
 // Variables for reading in current and voltage values
 int VRaw; //This will store our raw ADC data
@@ -206,11 +208,28 @@ void setmotors(int leftFront, int rightFront, int leftBack, int rightBack)
 		}
 	}
 
+	for (int i = 4; i < 8; i++)
+	{
+	if (negative[i-4])
+		{
+			motors[i]->run(FORWARD);
+		}
+		else
+		{
+			motors[i]->run(BACKWARD);
+		}
+	}
+
 	// Set motors to assigned values
 	motors[0]->setSpeed(rightFront);
 	motors[1]->setSpeed(leftFront);
 	motors[2]->setSpeed(leftBack);
 	motors[3]->setSpeed(rightBack);
+
+	motors[4]->setSpeed(rightFront);
+	motors[5]->setSpeed(leftFront);
+	motors[6]->setSpeed(leftBack);
+	motors[7]->setSpeed(rightBack);
 }
 
 // Initial set up (attach motors & begin serial comm)
@@ -223,7 +242,12 @@ void setup()
 	// Attach motors to motor array
 	for (int i = 0; i < 4; i++)
 	{
-		motors[i] = AFMS.getMotor(i+1);
+		motors[i] = AFMS_bottom.getMotor(i+1);
+	}
+
+	for (int i = 4; i < 8; i++)
+	{
+		motors[i] = AFMS_top.getMotor(i-4+1);
 	}
 
 	// Attach encoders (pin0, pin1, motor)
@@ -233,7 +257,8 @@ void setup()
 	encoders[3].attach(8, 11, 1);
 
 	// Start motorshield & serial comm
-	AFMS.begin();
+	AFMS_bottom.begin();
+	AFMS_top.begin();
 	setmotors(0, 0, 0, 0);
 	Serial.begin(57600);
 	msecs = millis();
@@ -261,34 +286,27 @@ void loop()
 
 		char *s, *e;
 
-		// Check for encoder reset
-		if (strstr(buf, "[reset]\n") != NULL)
+		if ((e = strchr(buf, '\n')))
 		{
 			e[0] = '\0';
+			if ((s = strrchr(buf, '[')))
+			{
+				// Parse string being read
+				// Left front, right front, left back, right back
+				sscanf(s, "[%d %d %d %d %d]\n", &targetv[1], &targetv[3], &targetv[0], &targetv[2], &reset_encoders);
+				timeout = millis();
+			}
 			memmove(buf, &e[1], strlen(&e[1]) + sizeof(char));
-
-			for (int i = 0; i < 4; i++)
-			{
-				encoders[i].reset_pos();
-			}
 		}
+	}
 
-		// Otherwise extract possible message
-		else
+	if (reset_encoders)
+	{
+		for (int i = 0; i < 4; i++)
 		{
-			if ((e = strchr(buf, '\n')))
-			{
-				e[0] = '\0';
-				if ((s = strrchr(buf, '[')))
-				{
-					// Parse string being read
-					// Left front, right front, left back, right back
-					sscanf(s, "[%d %d %d %d]\n", &targetv[1], &targetv[3], &targetv[0], &targetv[2]);
-                    timeout = millis();
-				}
-				memmove(buf, &e[1], strlen(&e[1]) + sizeof(char));
-			}
+			encoders[i].reset_pos();
 		}
+		reset_encoders = 0;
 	}
 
 	// EMERGENCY STOP: MASTER COMM LOST (for testing turn this off)

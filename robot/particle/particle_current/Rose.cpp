@@ -81,7 +81,6 @@ void Rose::reset(void)
 void Rose::reset_encoders(void)
 {
 	this->reset_enc = true;
-	this->send(ones<vec>(10));
 }
 
 void* Rose::commHandler(void* args)
@@ -132,8 +131,6 @@ bool Rose::connect(void)
 		this->disconnect();
 		return false;
 	}
-
-	printf("pports size: %zd\n", this->pports.size());
 
 	// Create delay to read at correct rate
 	struct timespec synctime;
@@ -582,7 +579,7 @@ bool Rose::get_arm_position_placement(vec target_pos, vec target_pose, double ta
 	vec angles(DOF);
 
 	// solve first for the direction of the base
-	angles(JOINT0) = angle(target_pos(span(0,1))); // this is due to the y axis
+	angles(JOINT0) = angle(target_pos(span(0, 1))); // this is due to the y axis
 	target_pose = rotationMat(0, 0, -angles(JOINT0)) * target_pose;
 	double r = eucdist(target_pos(span(0, 1)));
 	// solve for the height next

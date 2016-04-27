@@ -27,6 +27,8 @@ class dbconn
 	{
 		std::string item;
 		std::string price;
+		std::vector<std::vector<std::string>> parsed_items;
+		int table;
 	};
 
 	struct db_send
@@ -66,7 +68,7 @@ class dbconn
 		 *speed
 		 *rotational direction
 		 */
-		std::vector<std::vector<std::string>> recv_data(mongocxx::v_noabi::database db);
+		void recv_data(mongocxx::v_noabi::database db);
 
 		/*sends information about the robot to the database
 		 * for now, only sends voltage

@@ -6,6 +6,7 @@
 #include <string>
 #include <unistd.h> /* used to sleep */
 #include <string.h> /*for string parsing */
+#include <cstring> /* for converting from string to char array for strtok function */
 
 #include <bsoncxx/builder/stream/document.hpp>
 #include <bsoncxx/types.hpp>
@@ -26,7 +27,17 @@ using bsoncxx::builder::stream::open_array;
 using bsoncxx::builder::stream::close_array;
 using bsoncxx::builder::stream::finalize;
 
-vector<vector<string>> dbconn::recv_data(mongocxx::v_noabi::database db) {
+dbconn::dbconn() {
+}
+
+dbconn::~dbconn() {
+}
+
+void dbconn::init_rose_status(mongocxx::v_noabi::database db) {
+	recv_data(db);
+}
+
+void dbconn::recv_data(mongocxx::v_noabi::database db) {
 	if (customer_order.item != "") {
 		//if "item" is not empty, then we do not retrieve from the database
 		return;
@@ -34,9 +45,9 @@ vector<vector<string>> dbconn::recv_data(mongocxx::v_noabi::database db) {
 
 	bsoncxx::document::element e;
 
-	auto mycoll = db['mycollection'];
+	auto orders = db["orders"];
 
-	auto cursor = mycoll.find(document{} << "item" << open_document << "$exists" << true << close_document << finalize);
+	auto cursor = orders.find(document{} << "items" << open_document << "$exists" << true << close_document << finalize);
 
 	// //used as parameter to remove the order that has been retireved by the robot
 	// bsoncxx::builder::stream::document rm;
@@ -49,12 +60,16 @@ vector<vector<string>> dbconn::recv_data(mongocxx::v_noabi::database db) {
 
 
 	for (auto&& doc : cursor) {
-		e = doc["item"];
+		e = doc["items"];
 		customer_order.item = e.get_utf8().value.to_string();
-		e = doc["price"];
+		e = doc["prices"];
 		customer_order.price = e.get_utf8().value.to_string();
+		e = doc["table"];
+		string table_string = e.get_utf8().value.to_string();
+		customer_order.table = stoi(table_string);
+
 		//delete the document
-		mucoll.delete_one(doc);
+		orders.delete_one(doc);
 		//break out the for loop so that we only remove one order
 		break;
 	}
@@ -64,26 +79,85 @@ vector<vector<string>> dbconn::recv_data(mongocxx::v_noabi::database db) {
 	//of each row:
 	//index 0 is the item name
 	//index 1 is the item price
-	vector<vector<string>> parsed_items;
 
+	cout<<customer_order.item.length()<<endl;
+	cout<<customer_order.item<<endl;
 	//initialization
-	char* ptr_item;
-	ptr_item = strtok(customer_order.item);
-	parsed_items[0][0] = ptr;
-	char* ptr_price;
-	ptr_price = strtok(customer_order.price);
-	parsed_items[0][1];
+	//create "item_array" to store parsed items in a c-string (char array)
+
+	//TODO: getting a seg fault here. can pull from database but apparently am bad
+	//at mem allocation.
+	char* item_array = new char[customer_order.item.length() + 1];
+	strcpy(item_array, customer_order.item.c_str());
+
+	vector<string> init_item;
+	customer_order.parsed_items.push_back(init_item);
+	char* item_token = strtok(item_array,",");
+	customer_order.parsed_items[0].push_back(string(item_token));
+
 	//keep track of each item pushed to vector
 	int count_item = 1;
 
-	while (ptr_item != NULL) {
-		ptr_item = strtok(customer_order.items);
-		parsed_items[count_item][0];
-		ptr_price = strtok(customer_order.price);
-		parsed_items[count_item][1];
+	while (1) {
+
+		//reinitialize for new item input
+		vector<string> init_item;
+
+		//checks if we have reached the end of our string 
+		//strtok returns null if it is done parsing
+
+		customer_order.parsed_items.push_back(init_item);
+
+		item_token = strtok(NULL,",");
+		if (item_token == NULL) {
+			break;
+		}
+		customer_order.parsed_items[count_item].push_back(string(item_token));
+
 		count_item++;
 	}
 
-	return parsed_items;
+	//now do same thing with "price_array"
+	char* price_array = new char[customer_order.price.length() + 1];
+	strcpy(price_array, customer_order.price.c_str());
 
+	char* price_token = strtok(price_array,",");
+	customer_order.parsed_items[0].push_back(string(price_token));
+
+	// cout<<customer_order.parsed_items[0][0]<<endl;
+	// cout<<customer_order.parsed_items[0][1]<<endl;
+
+	//keep track of each item pushed to vector
+	count_item = 1;
+
+	while (1) {
+		price_token = strtok(NULL,",");
+		if (price_token == NULL) {
+			break;
+		}
+		customer_order.parsed_items[count_item].push_back(string(price_token));
+		count_item++;
+	}
+
+	delete item_array;
+	delete price_array;
+
+	count_item = 0;
+	for (vector<vector<string>>::iterator i = customer_order.parsed_items.begin(); 
+		i != customer_order.parsed_items.end(); ++i) {
+		for (vector<string>::iterator j = i->begin(); j != i->end(); ++j) {
+			cout<<*j<<endl;
+		}
+	}
+
+
+}
+
+int main() {
+	mongocxx::instance inst{};					
+	mongocxx::client conn{mongocxx::uri{}};
+	auto db = conn["rosedb"];
+
+	dbconn rose_db;
+	rose_db.init_rose_status(db);
 }

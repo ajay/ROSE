@@ -144,6 +144,13 @@ class Rose
 		arma::vec get_end_effector_pos(int linkid);
 		bool get_arm_position_placement(arma::vec target_pos, arma::vec target_pose, double target_spin, double target_grab, arma::vec &solution_enc);
 
+		// ARM STUFF
+		arma::vec arm_mint;
+		arma::vec arm_maxt;
+		arma::vec arm_minv;
+		arma::vec arm_maxv;
+		arma::vec arm_link_length;
+
 	private:
 		/**
 		 * Private method for handing data transfer over serial.
@@ -203,11 +210,6 @@ class Rose
 		pthread_mutex_t *commRecvLock;
 
 		// ARM STUFF
-		arma::vec arm_mint;
-		arma::vec arm_maxt;
-		arma::vec arm_minv;
-		arma::vec arm_maxv;
-		arma::vec arm_link_length;
 		bool arm_active;
 		bool calibration_loaded;
 };
