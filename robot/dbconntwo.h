@@ -70,6 +70,11 @@ class dbconn
 		 */
 		void recv_data(mongocxx::v_noabi::database db);
 
+		/* clear the item from db_recv_order
+		* so that the robot knows the order has been fulfilled
+		*/
+		void clear_data();
+
 		/*sends information about the robot to the database
 		 * for now, only sends voltage
 		 */
