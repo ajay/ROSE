@@ -40,15 +40,30 @@ void dbconn::init_rose_status(mongocxx::v_noabi::database db) {
 
 	init.delete_many({});
 
+	double t;
+	t = ((double)clock() / CLOCKS_PER_SEC) * 1000; // Gives the time in seconds
+
 	//initialize robot parameters
+	bsoncxx::document::value init_clock = document{} << "clock" << t << finalize;
 	bsoncxx::document::value init_encoders = document{} << "encoders" << open_array
 		<< 0 << 0 << 0 << 0 << close_array << finalize;
 	bsoncxx::document::value init_volt = document{} << "current_voltage" << 0 << finalize;
 	bsoncxx::document::value init_state = document{} << "current_state" << "" << finalize;
+	bsoncxx::document::value init_arm_pos = document{} << "arm_pos" << open_array
+		<< 0.0 << 0.0 << 0.0 << 0.0 << 0.0 << 0.0 << close_array << finalize;
+	bsoncxx::document::value init_base_vel = document{} << "base_vel" << open_array
+		<< 0.0 << 0.0 << 0.0 << 0.0 << close_array << finalize;
+	bsoncxx::document::value init_arm_vel = document{} << "arm_vel" << open_array
+		<< 0.0 << 0.0 << 0.0 << 0.0 << 0.0 << 0.0 << close_array << finalize;
 
+
+	init.insert_one(move(init_clock));
 	init.insert_one(move(init_encoders));
 	init.insert_one(move(init_volt));
 	init.insert_one(move(init_state));
+	init.insert_one(move(init_arm_pos));
+	init.insert_one(move(init_base_vel));
+	init.insert_one(move(init_arm_vel));
 
 }
 
@@ -199,20 +214,20 @@ void dbconn::send_data(mongocxx::v_noabi::database db)
 
 	// This pushes the time since process start.
 
-// 	document find_clock;
-// 	find_clock << "clock" << open_document << "$exists" << true << close_document;
+	document find_clock;
+	find_clock << "clock" << open_document << "$exists" << true << close_document;
 
-// 	double t;
-// 	t = ((double)clock() / CLOCKS_PER_SEC) * 1000; // Gives the time in seconds
+	double t;
+	t = ((double)clock() / CLOCKS_PER_SEC) * 1000; // Gives the time in seconds
 
-// //	printf("%f\n", t);
+	//	printf("%f\n", t);
 
-// 	// The web app will check to see if the clock has been updated in the database
-// 	document update_clock;
-// 	update_clock << "$set" << open_document << "clock" << t << close_document;
+	// The web app will check to see if the clock has been updated in the database
+	document update_clock;
+	update_clock << "$set" << open_document << "clock" << t << close_document;
 
-// 	// Perform the update
-// 	store_data.update_one(find_clock.view(),update_clock.view());
+	// Perform the update
+	store_data.update_one(find_clock.view(),update_clock.view());
 
 	/*------------ Send Voltage ---------------*/
 
@@ -257,6 +272,46 @@ void dbconn::send_data(mongocxx::v_noabi::database db)
 	update_state << "$set" << open_document << "current_state" << rose_data_send.state << close_document;
 
 	store_data.update_one(state_doc.view(), update_state.view());
+
+	/*----------- Send Arm Position Values -----------------*/
+
+	document arm_pos_doc;
+	arm_pos_doc << "arm_pos" << open_document << "$exists" << true << close_document;
+
+	document update_arm_pos;
+	update_arm_pos << "$set" << open_document << "arm_pos" << open_array
+		<< rose_data_send.arm_pos[0] << rose_data_send.arm_pos[1] << rose_data_send.arm_pos[2]
+		<< rose_data_send.arm_pos[3] << rose_data_send.arm_pos[4] << rose_data_send.arm_pos[5]
+		<< close_array << close_document;
+
+	store_data.update_one(arm_pos_doc.view(), update_arm_pos.view());
+
+	/*-------------- Send Base Motor Velocity --------------*/
+
+	document base_vel_doc;
+	base_vel_doc << "base_vel" << open_document << "$exists" << true << close_document;
+
+	document update_base_vel;
+	update_base_vel << "$set" << open_document << "base_vel" << open_array
+		<< rose_data_send.base_vel[0] << rose_data_send.base_vel[1] << rose_data_send.base_vel[2]
+		<< rose_data_send.base_vel[3] << close_array << close_document;
+
+	store_data.update_one(base_vel_doc.view(), update_base_vel.view());
+
+	/*------------- Send Arm Motor Velocity ---------------*/
+
+	document arm_vel_doc;
+	arm_vel_doc << "arm_vel" << open_document << "$exists" << true << close_document;
+
+	document update_arm_vel;
+	update_arm_vel << "$set" << open_document << "arm_vel" << open_array
+		<< rose_data_send.arm_vel[0] << rose_data_send.arm_vel[1] << rose_data_send.arm_vel[2]
+		<< rose_data_send.arm_vel[3] << rose_data_send.arm_vel[4] << rose_data_send.arm_vel[5]
+		<< close_array << close_document;
+
+	store_data.update_one(arm_vel_doc.view(), update_arm_vel.view());
+
+
 
 }
 

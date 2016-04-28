@@ -36,6 +36,9 @@ class dbconn
 		int encoders[4];
 		double twelve_volt_voltage;
 		std::string state;
+		double arm_pos[6];
+		double base_vel[4];
+		double arm_vel[6];
 	};
 
 	public:
