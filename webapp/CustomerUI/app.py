@@ -7,14 +7,14 @@ def connect():
 # the Mongo DB Database (underlined in red in the screenshots)
 # Obviously, do not store your password as plaintext in practice
     # LOCALHOST
-    connection = MongoClient()
-    handle = connection["rosedb"]
-    return handle
-    # MONGOLAB
-    # connection = MongoClient("ds015878.mongolab.com", 15878)
+    # connection = MongoClient()
     # handle = connection["rosedb"]
-    # handle.authenticate("Brice","12345678")
     # return handle
+    # MONGOLAB
+    connection = MongoClient("ds015878.mongolab.com", 15878)
+    handle = connection["rosedb"]
+    handle.authenticate("Brice","12345678")
+    return handle
 
 app = Flask(__name__)
 handle = connect()

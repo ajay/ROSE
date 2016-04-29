@@ -12,6 +12,11 @@
  <h2 id="orderList" style="text-align:right;">List of Customer Orders:</h2>
  <p id = "test1"></p>
  <p id = "test2"></p>
+ <p id = "test3"></p>
+ <p id = "test4"></p>
+
+ <ol id = "list1">
+
  	<script>
  	var xhttp;
     xhttp = new XMLHttpRequest();
@@ -20,8 +25,33 @@
     	if (xhttp.readyState == 4 && xhttp.status == 200) {
     		console.log(xhttp.responseText);
     		var JSObj = JSON.parse(xhttp.responseText);
-            var key = "prices";
-    		document.getElementById("test1").innerHTML = JSObj.results[0].prices;
+    		var docKeys = Object.keys(JSObj.results);
+            var numberOfDocs = docKeys.length; 
+            var docNum;
+            for (docNum = 0; docNum <= numberOfDocs; docNum++) {
+                //<ol>
+                    /*</li>*/
+                    var arrayOfItems = (JSObj.results[docNum].items).split(",");
+                    var arrayOfPrices = (JSObj.results[docNum].prices).split(",");
+                    //var i, pIndex;
+                    /*for (i = 0; i < arrayOfItems.length; i++) {
+                        //pIndex = "test" + [i];
+                        document.write(pIndex);
+                        document.getElementById(pIndex).innerHTML = JSObj.results[docNum].table;
+                        document.getElementById(pIndex).innerHTML += JSObj.results[docNum].items[i] + JSObj.results[docNum].prices[i];*/
+                        
+                    //}
+                    
+                
+                //</ol>
+            //}
+
+    /*//Helper function to get all items in this order.
+    function getItems(items) {
+        var splitItems = items.split(",");
+        return splitItems;
+    }*/
+
 
             /*var i;		//iterate through each order
     		var j; 		//iterate for each item within each order

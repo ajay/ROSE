@@ -37,10 +37,19 @@ def override():
     # speed = handle.mycollection.find({"state":{"$exists":True}})[0]["speed"]
     return render_template('override.html', userinputs=userinputs)
 
+
 @app.route("/getOrders", methods=['GET'])
 def getOrders():
-    placedOrders = [json.dumps(x, default = json_util.default) for x in handle.orders.find()]
-    return jsonify(results=placedOrders)
+    orders = handle.orders.find()
+    json_orders = map(order_to_json, orders)
+    return jsonify(results=json_orders)
+    
+# Helper function to return a JSON object, given an order document from the orders collection.
+def order_to_json(order):
+    return {"prices": order["prices"],
+            "table": order["table"],
+            "items": order["items"]}
+
 
 @app.route("/test", methods=['GET', 'POST'])
 def test():
