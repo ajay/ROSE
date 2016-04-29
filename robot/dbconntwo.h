@@ -36,6 +36,9 @@ class dbconn
 		int encoders[4];
 		double twelve_volt_voltage;
 		std::string state;
+		double arm_pos[6];
+		double base_vel[4];
+		double arm_vel[6];
 	};
 
 	public:
@@ -69,6 +72,11 @@ class dbconn
 		 *rotational direction
 		 */
 		void recv_data(mongocxx::v_noabi::database db);
+
+		/* clear the item from db_recv_order
+		* so that the robot knows the order has been fulfilled
+		*/
+		void clear_data();
 
 		/*sends information about the robot to the database
 		 * for now, only sends voltage
