@@ -20,6 +20,12 @@ app = Flask(__name__)
 handle = connect()
 tablenumber = 0
 
+#Default Table:  if the user does not specify a table number, redirect to Table 69.
+@app.route("/index/", methods=['GET'])
+@app.route("/", methods=['GET'])
+def default():
+	return redirect('/69')
+
 #This binds our index page to both "localhost:xxxx/" and "localhost:xxxx/index/".
 #If navigating to that url, index.html will be shown.
 @app.route("/index/<tblnum>" ,methods=['GET'])

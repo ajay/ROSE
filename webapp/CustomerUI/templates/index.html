@@ -66,7 +66,10 @@
 			<div class="row">
 				<div class="col-md-4">
 					<div class="service-item">
-						<img id="title" src="{{ url_for('static',filename='img/coke.png') }}" alt="Rose Team">
+						<img id="title" src="{{ url_for('static',filename='img/coke.png') }}" alt="Rose Team" usemap = "#usethismapcoke">
+            <map name="usethismapcoke">
+              <area shape = "rect" coords="0,0,400,200" alt="Button" onclick="additem('coke', 1.99)">
+            </map>
 						<!-- <a href="#drinks" class="btn btn-primary">Coke</a> -->
 						 <button id="coke" value=1.99 onclick="additem('coke', 1.99)">Coke</button>
 						<p>$1.99</p>
@@ -74,14 +77,20 @@
 				</div>
 				<div class="col-md-4">
 					<div class="service-item">
-						<img id="title" src="{{ url_for('static',filename='img/sprite.png') }}" alt="Rose Team">
+						<img id="title" src="{{ url_for('static',filename='img/sprite.png') }}" alt="Rose Team" usemap="usethismapsprite">
+            <map name="usethismapsprite">
+              <area shape = "rect" coords="0,0,400,200" alt="Button" onclick="additem('sprite', 1.99)">
+            </map>
 						<button id="sprite" value=1.99 onclick="additem('sprite', 1.99)">Sprite</button>
 						<p>$1.99</p>
 					</div>
 				</div>
 				<div class="col-md-4">
 					<div class="service-item">
-						<img id="title" src="{{ url_for('static',filename='img/fanta.png') }}" alt="Rose Team">
+						<img id="title" src="{{ url_for('static',filename='img/fanta.png') }}" alt="Rose Team" usemap="usethismapfanta">
+            <map name="usethismapfanta">
+              <area shape = "rect" coords="0,0,400,200" alt="Button" onclick="additem('fanta', 1.99)">
+            </map>
 						<button id="fanta" value=1.99 onclick="additem('fanta', 1.99)">Fanta</button>
 						<p>$1.99</p>
 					</div>
