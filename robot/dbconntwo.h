@@ -86,4 +86,6 @@ class dbconn
 
 };
 
+void dbsim();
+
 #endif

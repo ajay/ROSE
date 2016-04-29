@@ -107,7 +107,7 @@ void dbconn::recv_data(mongocxx::v_noabi::database db) {
 	}
 
 	if (customer_order.item == "") {
-		cout<<"the database is empty \n";
+		cout<<"The robot is waiting. \n";
 		return;
 	}
 	//from here we will have to parse the information using strtok.
@@ -336,7 +336,7 @@ void dbconn::db_update() {
 	}
 }
 
-int main() {
-	dbconn rose_db;
-	rose_db.db_update();
-}
+// int main() {
+// 	dbconn rose_db;
+// 	rose_db.db_update();
+// }
