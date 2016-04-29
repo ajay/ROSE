@@ -9,9 +9,10 @@
  <h1 id="homeTitle" style="text-align:center;">Manager Interface Home Page</h1>
  <h2 id="robotStatus" style = "text-align:center;">Current Robot Status: </h2>
  
- <h2 id="orderList" style="text-align:right;">List of Customer Orders:</h2>
- <p id = "test1"></p>
- <p id = "test2"></p>
+ <h2 id="orderListHeader" style="text-align:right;">List of Customer Orders:</h2>
+ <div id = "orderList">
+</div>
+
  	<script>
  	var xhttp;
     xhttp = new XMLHttpRequest();
@@ -20,15 +21,81 @@
     	if (xhttp.readyState == 4 && xhttp.status == 200) {
     		console.log(xhttp.responseText);
     		var JSObj = JSON.parse(xhttp.responseText);
-            var key = "prices";
-    		document.getElementById("test1").innerHTML = JSObj.results[0].prices;
+    		var docKeys = Object.keys(JSObj.results);
+            var numberOfDocs = docKeys.length; 
+            var docNum;
+            for (docNum = 0; docNum < numberOfDocs; docNum++) {
+                //<ol>
+                    /*</li>*/
+                    //document.write("Before: " + JSObj.results[docNum].items);
+                    var tableNum = JSObj.results[docNum].table;
+                    var arrayOfItems = JSObj.results[docNum].items.split(",");
+                    var arrayOfPrices = JSObj.results[docNum].prices.split(",");
+
+                    //document.write("After: " + JSObj.results[docNum].items);
+
+                    //document.write(JSObj.results[docNum].items);
+                    //document.write(JSObj.results[docNum].items[1]);
+                    //document.write(JSObj.results[docNum].items[2]);
+
+                    //Display table string
+                    var table = document.createElement("h3");
+                    var tabletext = document.createTextNode("Table number: " + tableNum);
+                    table.appendChild(tabletext);
+                    table.style.display = "inline-block";
+                    //table.setAttribute("id","table" + (pricelist.length-1));
+                    document.getElementById("orderList").appendChild(table);
+
+                    var i;
+                    for (i = 0; i < arrayOfItems.length; i++) {
+                        //append item string to item column
+                        var item0 = document.createElement("h3");
+                        var itemtext = document.createTextNode("Item: " + arrayOfItems[i]);
+                        //document.write("Currently working item: " + JSObj.results[docNum].items[i]);
+                        item0.appendChild(itemtext);
+                        item0.style.display = "inline-block";
+                        //item0.setAttribute("id","item" + (pricelist.length-1));
+                        document.getElementById("orderList").appendChild(item0);
+
+                        //append price string to price column
+                        var price0 = document.createElement("h3");
+                        var pricetext = document.createTextNode("Price: " + arrayOfPrices[i]);
+                        price0.appendChild(pricetext);
+                        price0.style.display = "inline-block";
+                        //price0.setAttribute("id","price" + (pricelist.length-1));
+                        document.getElementById("orderList").appendChild(price0);
+                    }
+
+/*                    document.write(tableNum);
+                    document.write(arrayOfItems);
+                    document.write(arrayOfPrices);*/
+
+                    //var i, pIndex;
+                    /*for (i = 0; i < arrayOfItems.length; i++) {
+                        //pIndex = "test" + [i];
+                        document.write(pIndex);
+                        document.getElementById(pIndex).innerHTML = JSObj.results[docNum].table;
+                        document.getElementById(pIndex).innerHTML += JSObj.results[docNum].items[i] + JSObj.results[docNum].prices[i];*/
+                        
+                    //}
+                    
+                
+                //</ol>
+            //}
+
+    /*//Helper function to get all items in this order.
+    function getItems(items) {
+        var splitItems = items.split(",");
+        return splitItems;
+    }*/
+
 
             /*var i;		//iterate through each order
     		var j; 		//iterate for each item within each order
     		for (i = 0; i < JSObj.)*/
     		//document.getElementById("test1").innerHTML = JSObj.results[0].table;
     		/*document.getElementById("test1").innerHTML = "Table: " + JSObj.results[i].table;*/
-    		
+    	   }	
     	}
 	};
     xhttp.send();

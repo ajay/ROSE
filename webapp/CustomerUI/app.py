@@ -7,14 +7,14 @@ def connect():
 # the Mongo DB Database (underlined in red in the screenshots)
 # Obviously, do not store your password as plaintext in practice
     # LOCALHOST
-    connection = MongoClient()
-    handle = connection["rosedb"]
-    return handle
-    # MONGOLAB
-    # connection = MongoClient("ds015878.mongolab.com", 15878)
+    # connection = MongoClient()
     # handle = connection["rosedb"]
-    # handle.authenticate("Brice","12345678")
     # return handle
+    # MONGOLAB
+    connection = MongoClient("ds015878.mongolab.com", 15878)
+    handle = connection["rosedb"]
+    handle.authenticate("Brice","12345678")
+    return handle
 
 app = Flask(__name__)
 handle = connect()
@@ -44,5 +44,5 @@ def order(table, items, prices):
 # Remove the "debug=True" for production
 if __name__ == '__main__':
     # Bind to PORT if defined, otherwise default to 5000.
-    port = int(os.environ.get('PORT', 5000))
+    port = int(os.environ.get('PORT', 5010))
     app.run(host='0.0.0.0', port=port, debug=True)
